@@ -88,6 +88,8 @@ create policy favorites_own on public.favorites for all using (user_id = auth.ui
 
 -- Grants (Supabase roles)
 grant usage on schema public to anon, authenticated;
+-- Supabase grants anon write privileges by default; signed-out visitors only ever read.
+revoke insert, update, delete, truncate on all tables in schema public from anon;
 grant select on public.campuses, public.merchants, public.merchant_branches, public.perks, public.quests, public.badges to anon;
 grant select, insert, update, delete on all tables in schema public to authenticated;
 revoke insert, update, delete on public.redemptions, public.xp_events, public.user_stats, public.user_quests, public.user_badges from authenticated;

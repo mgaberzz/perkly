@@ -1,7 +1,7 @@
 -- Perkly core schema
 -- Roles: student (mobile app), merchant (merchant portal, via merchant_members), admin (admin portal)
 
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 -- ───────────────────────────── Reference data ─────────────────────────────
 create table public.campuses (
@@ -26,7 +26,7 @@ create table public.profiles (
   campus_id       uuid references public.campuses(id) on delete set null,
   role            text not null default 'student' check (role in ('student','merchant','admin')),
   status          text not null default 'active' check (status in ('active','banned')),
-  referral_code   text unique not null default upper(substr(encode(gen_random_bytes(6),'hex'),1,8)),
+  referral_code   text unique not null default upper(substr(encode(extensions.gen_random_bytes(6),'hex'),1,8)),
   referred_by     uuid references public.profiles(id) on delete set null,
   interests       text[] not null default '{}',
   created_at      timestamptz not null default now()
@@ -91,7 +91,7 @@ create table public.merchant_branches (
 create table public.branch_qr_codes (
   id          uuid primary key default gen_random_uuid(),
   branch_id   uuid not null references public.merchant_branches(id) on delete cascade,
-  code        text not null unique default ('PK-' || upper(encode(gen_random_bytes(8),'hex'))),
+  code        text not null unique default ('PK-' || upper(encode(extensions.gen_random_bytes(8),'hex'))),
   label       text not null default 'Cashier',
   is_active   boolean not null default true,
   created_at  timestamptz not null default now()

@@ -265,7 +265,7 @@ declare
   v_status text := 'success';
   v_flag text;
   v_redemption_id uuid := gen_random_uuid();
-  v_code text := upper(substr(encode(gen_random_bytes(3), 'hex'), 1, 4));
+  v_code text := upper(substr(encode(extensions.gen_random_bytes(3), 'hex'), 1, 4));
   v_xp integer := 0;
   v_base integer;
   v_old_level integer;

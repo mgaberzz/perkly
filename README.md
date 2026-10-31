@@ -56,6 +56,16 @@ a weighted segment **on the server** (XP or a streak freeze) — odds are never 
 +25 new merchant, streak bonus, milestones (3/5/7/14/30 days), freeze tokens, levels 1–7 (Newbie → Campus Legend),
 daily/weekly/monthly quests, badges, referral +50 XP when the friend first redeems, daily open +5 XP, 150 XP/day cap.
 
+## Live backend
+
+The Supabase project **Perkly** (`qnvzkjojuumtzpkvjlja`, eu-west-1) has all 6 migrations and the demo seed applied:
+10 campuses · 89 demo merchants · 128 branches (each with a cashier QR) · 105 perks · 5 quests · 7 badges.
+The earlier prototype tables were moved, untouched, into the `legacy` schema.
+
+- API URL: `https://qnvzkjojuumtzpkvjlja.supabase.co`
+- Publishable key: in Supabase → Project Settings → API keys (already filled into the git-ignored `apps/*/.env*` files of the dev box)
+- Demo QR codes: `select m.name, q.code from branch_qr_codes q join merchant_branches b on b.id = q.branch_id join merchants m on m.id = b.merchant_id;`
+
 ## Setup
 
 ### 1. Supabase

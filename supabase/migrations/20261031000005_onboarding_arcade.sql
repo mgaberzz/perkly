@@ -24,6 +24,7 @@ create table public.spins (
 create index spins_user_idx on public.spins (user_id, created_at desc);
 alter table public.spins enable row level security;
 create policy spins_read on public.spins for select using (user_id = auth.uid() or public.is_admin());
+revoke insert, update, delete, truncate on public.spins from anon, authenticated;
 grant select on public.spins to authenticated;
 
 -- Wheel segments, in clockwise order as drawn by the app. Weights decide the odds (server-side only).
@@ -112,6 +113,7 @@ begin
     'total_xp', (select total_xp from user_stats where user_id = v_uid)
   );
 end $$;
+revoke execute on function public.spin_wheel() from public, anon;
 grant execute on function public.spin_wheel() to authenticated;
 
 -- ───────── Social proof: redemptions per perk (last 30 days), live merchants only ─────────
@@ -140,4 +142,8 @@ begin
   update profiles set referred_by = v_ref where id = v_uid;
   return jsonb_build_object('ok', true);
 end $$;
+revoke execute on function public.apply_referral(text) from public, anon;
 grant execute on function public.apply_referral(text) to authenticated;
+
+-- Trigger-only and internal functions are never callable through the API
+revoke execute on function public.ticket_on_redemption(), public.ticket_on_quest() from public, anon, authenticated;
