@@ -69,6 +69,7 @@ export default function Login() {
   const { c } = useTheme();
   const [mode, setMode] = useState<'phone' | 'email'>('phone');
   const [value, setValue] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState<null | 'otp' | 'google' | 'apple'>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -78,6 +79,14 @@ export default function Login() {
     if (mode === 'phone' && !/^\+201[0125]\d{8}$/.test(target)) return setError('That doesn’t look like an Egyptian mobile number. Try 01x xxxx xxxx.');
     if (mode === 'email' && !/^\S+@\S+\.\S+$/.test(target)) return setError('Enter a valid email.');
     setLoading('otp');
+    // Email + password (accounts created in Supabase or via invite) — no code needed
+    if (mode === 'email' && password) {
+      const { error: pwErr } = await supabase.auth.signInWithPassword({ email: target, password });
+      setLoading(null);
+      if (pwErr) return setError('Wrong email or password.');
+      router.replace('/');
+      return;
+    }
     const { error: err } = mode === 'phone'
       ? await supabase.auth.signInWithOtp({ phone: target })
       : await supabase.auth.signInWithOtp({ email: target, options: { shouldCreateUser: true } });
@@ -120,8 +129,14 @@ export default function Login() {
               keyboardType="email-address" autoCapitalize="none" autoComplete="email"
               style={[box, { paddingHorizontal: 16, paddingVertical: 18, fontSize: 18, fontWeight: '700', color: c.text }]} />
           )}
+          {mode === 'email' && (
+            <TextInput value={password} onChangeText={setPassword} placeholder="Password (optional)" placeholderTextColor={c.textMuted}
+              secureTextEntry autoCapitalize="none" autoComplete="password"
+              style={[box, { paddingHorizontal: 16, paddingVertical: 18, fontSize: 18, fontWeight: '700', color: c.text }]} />
+          )}
+          {mode === 'email' && <T v="small">Have a password? Enter it to sign in. Leave it empty and we’ll email you a code.</T>}
           {error && <T v="small" color={brand.danger}>{error}</T>}
-          <Button title="Continue" onPress={send} loading={loading === 'otp'} disabled={!value.trim()} />
+          <Button title={mode === 'email' && password ? 'Sign in' : 'Continue'} onPress={send} loading={loading === 'otp'} disabled={!value.trim()} />
 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 }}>
             <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
@@ -132,7 +147,7 @@ export default function Login() {
             <SocialButton label="Google" icon="G" onPress={() => social('google')} loading={loading === 'google'} />
             {Platform.OS !== 'android' && <SocialButton label="Apple" icon={Platform.OS === 'ios' ? '\uF8FF' : '🍎'} dark onPress={() => social('apple')} loading={loading === 'apple'} />}
             <SocialButton label={mode === 'phone' ? 'Email' : 'Phone'} icon={mode === 'phone' ? '✉️' : '📱'}
-              onPress={() => { setMode(mode === 'phone' ? 'email' : 'phone'); setValue(''); setError(null); }} />
+              onPress={() => { setMode(mode === 'phone' ? 'email' : 'phone'); setValue(''); setPassword(''); setError(null); }} />
           </View>
 
           <T v="small" style={{ textAlign: 'center', marginTop: 8, lineHeight: 18 }}>
