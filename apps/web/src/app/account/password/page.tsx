@@ -5,6 +5,8 @@ import { ActionForm, SubmitButton } from "@/components/action-form";
 import { Field, Input } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionState } from "@/lib/types";
+import { getT } from "@/lib/i18n/server";
+import { LangSwitch } from "@/components/lang-switch";
 
 export const metadata = { title: "Set password" };
 
@@ -25,17 +27,18 @@ async function setPassword(_: ActionState, formData: FormData): Promise<ActionSt
 export default async function PasswordPage() {
   const { user, profile } = await getSession();
   if (!user) redirect("/login");
+  const t = await getT();
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
       <div className="w-full max-w-sm">
-        <Logo className="mb-8 text-xl" />
-        <h1 className="text-2xl font-extrabold">Set your password</h1>
+        <div className="mb-8 flex items-center justify-between"><Logo className="text-xl" /><LangSwitch /></div>
+        <h1 className="text-2xl font-extrabold">{t("Set your password")}</h1>
         <p className="mb-6 mt-1 text-sm text-zinc-500">{user.email}</p>
         <ActionForm action={setPassword} className="space-y-4">
-          <Field label="Your name"><Input name="full_name" defaultValue={profile?.full_name ?? ""} /></Field>
-          <Field label="New password"><Input name="password" type="password" minLength={8} autoComplete="new-password" required /></Field>
-          <Field label="Confirm password"><Input name="confirm" type="password" minLength={8} autoComplete="new-password" required /></Field>
-          <SubmitButton className="w-full">Save & continue</SubmitButton>
+          <Field label={t("Your name")}><Input name="full_name" defaultValue={profile?.full_name ?? ""} /></Field>
+          <Field label={t("New password")}><Input name="password" type="password" minLength={8} autoComplete="new-password" required /></Field>
+          <Field label={t("Confirm password")}><Input name="confirm" type="password" minLength={8} autoComplete="new-password" required /></Field>
+          <SubmitButton className="w-full">{t("Save & continue")}</SubmitButton>
         </ActionForm>
       </div>
     </main>

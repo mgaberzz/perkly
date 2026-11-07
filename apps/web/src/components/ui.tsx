@@ -43,7 +43,9 @@ const STATUS_STYLES: Record<string, string> = {
   paused: "bg-zinc-200 text-zinc-700", expired: "bg-zinc-200 text-zinc-600",
   churned: "bg-red-100 text-red-700", rejected: "bg-red-100 text-red-700", reversed: "bg-red-100 text-red-700", banned: "bg-red-100 text-red-700",
   owner: "bg-perk-purple/10 text-perk-purple", manager: "bg-perk-blue/10 text-perk-blue", cashier: "bg-zinc-100 text-zinc-700",
+  branch_manager: "bg-perk-blue/10 text-perk-blue", approved: "bg-emerald-100 text-emerald-700", paid: "bg-emerald-100 text-emerald-700",
   admin: "bg-perk-pink/10 text-perk-pink", merchant: "bg-perk-blue/10 text-perk-blue", student: "bg-perk-purple/10 text-perk-purple",
+  operations: "bg-perk-pink/10 text-perk-pink", account_manager: "bg-perk-pink/10 text-perk-pink", finance: "bg-perk-pink/10 text-perk-pink",
 };
 
 export function Badge({ children, tone, className = "" }: { children: ReactNode; tone?: string; className?: string }) {
@@ -102,9 +104,9 @@ export function Table({ head, children, empty }: { head: ReactNode[]; children: 
   const hasRows = Array.isArray(children) ? children.length > 0 : Boolean(children);
   return (
     <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white shadow-sm">
-      <table className="w-full text-left text-sm">
+      <table className="w-full text-start text-sm">
         <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
-          <tr>{head.map((h, i) => <th key={i} className="px-4 py-3 font-semibold">{h}</th>)}</tr>
+          <tr>{head.map((h, i) => <th key={i} className="whitespace-nowrap px-4 py-3 text-start font-semibold">{h}</th>)}</tr>
         </thead>
         <tbody className="divide-y divide-zinc-100">
           {hasRows ? children : (
@@ -141,9 +143,9 @@ export function BarChart({ data, empty = "No data yet" }: { data: { label: strin
   );
 }
 
-export function HBarList({ data, format = (n: number) => String(n) }: { data: { label: string; value: number }[]; format?: (n: number) => string }) {
+export function HBarList({ data, format = (n: number) => String(n), empty = "No data yet" }: { data: { label: string; value: number }[]; format?: (n: number) => string; empty?: string }) {
   const max = Math.max(1, ...data.map((d) => d.value));
-  if (data.length === 0) return <div className="py-6 text-center text-sm text-zinc-500">No data yet</div>;
+  if (data.length === 0) return <div className="py-6 text-center text-sm text-zinc-500">{empty}</div>;
   return (
     <ul className="space-y-2">
       {data.map((d, i) => (

@@ -1,0 +1,115 @@
+import Link from "next/link";
+import { requireStaff } from "@/lib/auth";
+import { Badge, Card, Input, LinkButton, PageHeader, Stat, Table, Td } from "@/components/ui";
+import { ActionForm, SubmitButton } from "@/components/action-form";
+import { ExportButtons } from "@/components/export-buttons";
+import { date, egp } from "@/lib/format";
+import { getT } from "@/lib/i18n/server";
+import { BRAND_TYPE_LABEL } from "@/lib/labels";
+import type { Balance, Settlement } from "@/lib/types";
+import { createSettlements, markSettlementPaid, setPaymentsMode } from "../actions";
+
+export const metadata = { title: "Finance" };
+
+export default async function FinancePage({ searchParams }: PageProps<"/admin/finance">) {
+  const { supabase, can } = await requireStaff("finance");
+  const t = await getT();
+  const sp = await searchParams;
+  const view = sp.view === "all" ? "all" : "due";
+  const [{ data: balances }, { data: settlements }, { data: setting }] = await Promise.all([
+    supabase.rpc("merchant_balances"),
+    supabase.from("settlements").select("*, merchant:merchants(id, name, merchant_code)").order("created_at", { ascending: false }).limit(100)
+      .returns<(Settlement & { merchant: { id: string; name: string; merchant_code: string } })[]>(),
+    supabase.from("app_settings").select("value").eq("key", "payments").maybeSingle<{ value: { mode: string; provider: string | null } }>(),
+  ]);
+  const all = (balances ?? []) as Balance[];
+  const sum = (k: keyof Balance) => all.reduce((a, b) => a + Number(b[k] ?? 0), 0);
+  const rows = view === "all" ? all : all.filter((b) => Number(b.due_to_merchant) > 0 || Number(b.pending_settlements) > 0 || Number(b.commission_owed) > 0);
+  rows.sort((a, b) => Number(b.due_to_merchant) - Number(a.due_to_merchant));
+  const pending = (settlements ?? []).filter((s) => s.status === "pending");
+  const mode = setting?.value.mode ?? "off";
+
+  return (
+    <>
+      <PageHeader title={t("Finance & settlements")} subtitle={t("What Perkly owes merchants from in-app payments, and the commission merchants owe on cashier sales.")}
+        actions={<ExportButtons kind="balances" params={{ all: view === "all" ? "1" : undefined }} />} />
+
+      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Stat accent label={t("Due to merchants")} value={egp(sum("due_to_merchant"))} hint={t("Not yet in a settlement")} />
+        <Stat label={t("Pending payouts")} value={egp(sum("pending_settlements"))} hint={t("{n} settlement(s) to transfer", { n: pending.length })} />
+        <Stat label={t("Paid out")} value={egp(sum("paid_out"))} />
+        <Stat label={t("Commission to invoice")} value={egp(sum("commission_owed"))} hint={t("On sales paid at the cashier")} />
+      </div>
+
+      <div className="mb-6 grid gap-6 lg:grid-cols-3">
+        <Card title={t("Create settlements")} className="lg:col-span-2">
+          <p className="mb-3 text-sm text-zinc-500">{t("Groups every unsettled in-app payment up to the chosen date into one payout per merchant. Then transfer the money and mark each payout as paid with the bank reference.")}</p>
+          <ActionForm action={createSettlements} className="flex flex-wrap items-end gap-3">
+            <label className="text-xs text-zinc-500">{t("Up to (Cairo date)")}<Input type="date" name="until" className="w-44" /></label>
+            <SubmitButton>{t("Create settlements")}</SubmitButton>
+          </ActionForm>
+        </Card>
+        <Card title={t("In-app payments")}>
+          <div className="mb-3 flex items-center gap-2 text-sm">{t("Mode")}: <Badge tone={mode === "live" ? "live" : mode === "test" ? "pending" : "paused"}>{t(mode)}</Badge></div>
+          <p className="mb-3 text-xs text-zinc-500">{t("Test mode records payments without charging cards. Switch to live once a payment gateway (e.g. Paymob) is connected.")}</p>
+          {can("settings") && (
+            <form action={setPaymentsMode} className="flex gap-2">
+              {["off", "test", "live"].map((m) => (
+                <button key={m} name="mode" value={m} disabled={m === "live"} className={`rounded-lg px-3 py-1.5 text-xs font-semibold ring-1 ring-zinc-200 disabled:opacity-40 ${m === mode ? "bg-perk-ink text-white" : "bg-white"}`}>{t(m)}</button>
+              ))}
+            </form>
+          )}
+        </Card>
+      </div>
+
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-bold">{t("Merchant balances")}</h2>
+        <div className="flex gap-2">
+          <LinkButton href="/admin/finance" variant={view === "due" ? "primary" : "secondary"}>{t("With amounts due")}</LinkButton>
+          <LinkButton href="/admin/finance?view=all" variant={view === "all" ? "primary" : "secondary"}>{t("All merchants")}</LinkButton>
+        </div>
+      </div>
+      <Table head={[t("Merchant"), t("Brand type"), t("In-app sales"), t("Commission"), t("Due to merchant"), t("Pending payouts"), t("Paid out"), t("Commission to invoice"), t("Bank")]} empty={t("Nothing due 🎉")}>
+        {rows.map((b) => (
+          <tr key={b.merchant_id}>
+            <Td><Link href={`/admin/merchants/${b.merchant_id}`} className="font-semibold hover:text-perk-purple">{b.merchant_name}</Link><div className="font-mono text-xs text-zinc-500">{b.merchant_code}</div></Td>
+            <Td>{t(BRAND_TYPE_LABEL[b.brand_type] ?? b.brand_type)}</Td>
+            <Td>{egp(b.in_app_gross)}</Td>
+            <Td>{egp(b.in_app_commission)}</Td>
+            <Td className="font-bold text-perk-purple">{egp(b.due_to_merchant)}</Td>
+            <Td>{egp(b.pending_settlements)}</Td>
+            <Td>{egp(b.paid_out)}</Td>
+            <Td>{egp(b.commission_owed)}</Td>
+            <Td className="text-xs">{b.bank_name ? <>{b.bank_name}<div className="font-mono text-zinc-500">{b.iban}</div></> : <span className="text-amber-600">{t("Missing")}</span>}</Td>
+          </tr>
+        ))}
+      </Table>
+
+      <div className="mb-3 mt-8 flex items-center justify-between">
+        <h2 className="font-bold">{t("Settlements")}</h2>
+        <ExportButtons kind="settlements" />
+      </div>
+      <Table head={[t("Created"), t("Merchant"), t("Period"), t("Transactions"), t("Payout"), t("Status"), ""]} empty={t("No settlements yet.")}>
+        {(settlements ?? []).map((s) => (
+          <tr key={s.id}>
+            <Td>{date(s.created_at)}</Td>
+            <Td>{s.merchant.name}<div className="font-mono text-xs text-zinc-500">{s.merchant.merchant_code}</div></Td>
+            <Td className="text-xs">{s.period_start} → {s.period_end}</Td>
+            <Td>{s.lines}</Td>
+            <Td className="font-bold">{egp(s.amount)}<div className="text-xs font-normal text-zinc-500">{t("of {gross} · commission {c}", { gross: egp(s.gross_amount), c: egp(s.commission) })}</div></Td>
+            <Td><Badge tone={s.status}>{t(s.status)}</Badge>{s.reference && <div className="font-mono text-xs text-zinc-500">{s.reference}</div>}</Td>
+            <Td>
+              {s.status === "pending" && (
+                <ActionForm action={markSettlementPaid} className="flex gap-2">
+                  <input type="hidden" name="id" value={s.id} />
+                  <Input name="reference" placeholder={t("Bank reference")} className="w-36 text-xs" required />
+                  <SubmitButton variant="secondary" className="text-xs">{t("Mark paid")}</SubmitButton>
+                </ActionForm>
+              )}
+            </Td>
+          </tr>
+        ))}
+      </Table>
+    </>
+  );
+}

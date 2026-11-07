@@ -352,7 +352,8 @@ create policy stats_read on public.user_stats for select using (user_id = (selec
 
 -- Merchants
 create policy merchants_read on public.merchants for select using (
-  status = 'live' or public.can_see_merchant(id) or public.is_merchant_member(id) or public.has_redeemed_at(id));
+  status = 'live' or public.can_see_merchant(id) or public.has_redeemed_at(id)
+  or public.is_merchant_member(id, array['owner','manager','branch_manager','cashier']));
 create policy merchants_insert on public.merchants for insert with check (public.is_staff(array['admin','operations']));
 create policy merchants_update on public.merchants for update
   using (public.can_manage_merchant(id) or public.is_merchant_member(id, array['owner','manager']))
@@ -368,7 +369,8 @@ create policy members_delete on public.merchant_members for delete using (public
 
 -- Branches
 create policy branches_read on public.merchant_branches for select using (
-  public.can_see_merchant(merchant_id) or public.is_merchant_member(merchant_id) or public.has_redeemed_at(merchant_id)
+  public.can_see_merchant(merchant_id) or public.is_merchant_member(merchant_id) or public.is_branch_manager(id)
+  or public.has_redeemed_at(merchant_id)
   or (is_active and exists (select 1 from merchants m where m.id = merchant_id and m.status = 'live')));
 create policy branches_insert on public.merchant_branches for insert
   with check (public.can_manage_merchant(merchant_id) or public.is_merchant_member(merchant_id, array['owner','manager']));

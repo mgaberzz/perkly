@@ -1,6 +1,7 @@
 "use client";
 import { useActionState, useEffect, useRef, type ReactNode } from "react";
 import type { ActionState } from "@/lib/types";
+import { useT } from "./i18n";
 
 /** Form wrapper for server actions that return { error } / { ok }. */
 export function ActionForm({
@@ -12,13 +13,14 @@ export function ActionForm({
   resetOnSuccess?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const t = useT();
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => { if (state?.ok && resetOnSuccess) ref.current?.reset(); }, [state, resetOnSuccess]);
   return (
     <form ref={ref} action={formAction}>
       <fieldset disabled={pending} className={className}>{children}</fieldset>
-      {state?.error && <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{state.error}</p>}
-      {state?.ok && <p className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">{state.ok}</p>}
+      {state?.error && <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{t(state.error)}</p>}
+      {state?.ok && <p className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">{t(state.ok)}</p>}
     </form>
   );
 }

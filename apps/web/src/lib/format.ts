@@ -9,12 +9,12 @@ export const dateTime = (s: string | null | undefined) =>
 export const date = (s: string | null | undefined) =>
   s ? new Date(s).toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", dateStyle: "medium" }) : "—";
 
-export function discountLabel(p: Pick<Perk, "discount_type" | "discount_value">) {
+export function discountLabel(p: Pick<Perk, "discount_type" | "discount_value">, t: (s: string, v?: Record<string, string | number>) => string = (s, v) => s.replace("{n}", String(v?.n ?? ""))) {
   switch (p.discount_type) {
-    case "percentage": return `${Number(p.discount_value)}% off`;
-    case "amount": return `${Number(p.discount_value)} EGP off`;
-    case "bogo": return "Buy 1 get 1";
-    case "bundle": return "Bundle deal";
+    case "percentage": return t("{n}% off", { n: Number(p.discount_value) });
+    case "amount": return t("{n} EGP off", { n: Number(p.discount_value) });
+    case "bogo": return t("Buy 1 get 1");
+    case "bundle": return t("Bundle deal");
   }
 }
 
