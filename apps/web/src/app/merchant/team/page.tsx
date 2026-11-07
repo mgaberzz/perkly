@@ -12,13 +12,20 @@ export default async function TeamPage() {
     .eq("merchant_id", merchant.id).order("created_at");
   // Names/emails of teammates: profiles RLS only exposes your own row, so read them server-side.
   const ids = (members ?? []).map((m) => m.user_id);
-  const { data: people } = ids.length
+  // Teammates' names need the server-only secret key; without it, show the list without names.
+  const hasKey = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const { data: people } = ids.length && hasKey
     ? await createAdminClient().from("profiles").select("id, full_name, email").in("id", ids)
-    : { data: [] };
+    : { data: [] as { id: string; full_name: string | null; email: string | null }[] };
   const byId = new Map((people ?? []).map((p) => [p.id, p]));
   return (
     <>
       <PageHeader title="Team" subtitle="Owners manage everything · Managers edit perks & branches · Cashiers view redemptions." />
+      {!hasKey && (
+        <div className="mb-4 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+          Add <code>SUPABASE_SERVICE_ROLE_KEY</code> to <code>apps/web/.env.local</code> to see teammates&apos; names and send invites.
+        </div>
+      )}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Table head={["Name", "Email", "Role", ""]}>

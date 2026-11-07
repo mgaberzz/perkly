@@ -29,7 +29,9 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
     supabase.rpc("merchant_stats", { p_merchant_id: id, p_days: 30 }),
   ]);
   const ids = (members ?? []).map((m) => m.user_id);
-  const { data: people } = ids.length ? await createAdminClient().from("profiles").select("id, full_name, email").in("id", ids) : { data: [] };
+  const { data: people } = ids.length && process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? await createAdminClient().from("profiles").select("id, full_name, email").in("id", ids)
+    : { data: [] as { id: string; full_name: string | null; email: string | null }[] };
   const byId = new Map((people ?? []).map((p) => [p.id, p]));
   const s = (stats ?? {}) as { redemptions?: number; unique_students?: number; discount_given?: number; revenue_after_discount?: number };
 
