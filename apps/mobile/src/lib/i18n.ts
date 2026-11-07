@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DevSettings, I18nManager, Platform } from 'react-native';
-import * as Updates from 'expo-updates';
+import { reloadAppAsync } from 'expo';
 import { AR } from './i18n-ar';
 
 export type Lang = 'en' | 'ar';
@@ -34,7 +34,7 @@ export async function setLanguage(next: Lang) {
   }
   I18nManager.allowRTL(next === 'ar');
   I18nManager.forceRTL(next === 'ar');
-  try { await Updates.reloadAsync(); } catch { DevSettings.reload(); }
+  try { await reloadAppAsync('language'); } catch { DevSettings.reload(); }
 }
 
 /** Back chevron that points the right way in both directions */
