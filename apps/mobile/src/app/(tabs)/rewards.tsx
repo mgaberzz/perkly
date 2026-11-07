@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Text } from '@/components/text';
 import { Card, Chip, GradientCard, Screen, SectionHeader, StreakFlame, T, XPBar } from '@/components/ui';
 import { levelProgress } from '@/lib/format';
@@ -67,12 +67,12 @@ export default function Rewards() {
           <View>
             <Text style={{ color: '#ffffffcc', fontWeight: '800', fontSize: 12, letterSpacing: 1 }}>{t('LEVEL {n}', { n: cur.level })}</Text>
             <Text style={{ color: '#fff', fontWeight: '900', fontSize: 26 }}>{cur.name}</Text>
-            <Text style={{ color: '#ffffffdd', fontWeight: '700' }}>{t('{n} XP total', { n: stats?.total_xp ?? 0 })}</Text>
+            <Text onPress={() => router.push({ pathname: '/explain', params: { metric: 'xp' } })} style={{ color: '#ffffffdd', fontWeight: '700', textDecorationLine: 'underline' }}>{t('{n} XP total', { n: stats?.total_xp ?? 0 })}</Text>
           </View>
-          <View style={{ backgroundColor: '#ffffff26', borderRadius: 20, padding: 12, alignItems: 'center' }}>
+          <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'streak' } })} style={{ backgroundColor: '#ffffff26', borderRadius: 20, padding: 12, alignItems: 'center' }}>
             <StreakFlame days={streak} size={34} />
             <Text style={{ color: '#fff', fontWeight: '700', fontSize: 11 }}>{t('day streak')}</Text>
-          </View>
+          </Pressable>
         </View>
         <View style={{ backgroundColor: '#ffffff', borderRadius: 16, padding: 12 }}><XPBar totalXp={stats?.total_xp ?? 0} /></View>
         <Text style={{ color: '#fff', fontWeight: '700' }}>
@@ -104,7 +104,7 @@ export default function Rewards() {
               const done = !!p?.completed_at;
               const pct = Math.min(1, (p?.progress ?? 0) / q.target);
               return (
-                <Card key={q.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: done ? 0.7 : 1 }}>
+                <Card key={q.id} onPress={() => router.push({ pathname: '/explain', params: { metric: 'redemptions' } })} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: done ? 0.7 : 1 }}>
                   <Text style={{ fontSize: 28 }}>{done ? '✅' : q.emoji ?? '🎯'}</Text>
                   <View style={{ flex: 1, gap: 6 }}>
                     <T v="h3">{t(q.title)}</T>
@@ -151,7 +151,7 @@ export default function Rewards() {
               <T v="h3">{l.display_name}{l.is_me ? ` (${t('you')})` : ''}</T>
               {scope === 'all' && l.campus_name ? <T v="small">{l.campus_name}</T> : null}
             </View>
-            <T v="h3" color={brand.purple}>{l.xp} XP</T>
+            <T v="h3" color={brand.purple} onPress={l.is_me ? () => router.push({ pathname: '/explain', params: { metric: 'xp' } }) : undefined}>{l.xp} XP</T>
           </View>
         ))}
       </Card>

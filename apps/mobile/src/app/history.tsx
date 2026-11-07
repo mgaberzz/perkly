@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FlatList, View } from 'react-native';
 import { Card, Empty, MerchantLogo, T } from '@/components/ui';
@@ -27,7 +28,7 @@ export default function History() {
       keyExtractor={(r) => r.id}
       ListEmptyComponent={rows ? <Empty emoji="🧾" title={t('No redemptions yet')} subtitle={t('Scan a Perkly QR at the cashier to start saving.')} /> : undefined}
       renderItem={({ item: r }) => (
-        <Card style={{ flexDirection: 'row', gap: 12, alignItems: 'center', opacity: r.status === 'reversed' ? 0.5 : 1 }}>
+        <Card onPress={() => router.push({ pathname: '/explain', params: { metric: 'redemption', id: r.id } })} style={{ flexDirection: 'row', gap: 12, alignItems: 'center', opacity: r.status === 'reversed' ? 0.5 : 1 }}>
           <MerchantLogo name={r.merchant_name} category="" uri={r.logo_url} size={44} />
           <View style={{ flex: 1 }}>
             <T v="h3" numberOfLines={1}>{r.merchant_name}</T>

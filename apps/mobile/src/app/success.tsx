@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Linking, ScrollView, View } from 'react-native';
+import { Animated, Easing, Linking, Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/components/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui';
@@ -134,8 +134,8 @@ export default function Success() {
               <Text style={{ color: '#fff', fontSize: 24, fontWeight: '900', textAlign: 'center' }}>{t('Success! You saved {amount} 🎉', { amount: egp(r.discount_amount) })}</Text>
             )}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-              <Pill big={`+${r.xp_awarded} XP ⚡`} small={r.leveled_up ? t('Level up! {name}', { name: t(r.level_name) }) : t('Lv {n} · {name}', { n: r.level, name: t(r.level_name) })} />
-              <Pill big={`${r.streak} 🔥`} small={r.used_freeze_token ? t('Streak saved by freeze ❄️') : t('day streak')} />
+              <Pill onPress={() => router.push({ pathname: '/explain', params: { metric: 'redemption', id: r.redemption_id } })} big={`+${r.xp_awarded} XP ⚡`} small={r.leveled_up ? t('Level up! {name}', { name: t(r.level_name) }) : t('Lv {n} · {name}', { n: r.level, name: t(r.level_name) })} />
+              <Pill onPress={() => router.push({ pathname: '/explain', params: { metric: 'streak' } })} big={`${r.streak} 🔥`} small={r.used_freeze_token ? t('Streak saved by freeze ❄️') : t('day streak')} />
             </View>
             {r.first_time_at_merchant && <Pill big={t('New spot unlocked 🧭')} small={t('+25 XP for trying somewhere new')} />}
             {r.quests_completed.map((q) => <Pill key={q.title} big={`${q.emoji} ${t(q.title)}`} small={t('Quest complete · +{n} XP', { n: q.xp_reward })} />)}
@@ -149,11 +149,11 @@ export default function Success() {
   );
 }
 
-function Pill({ big, small }: { big: string; small: string }) {
+function Pill({ big, small, onPress }: { big: string; small: string; onPress?: () => void }) {
   return (
-    <View style={{ flex: 1, minWidth: 140, backgroundColor: '#ffffff26', borderRadius: 20, padding: 14, gap: 2 }}>
+    <Pressable onPress={onPress} disabled={!onPress} style={{ flex: 1, minWidth: 140, backgroundColor: '#ffffff26', borderRadius: 20, padding: 14, gap: 2 }}>
       <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900' }}>{big}</Text>
       <Text style={{ color: '#ffffffdd', fontSize: 12, fontWeight: '700' }}>{small}</Text>
-    </View>
+    </Pressable>
   );
 }

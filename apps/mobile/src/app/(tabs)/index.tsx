@@ -59,10 +59,10 @@ export default function Home() {
       {/* Wallet-style stats strip */}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8 }}>
         {[
-          { icon: '💸', value: egp(stats?.total_saved ?? 0), label: t('Saved'), to: '/history' as const },
-          { icon: '🔥', value: t('{n} days', { n: stats?.current_streak ?? 0 }), label: t('Streak'), to: '/rewards' as const },
-          { icon: '🎟️', value: `x${stats?.spin_tickets ?? 0}`, label: t('Spins'), to: '/arcade' as const },
-          { icon: '⚡', value: `${stats?.total_xp ?? 0}`, label: 'XP', to: '/rewards' as const },
+          { icon: '💸', value: egp(stats?.total_saved ?? 0), label: t('Saved'), to: { pathname: '/explain' as const, params: { metric: 'saved' } } },
+          { icon: '🔥', value: t('{n} days', { n: stats?.current_streak ?? 0 }), label: t('Streak'), to: { pathname: '/explain' as const, params: { metric: 'streak' } } },
+          { icon: '🎟️', value: `x${stats?.spin_tickets ?? 0}`, label: t('Spins'), to: { pathname: '/arcade' as const, params: {} } },
+          { icon: '⚡', value: `${stats?.total_xp ?? 0}`, label: 'XP', to: { pathname: '/explain' as const, params: { metric: 'xp' } } },
         ].map((s) => (
           <Pressable key={s.label} onPress={() => router.push(s.to)} style={{ alignItems: 'flex-start' }}>
             <T v="h3" style={{ fontSize: 15 }}>{s.icon} {s.value}</T>

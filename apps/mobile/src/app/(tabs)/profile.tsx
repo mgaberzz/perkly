@@ -36,7 +36,7 @@ export default function Me() {
         </Pressable>
         <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: '#FF3EA51A', alignItems: 'center', justifyContent: 'center' }}><Mascot size={80} /></View>
         <T v="h2" style={{ textAlign: 'center' }}>{profile?.full_name ?? t('Student')}</T>
-        <T v="muted" style={{ textAlign: 'center' }}>🎓 {campus?.short_name ?? campus?.name ?? t('No campus')} · {t('Lv {n} · {name}', { n: cur.level, name: cur.name })}</T>
+        <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'xp' } })}><T v="muted" style={{ textAlign: 'center' }}>🎓 {campus?.short_name ?? campus?.name ?? t('No campus')} · {t('Lv {n} · {name}', { n: cur.level, name: cur.name })}</T></Pressable>
         <Pressable onPress={() => router.push('/edit-profile')}><T color={brand.pink} style={{ fontWeight: '900', fontSize: 16 }}>{t('Edit profile')}</T></Pressable>
       </View>
 
@@ -51,13 +51,13 @@ export default function Me() {
       </GradientCard>
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-        <Card style={{ flex: 1, minWidth: 100 }}><T v="label">{t('Saved')}</T><T v="h2" color={brand.success}>{egp(stats?.total_saved ?? 0)}</T></Card>
-        <Card style={{ flex: 1, minWidth: 100 }}><T v="label">{t('Redemptions')}</T><T v="h2">{stats?.total_redemptions ?? 0}</T></Card>
+        <Card style={{ flex: 1, minWidth: 100 }} onPress={() => router.push({ pathname: '/explain', params: { metric: 'saved' } })}><T v="label">{t('Saved')}</T><T v="h2" color={brand.success}>{egp(stats?.total_saved ?? 0)}</T></Card>
+        <Card style={{ flex: 1, minWidth: 100 }} onPress={() => router.push({ pathname: '/explain', params: { metric: 'redemptions' } })}><T v="label">{t('Redemptions')}</T><T v="h2">{stats?.total_redemptions ?? 0}</T></Card>
         <Card style={{ flex: 1, minWidth: 100 }} onPress={() => router.push('/arcade')}><T v="label">{t('Spins')}</T><T v="h2">🎟️ {stats?.spin_tickets ?? 0}</T></Card>
       </View>
 
       {(Number(stats?.cashback_balance ?? 0) > 0 || Number(stats?.cashback_pending ?? 0) > 0) && (
-        <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <Card onPress={() => router.push({ pathname: '/explain', params: { metric: 'cashback' } })} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Text style={{ fontSize: 28 }}>💸</Text>
           <View style={{ flex: 1 }}>
             <T v="label">{t('Cashback')}</T>
@@ -72,13 +72,13 @@ export default function Me() {
         {recent.length === 0 ? (
           <T v="muted" style={{ textAlign: 'center' }}>{t('You haven’t redeemed a perk yet — scan your first QR 💜')}</T>
         ) : recent.map((r, i) => (
-          <View key={r.id} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: i < recent.length - 1 ? 1 : 0, borderBottomColor: c.border }}>
+          <Pressable key={r.id} onPress={() => router.push({ pathname: '/explain', params: { metric: 'redemption', id: r.id } })} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: i < recent.length - 1 ? 1 : 0, borderBottomColor: c.border }}>
             <View style={{ flex: 1 }}>
               <T v="h3" numberOfLines={1}>{r.merchant_name}</T>
               <T v="small" numberOfLines={1}>{r.perk_title} · {shortDate(r.created_at)}</T>
             </View>
             <T color={brand.success} style={{ fontWeight: '900' }}>{r.discount_amount != null ? `−${egp(r.discount_amount)}` : `+${r.xp_awarded} XP`}</T>
-          </View>
+          </Pressable>
         ))}
       </Card>
 
