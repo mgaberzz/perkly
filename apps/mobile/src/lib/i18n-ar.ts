@@ -1,5 +1,14 @@
 // Arabic translations for the student app. Keys are the English text used in the code (see lib/i18n.ts).
 export const AR: Record<string, string> = {
+  "Use code or password instead": "استخدم الكود أو كلمة المرور بدلًا من كده",
+  "Log in faster?": "عايز تدخل أسرع؟",
+  "Use {method} to open Perkly — you stay signed in, no codes or passwords.": "استخدم {method} لفتح Perkly — هتفضل مسجّل دخول، من غير أكواد ولا كلمات مرور.",
+  "Turn on": "تفعيل",
+  "Next time, log back in with {method} — no code needed.": "المرة الجاية ادخل بـ {method} — من غير كود.",
+  "Log out & forget this phone": "تسجيل الخروج ونسيان الموبايل ده",
+  "Your saved login expired — sign in with your number or email once more.": "الدخول المحفوظ انتهى — سجّل دخول برقمك أو إيميلك مرة كمان.",
+  "as {who}": "باسم {who}",
+  "or use another way": "أو استخدم طريقة تانية",
   "+10 to +100 XP added to your level instantly": "من +10 إلى +100 XP تُضاف لمستواك فورًا",
   "+25 XP for trying somewhere new": "+25 XP لتجربة مكان جديد",
   "+45 XP · 5-day streak 🔥": "+45 XP · سلسلة 5 أيام 🔥",

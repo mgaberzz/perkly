@@ -11,7 +11,7 @@ import { gradient } from '@/lib/theme';
 const RELOCK_AFTER_MS = 30_000;
 
 /** When biometric login is on, the app opens locked and re-locks after 30 s in the background. */
-export function BiometricGate({ active, children }: { active: boolean; children: ReactNode }) {
+export function BiometricGate({ active, onUsePassword, children }: { active: boolean; onUsePassword: () => void; children: ReactNode }) {
   const [locked, setLocked] = useState(false);
   const [checked, setChecked] = useState(false);
   const away = useRef<number | null>(null);
@@ -25,9 +25,12 @@ export function BiometricGate({ active, children }: { active: boolean; children:
     if (ok) setLocked(false);
   }, []);
 
-  // Cold start
+  // Cold start: lock only if the app OPENS already signed in (not right after logging in)
+  const coldChecked = useRef(false);
   useEffect(() => {
-    if (!active) { setLocked(false); setChecked(true); return; }
+    if (!active) { setLocked(false); setChecked(true); coldChecked.current = true; return; }
+    if (coldChecked.current) { setChecked(true); return; }
+    coldChecked.current = true;
     biometricEnabled().then((on) => {
       setChecked(true);
       if (on) { setLocked(true); tryUnlock(); }
@@ -57,6 +60,11 @@ export function BiometricGate({ active, children }: { active: boolean; children:
           <Text style={{ color: '#fff', fontSize: 26, fontWeight: '900' }}>{t('Perkly is locked')}</Text>
           <Text style={{ color: '#ffffffcc', fontWeight: '600', textAlign: 'center' }}>{t('Use Face ID, your fingerprint or your phone passcode to continue.')}</Text>
           {checked && <Button variant="white" icon="🔓" title={t('Unlock')} onPress={tryUnlock} style={{ alignSelf: 'stretch' }} />}
+          {checked && (
+            <Text onPress={() => { setLocked(false); onUsePassword(); }} style={{ color: '#fff', fontWeight: '800', textDecorationLine: 'underline', padding: 8 }}>
+              {t('Use code or password instead')}
+            </Text>
+          )}
         </LinearGradient>
       )}
     </View>

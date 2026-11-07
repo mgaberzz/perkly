@@ -4,7 +4,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BiometricGate } from '@/components/biometric-gate';
+import { biometricAvailable, biometricEnabled, setBiometricEnabled } from '@/lib/biometric';
 import { initLanguage, t } from '@/lib/i18n';
 import { SessionProvider, useSession } from '@/lib/session';
 import { brand } from '@/lib/theme';
@@ -12,7 +15,7 @@ import { brand } from '@/lib/theme';
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function RootStack() {
-  const { ready, session } = useSession();
+  const { ready, session, profile, quickLogin, signOut } = useSession();
   const segments = useSegments();
   useEffect(() => { if (ready) SplashScreen.hideAsync().catch(() => {}); }, [ready]);
 
@@ -21,11 +24,27 @@ function RootStack() {
   useEffect(() => {
     if (!ready || session || inAuth) return;
     if (router.canDismiss()) router.dismissAll();
-    router.replace('/welcome');
-  }, [ready, session, inAuth]);
+    router.replace(quickLogin.available ? '/login' : '/welcome');
+  }, [ready, session, inAuth, quickLogin.available]);
+
+  // After the first login on this phone, offer Face ID / fingerprint once
+  const onboarded = !!profile?.terms_accepted_at;
+  useEffect(() => {
+    if (!session || !onboarded) return;
+    (async () => {
+      if ((await AsyncStorage.getItem('perkly.biometricAsked')) || (await biometricEnabled())) return;
+      const bio = await biometricAvailable().catch(() => ({ ok: false, label: '' }));
+      if (!bio.ok) return;
+      await AsyncStorage.setItem('perkly.biometricAsked', '1');
+      Alert.alert(t('Log in faster?'), t('Use {method} to open Perkly — you stay signed in, no codes or passwords.', { method: bio.label }), [
+        { text: t('Not now'), style: 'cancel' },
+        { text: t('Turn on'), onPress: () => { setBiometricEnabled(true).catch(() => {}); } },
+      ]);
+    })();
+  }, [session, onboarded]);
   if (!ready) return null;
   return (
-    <BiometricGate active={!!session}>
+    <BiometricGate active={!!session} onUsePassword={() => signOut()}>
     <Stack screenOptions={{ headerShown: false, headerTintColor: brand.purple, headerBackButtonDisplayMode: 'minimal' }}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />

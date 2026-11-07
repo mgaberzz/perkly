@@ -36,8 +36,16 @@ export default function Settings() {
     ]);
   }
   function logout() {
-    if (Platform.OS === 'web') { signOut(); return; }
-    Alert.alert(t('Log out?'), t('You can log back in any time.'), [{ text: t('Cancel'), style: 'cancel' }, { text: t('Log out'), style: 'destructive', onPress: signOut }]);
+    if (Platform.OS === 'web') { signOut({ keepQuickLogin: false }); return; }
+    if (bio.on) {
+      Alert.alert(t('Log out?'), t('Next time, log back in with {method} — no code needed.', { method: bio.label }), [
+        { text: t('Cancel'), style: 'cancel' },
+        { text: t('Log out'), onPress: () => signOut() },
+        { text: t('Log out & forget this phone'), style: 'destructive', onPress: () => signOut({ keepQuickLogin: false }) },
+      ]);
+      return;
+    }
+    Alert.alert(t('Log out?'), t('You can log back in any time.'), [{ text: t('Cancel'), style: 'cancel' }, { text: t('Log out'), style: 'destructive', onPress: () => signOut({ keepQuickLogin: false }) }]);
   }
 
   const Row = ({ label, onPress, right }: { label: string; onPress?: () => void; right?: React.ReactNode }) => (

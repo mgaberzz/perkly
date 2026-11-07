@@ -7,6 +7,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mascot } from '@/components/mascot';
 import { Button, T } from '@/components/ui';
 import { signInWithProvider } from '@/lib/oauth';
+import { biometricAvailable } from '@/lib/biometric';
+import { useSession } from '@/lib/session';
 import { supabase, supabaseConfigured } from '@/lib/supabase';
 import { brand, gradient, useTheme } from '@/lib/theme';
 import { t } from '@/lib/i18n';
@@ -72,7 +74,18 @@ export default function Login() {
   const [mode, setMode] = useState<'phone' | 'email'>('phone');
   const [value, setValue] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState<null | 'otp' | 'google' | 'apple'>(null);
+  const [loading, setLoading] = useState<null | 'otp' | 'google' | 'apple' | 'bio'>(null);
+  const { quickLogin, biometricLogin } = useSession();
+  const [bioLabel, setBioLabel] = useState('Face ID');
+  useEffect(() => { biometricAvailable().then((b) => b.label && setBioLabel(b.label)).catch(() => {}); }, []);
+
+  async function bioLogin() {
+    setError(null); setLoading('bio');
+    const r = await biometricLogin();
+    setLoading(null);
+    if (r.ok) router.replace('/');
+    else if (r.error === 'expired') setError(t('Your saved login expired — sign in with your number or email once more.'));
+  }
   const [error, setError] = useState<string | null>(null);
 
   async function send() {
@@ -115,6 +128,17 @@ export default function Login() {
             <T v="h1" style={{ textAlign: 'center' }}>{t('Log in or sign up')}</T>
             <T v="muted" style={{ textAlign: 'center' }}>{t('Student perks at cafés, restaurants, gyms and stores around your campus.')}</T>
           </View>
+          {quickLogin.available && (
+            <View style={{ gap: 6 }}>
+              <Button icon="🔐" title={t('Log in with {method}', { method: bioLabel })} onPress={bioLogin} loading={loading === 'bio'} />
+              {quickLogin.email && <T v="small" style={{ textAlign: 'center' }}>{t('as {who}', { who: quickLogin.email })}</T>}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 }}>
+                <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
+                <T v="small">{t('or use another way')}</T>
+                <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
+              </View>
+            </View>
+          )}
           {!supabaseConfigured && <T v="small" color={brand.danger}>Supabase isn't configured. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY.</T>}
 
           {mode === 'phone' ? (

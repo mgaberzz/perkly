@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { biometricEnabled, unlock } from './biometric';
 import { supabase } from './supabase';
 import type { Campus, Merchant, Profile, Stats } from './types';
 import { t } from './i18n';
@@ -32,10 +33,15 @@ type Ctx = {
   refreshMerchants: () => Promise<void>;
   refreshLocation: (ask?: boolean) => Promise<Coords>;
   toggleFavorite: (merchantId: string) => Promise<void>;
-  signOut: () => Promise<void>;
+  /** Log out. With biometric login on (and keepQuickLogin), the session stays parked on this phone for "Log in with Face ID". */
+  signOut: (opts?: { keepQuickLogin?: boolean }) => Promise<void>;
+  /** A parked session exists → the login screen offers "Log in with Face ID" */
+  quickLogin: { available: boolean; email: string | null };
+  biometricLogin: () => Promise<{ ok: boolean; error?: string }>;
 };
 
 const SessionContext = createContext<Ctx | null>(null);
+const PARKED_KEY = 'perkly.parkedSession';
 
 const MERCHANT_SELECT =
   'id, name, category, subcategory, description, logo_url, cover_url, channel, website_url, affiliate_url, ' +
@@ -44,7 +50,10 @@ const MERCHANT_SELECT =
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
-  const [session, setSession] = useState<Session | null>(null);
+  const [authSession, setSession] = useState<Session | null>(null);
+  // Parked = logged out in the app, but the session is kept on this phone for biometric login
+  const [parked, setParked] = useState(false);
+  const session = parked ? null : authSession;
   const [profile, setProfile] = useState<Profile | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [campus, setCampus] = useState<Campus | null>(null);
@@ -137,18 +146,46 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     else await supabase.from('favorites').insert({ user_id: userId, merchant_id: merchantId });
   }, [favorites, userId]);
 
-  const signOut = useCallback(async () => {
-    // Local sign-out never waits on the network; the session is cleared on this device right away
+  const signOut = useCallback(async (opts?: { keepQuickLogin?: boolean }) => {
+    if (opts?.keepQuickLogin !== false && (await biometricEnabled())) {
+      await AsyncStorage.setItem(PARKED_KEY, '1');
+      setParked(true);
+      return;
+    }
+    // Full sign-out: never waits on the network; the session is cleared on this device right away
+    await AsyncStorage.removeItem(PARKED_KEY).catch(() => {});
     await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+    setParked(false);
     setSession(null);
   }, []);
 
+  const biometricLogin = useCallback(async () => {
+    const ok = await unlock().catch(() => false);
+    if (!ok) return { ok: false };
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      // Session expired on the server → normal login needed
+      await AsyncStorage.removeItem(PARKED_KEY).catch(() => {});
+      setParked(false);
+      return { ok: false, error: 'expired' };
+    }
+    await AsyncStorage.removeItem(PARKED_KEY).catch(() => {});
+    setSession(data.session);
+    setParked(false);
+    return { ok: true };
+  }, []);
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    Promise.all([supabase.auth.getSession(), AsyncStorage.getItem(PARKED_KEY).catch(() => null)]).then(([{ data }, p]) => {
       setSession(data.session);
+      setParked(Boolean(data.session) && p === '1');
       setReady(true);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      setSession(s);
+      // A fresh sign-in (code, password, Google, Apple) replaces any parked session
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') { setParked(false); AsyncStorage.removeItem(PARKED_KEY).catch(() => {}); }
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -171,12 +208,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [area, coords, campus]);
   const areaLabel = area.kind === 'campus' ? area.campus.name : coords ? t('Near you') : campus ? t('Around {place}', { place: campus.short_name ?? campus.name }) : t('Egypt');
 
+  const quickLogin = useMemo(() => ({ available: parked && Boolean(authSession), email: authSession?.user.email ?? authSession?.user.phone ?? null }), [parked, authSession]);
+
   const value = useMemo<Ctx>(() => ({
-    ready, session, profile, stats, campus, merchants, coords, favorites,
+    ready, session, quickLogin, biometricLogin, profile, stats, campus, merchants, coords, favorites,
     area, setArea, origin, areaLabel, recentAreas, clearRecentAreas, popularity,
     refreshProfile, refreshMerchants, refreshLocation, toggleFavorite, signOut,
   }), [ready, session, profile, stats, campus, merchants, coords, favorites, area, setArea, origin, areaLabel, recentAreas, clearRecentAreas, popularity,
-    refreshProfile, refreshMerchants, refreshLocation, toggleFavorite, signOut]);
+    refreshProfile, refreshMerchants, refreshLocation, toggleFavorite, signOut, quickLogin, biometricLogin]);
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
