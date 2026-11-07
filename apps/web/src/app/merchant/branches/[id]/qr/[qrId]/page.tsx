@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireMerchant } from "@/lib/auth";
+import { requireMerchantArea } from "@/lib/auth";
 import { QrImage } from "@/components/qr-image";
 import { PrintButton } from "@/components/print-button";
 import { getT } from "@/lib/i18n/server";
@@ -8,7 +8,7 @@ export const metadata = { title: "QR poster" };
 
 export default async function QrPosterPage({ params }: PageProps<"/merchant/branches/[id]/qr/[qrId]">) {
   const { id, qrId } = await params;
-  const { supabase, merchant, branchScope } = await requireMerchant();
+  const { supabase, merchant, branchScope } = await requireMerchantArea("branches");
   if (branchScope && branchScope.id !== id) notFound();
   const t = await getT();
   const { data: qr } = await supabase.from("branch_qr_codes")

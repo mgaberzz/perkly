@@ -48,10 +48,48 @@ export async function requireStaff(perm: Perm = "overview") {
   const role = s.profile?.role;
   if (!isStaffRole(role) || s.profile?.status !== "active") redirect("/login?error=not_admin");
   if (!can(role, perm)) redirect("/admin?denied=1");
-  return { ...s, user: s.user, profile: s.profile!, role, can: (p: Perm) => can(role, p) };
+  // Account managers only ever see their assigned merchants (null = all merchants)
+  let merchantScope: string[] | null = null;
+  if (role === "account_manager") {
+    const { data } = await s.supabase.rpc("staff_merchant_ids");
+    merchantScope = ((data ?? []) as string[]);
+  }
+  return { ...s, user: s.user, profile: s.profile!, role, can: (p: Perm) => can(role, p), merchantScope };
+}
+
+/** Restrict a Supabase query to the team member's merchants (no-op for roles that see all). */
+export function inScope<Q extends { in: (col: string, values: string[]) => Q }>(q: Q, scope: string[] | null, col = "merchant_id"): Q {
+  return scope ? q.in(col, scope.length ? scope : ["00000000-0000-0000-0000-000000000000"]) : q;
 }
 /** Full administrators only. */
 export const requireAdmin = () => requireStaff("users");
+
+/**
+ * Merchant portal areas per staff role:
+ *   owner          everything (incl. team, bank account)
+ *   manager        everything except adding staff and bank details
+ *   branch_manager own branch only: dashboard, transactions, branch & cashier QR codes
+ *   cashier        live transactions (and online code checks) only
+ */
+export const MERCHANT_AREAS = {
+  dashboard: ["owner", "manager", "branch_manager"],
+  transactions: ["owner", "manager", "branch_manager", "cashier"],
+  online: ["owner", "manager", "cashier"],
+  perks: ["owner", "manager"],
+  branches: ["owner", "manager", "branch_manager"],
+  payouts: ["owner", "manager"],
+  team: ["owner", "manager"],
+  profile: ["owner", "manager"],
+} as const satisfies Record<string, readonly MemberRole[]>;
+export type MerchantArea = keyof typeof MERCHANT_AREAS;
+export const merchantCan = (role: MemberRole, area: MerchantArea) => (MERCHANT_AREAS[area] as readonly MemberRole[]).includes(role);
+
+/** Merchant portal page guard: sends people to the first page their role can use. */
+export async function requireMerchantArea(area: MerchantArea) {
+  const ctx = await requireMerchant();
+  if (!merchantCan(ctx.memberRole, area)) redirect(merchantCan(ctx.memberRole, "dashboard") ? "/merchant" : "/merchant/redemptions");
+  return ctx;
+}
 
 export type Membership = { member_role: MemberRole; branch_id: string | null; merchant: Merchant; branch: { id: string; name: string } | null };
 

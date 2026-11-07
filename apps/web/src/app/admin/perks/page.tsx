@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireStaff } from "@/lib/auth";
+import { inScope, requireStaff } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import { Badge, LinkButton, PageHeader, Table, Td } from "@/components/ui";
 import { date, discountLabel, tierFor } from "@/lib/format";
@@ -12,9 +12,9 @@ const STATUSES = ["pending", "active", "paused", "rejected", "expired"];
 export default async function AdminPerksPage({ searchParams }: PageProps<"/admin/perks">) {
   const sp = await searchParams;
   const status = typeof sp.status === "string" ? sp.status : "pending";
-  const { supabase } = await requireStaff("perks");
+  const { supabase, merchantScope } = await requireStaff("perks");
   const t = await getT();
-  let query = supabase.from("perks").select("*, merchant:merchants(id, name)").order("created_at", { ascending: false }).limit(300);
+  let query = inScope(supabase.from("perks").select("*, merchant:merchants(id, name)").order("created_at", { ascending: false }).limit(300), merchantScope);
   if (status !== "all") query = query.eq("status", status);
   const { data } = await query.returns<(Perk & { merchant: { id: string; name: string } })[]>();
   return (

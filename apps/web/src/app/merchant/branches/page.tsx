@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { requireMerchant } from "@/lib/auth";
+import { requireMerchantArea } from "@/lib/auth";
 import { Badge, LinkButton, PageHeader, Table, Td } from "@/components/ui";
 import { getT } from "@/lib/i18n/server";
 
 export const metadata = { title: "Branches & QR" };
 
 export default async function BranchesPage() {
-  const { supabase, merchant, canManage, branchScope } = await requireMerchant();
+  const { supabase, merchant, canManage, branchScope } = await requireMerchantArea("branches");
   if (branchScope) redirect(`/merchant/branches/${branchScope.id}`);
   const t = await getT();
   const { data } = await supabase.from("merchant_branches")

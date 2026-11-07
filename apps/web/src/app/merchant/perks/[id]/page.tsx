@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireMerchant } from "@/lib/auth";
+import { requireMerchantArea } from "@/lib/auth";
 import { Badge, Card, Notice, PageHeader } from "@/components/ui";
 import { PerkForm } from "@/components/perk-form";
 import { discountLabel } from "@/lib/format";
@@ -12,7 +12,7 @@ export const metadata = { title: "Edit perk" };
 export default async function EditPerkPage({ params, searchParams }: PageProps<"/merchant/perks/[id]">) {
   const { id } = await params;
   const { created } = await searchParams;
-  const { supabase, merchant, canManage } = await requireMerchant();
+  const { supabase, merchant, canManage } = await requireMerchantArea("perks");
   const { data: perk } = await supabase.from("perks").select("*").eq("id", id).eq("merchant_id", merchant.id).maybeSingle<Perk>();
   if (!perk) notFound();
   const t = await getT();

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireMerchant } from "@/lib/auth";
+import { requireMerchantArea } from "@/lib/auth";
 import { BarChart, Button, Card, HBarList, LinkButton, PageHeader, Select, Stat } from "@/components/ui";
 import { ExportButtons } from "@/components/export-buttons";
 import { egp } from "@/lib/format";
@@ -19,7 +19,7 @@ type Stats = {
 };
 
 export default async function MerchantDashboard({ searchParams }: PageProps<"/merchant">) {
-  const { supabase, merchant, branchScope, canSeeMoney } = await requireMerchant();
+  const { supabase, merchant, branchScope, canSeeMoney } = await requireMerchantArea("dashboard");
   const t = await getT();
   const sp = await searchParams;
   const days = Number(sp.days) || 30;

@@ -8,13 +8,20 @@ import { createCampus, toggleCampus } from "../actions";
 export const metadata = { title: "Campuses" };
 
 export default async function CampusesPage() {
-  const { supabase, can } = await requireStaff("campuses_view");
+  const { supabase, can, role } = await requireStaff("campuses_view");
   const t = await getT();
   const editable = can("campuses_edit");
-  const { data } = await supabase.from("campuses").select("*").order("name").returns<Campus[]>();
+  let q = supabase.from("campuses").select("*").order("name");
+  if (role === "account_manager") {
+    // Only the campuses this account manager covers
+    const { data: ids } = await supabase.rpc("staff_campus_ids");
+    const list = ((ids ?? []) as string[]).filter(Boolean);
+    q = q.in("id", list.length ? list : ["00000000-0000-0000-0000-000000000000"]);
+  }
+  const { data } = await q.returns<Campus[]>();
   return (
     <>
-      <PageHeader title={t("Campuses")} subtitle={t("Students pick their campus during onboarding.")} />
+      <PageHeader title={role === "account_manager" ? t("My campuses") : t("Campuses")} subtitle={t("Students pick their campus during onboarding.")} />
       <div className="grid gap-6 lg:grid-cols-3">
         <div className={editable ? "lg:col-span-2" : "lg:col-span-3"}>
           <Table head={[t("Campus"), t("City"), t("Type"), t("Location"), t("Status"), ""]}>

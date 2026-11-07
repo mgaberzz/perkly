@@ -21,8 +21,12 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const t = await getT();
   // Open requests this person can act on (RLS scopes the count)
   const { count } = await supabase.from("admin_requests").select("*", { count: "exact", head: true }).eq("status", "pending");
+  // Account managers see "My …" because they only ever see their own merchants and campuses
+  const mine: Record<string, string> = role === "account_manager"
+    ? { "/admin/merchants": "My merchants", "/admin/campuses": "My campuses", "/admin/perks": "My campaigns", "/admin/redemptions": "My transactions" }
+    : role === "finance" ? { "/admin/merchants": "Merchants (view)" } : {};
   const nav = NAV.filter((n) => can(role, n.perm)).map((n) => ({
-    href: n.href, icon: n.icon, exact: n.exact, label: t(n.label), count: n.href === "/admin/notifications" ? count ?? 0 : undefined,
+    href: n.href, icon: n.icon, exact: n.exact, label: t(mine[n.href] ?? n.label), count: n.href === "/admin/notifications" ? count ?? 0 : undefined,
   }));
   return <Shell nav={nav} user={profile.full_name ?? user.email ?? ""} badge={`Perkly · ${t(ROLE_LABEL[role])}`}>{children}</Shell>;
 }

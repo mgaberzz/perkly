@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { requireMerchant } from "@/lib/auth";
+import { requireMerchantArea } from "@/lib/auth";
 import { Badge, Card, Field, Input, PageHeader } from "@/components/ui";
 import { ActionForm, ConfirmButton, SubmitButton } from "@/components/action-form";
 import { BranchForm } from "@/components/branch-form";
@@ -13,7 +13,7 @@ export const metadata = { title: "Branch" };
 
 export default async function BranchPage({ params }: PageProps<"/merchant/branches/[id]">) {
   const { id } = await params;
-  const { supabase, merchant, canManage, branchScope, memberRole } = await requireMerchant();
+  const { supabase, merchant, canManage, branchScope, memberRole } = await requireMerchantArea("branches");
   if (branchScope && branchScope.id !== id) redirect(`/merchant/branches/${branchScope.id}`);
   const t = await getT();
   const { data: branch } = await supabase.from("merchant_branches").select("*").eq("id", id).eq("merchant_id", merchant.id).maybeSingle<Branch>();

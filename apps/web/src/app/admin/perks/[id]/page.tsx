@@ -12,11 +12,11 @@ export const metadata = { title: "Perk" };
 
 export default async function AdminPerkPage({ params }: PageProps<"/admin/perks/[id]">) {
   const { id } = await params;
-  const { supabase } = await requireStaff("perks");
+  const { supabase, merchantScope } = await requireStaff("perks");
   const t = await getT();
   const { data: perk } = await supabase.from("perks").select("*, merchant:merchants(id, name)").eq("id", id)
     .maybeSingle<Perk & { merchant: { id: string; name: string } }>();
-  if (!perk) notFound();
+  if (!perk || (merchantScope && !merchantScope.includes(perk.merchant_id))) notFound();
   const { data: branches } = await supabase.from("merchant_branches").select("id,name").eq("merchant_id", perk.merchant_id).order("name");
   return (
     <>

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireMerchant } from "@/lib/auth";
+import { requireMerchantArea } from "@/lib/auth";
 import { Card, PageHeader } from "@/components/ui";
 import { BranchForm } from "@/components/branch-form";
 import { createBranch } from "../../actions";
@@ -8,7 +8,7 @@ import { getT } from "@/lib/i18n/server";
 export const metadata = { title: "New branch" };
 
 export default async function NewBranchPage() {
-  const { supabase, canManage } = await requireMerchant();
+  const { supabase, canManage } = await requireMerchantArea("branches");
   if (!canManage) redirect("/merchant/branches");
   const t = await getT();
   const { data: campuses } = await supabase.from("campuses").select("id,name").order("name");

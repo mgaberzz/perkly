@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireMerchant } from "@/lib/auth";
+import { requireMerchantArea } from "@/lib/auth";
 import { Badge, Card, Field, Input, PageHeader, Select, Table, Td } from "@/components/ui";
 import { ActionForm, ConfirmButton, SubmitButton } from "@/components/action-form";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -10,7 +10,7 @@ import { inviteStaff, removeStaff } from "../actions";
 export const metadata = { title: "Team" };
 
 export default async function TeamPage() {
-  const { supabase, merchant, memberRole, user, canManage } = await requireMerchant();
+  const { supabase, merchant, memberRole, user, canManage } = await requireMerchantArea("team");
   if (!canManage) redirect("/merchant");
   const t = await getT();
   const [{ data: members }, { data: branches }] = await Promise.all([

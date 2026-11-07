@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireMerchant } from "@/lib/auth";
+import { requireMerchantArea } from "@/lib/auth";
 import { Badge, LinkButton, PageHeader, Table, Td } from "@/components/ui";
 import { date, discountLabel, tierFor } from "@/lib/format";
 import type { Perk } from "@/lib/types";
@@ -9,7 +9,7 @@ import { getT } from "@/lib/i18n/server";
 export const metadata = { title: "Perks" };
 
 export default async function PerksPage() {
-  const { supabase, merchant, canManage } = await requireMerchant();
+  const { supabase, merchant, canManage } = await requireMerchantArea("perks");
   const t = await getT();
   const { data: perks } = await supabase.from("perks").select("*, branch:merchant_branches(name)")
     .eq("merchant_id", merchant.id).order("created_at", { ascending: false })

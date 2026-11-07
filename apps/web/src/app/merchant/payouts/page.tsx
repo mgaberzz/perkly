@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireMerchant } from "@/lib/auth";
+import { requireMerchantArea } from "@/lib/auth";
 import { Badge, Card, Field, Input, PageHeader, Select, Stat, Table, Td } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/action-form";
 import { ExportButtons } from "@/components/export-buttons";
@@ -11,7 +11,7 @@ import { saveBankAccount } from "../actions";
 export const metadata = { title: "Payouts" };
 
 export default async function PayoutsPage() {
-  const { supabase, merchant, canSeeMoney, memberRole } = await requireMerchant();
+  const { supabase, merchant, canSeeMoney, memberRole } = await requireMerchantArea("payouts");
   if (!canSeeMoney) redirect("/merchant");
   const t = await getT();
   const [{ data: b }, { data: settlements }, { data: bank }] = await Promise.all([

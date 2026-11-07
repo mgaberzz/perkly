@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireStaff } from "@/lib/auth";
+import { inScope, requireStaff } from "@/lib/auth";
 import { Badge, Button, Input, LinkButton, PageHeader, Select, Table, Td } from "@/components/ui";
 import { getT } from "@/lib/i18n/server";
 import { BRAND_TYPE_LABEL, CHANNEL_LABEL } from "@/lib/labels";
@@ -11,9 +11,9 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
   const sp = await searchParams;
   const s = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string).trim() : "");
   const [q, status, category, brand, channel] = ["q", "status", "category", "brand", "channel"].map(s);
-  const { supabase, can } = await requireStaff("merchants_view");
+  const { supabase, can, merchantScope, role } = await requireStaff("merchants_view");
   const t = await getT();
-  let query = supabase.from("merchants").select("*, branches:merchant_branches(count), perks(count)").order("name").limit(500);
+  let query = inScope(supabase.from("merchants").select("*, branches:merchant_branches(count), perks(count)").order("name").limit(500), merchantScope, "id");
   if (q) {
     const clean = q.replace(/[,()%]/g, "");
     query = query.or(`name.ilike.%${clean}%,merchant_code.ilike.%${clean}%`);
@@ -25,7 +25,7 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
   const { data } = await query.returns<(Merchant & { branches: { count: number }[]; perks: { count: number }[] })[]>();
   return (
     <>
-      <PageHeader title={t("Merchants")} subtitle={t("{n} shown", { n: data?.length ?? 0 })}
+      <PageHeader title={role === "account_manager" ? t("My merchants") : t("Merchants")} subtitle={t("{n} shown", { n: data?.length ?? 0 })}
         actions={can("merchants_create") && <LinkButton href="/admin/merchants/new">+ {t("New merchant")}</LinkButton>} />
       <form className="mb-4 flex flex-wrap gap-2">
         <Input name="q" defaultValue={q} placeholder={t("Search name or MER-…")} className="max-w-xs" />

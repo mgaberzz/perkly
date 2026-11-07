@@ -1,4 +1,4 @@
-import { requireMerchant } from "@/lib/auth";
+import { requireMerchantArea } from "@/lib/auth";
 import { Card, Field, Input, PageHeader, Textarea } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/action-form";
 import { getT } from "@/lib/i18n/server";
@@ -8,7 +8,7 @@ import { updateProfile } from "../actions";
 export const metadata = { title: "Business profile" };
 
 export default async function ProfilePage() {
-  const { merchant, canManage } = await requireMerchant();
+  const { merchant, canManage } = await requireMerchantArea("profile");
   const t = await getT();
   const row = (k: string, v: string) => <div className="flex justify-between gap-3"><dt className="text-zinc-500">{k}</dt><dd className="text-end font-semibold">{v}</dd></div>;
   return (

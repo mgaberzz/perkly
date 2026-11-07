@@ -226,7 +226,7 @@ begin
 end $$;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e2', false);
 do $$ begin
-  assert resolve_request((select id from admin_requests where kind = 'cashback'), true)->>'error' = 'not_allowed', 'am cannot approve cashback';
+  assert coalesce(resolve_request((select id from admin_requests where kind = 'cashback'), true)->>'error', '') in ('not_allowed', 'not_found'), 'am cannot approve cashback';
 end $$;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e3', false);
 do $$ begin
@@ -247,5 +247,31 @@ select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1
 do $$ begin
   update profiles set role = 'admin' where id = auth.uid();
   assert (select role from profiles where id = '00000000-0000-0000-0000-0000000000e1') = 'operations', 'ops cannot self-promote';
+end $$;
+reset role;
+
+-- ── Least privilege (migration 09) ──
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e2', false);
+do $$ begin
+  assert (select count(*) from staff_merchant_ids()) = 1, 'am sees only assigned merchant ids';
+  assert (select count(*) from profiles where role = 'student') = (select count(distinct user_id) from redemptions), 'am sees only own customers';
+  assert (select count(*) from profiles where role = 'student') < (select count(*) from user_stats) + 99, 'sanity';
+  assert not exists (select 1 from profiles p where p.role = 'student' and not exists (select 1 from redemptions r where r.user_id = p.id)), 'no non-customers visible';
+  assert (select count(*) from user_stats where user_id <> auth.uid()) = 0, 'am cannot read student stats';
+  assert (admin_overview()->>'scope') = 'mine', 'am overview scoped';
+  assert (select count(*) from admin_requests where kind = 'cashback') = 0, 'am does not see cashback requests';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e3', false);
+do $$ begin
+  assert (select count(*) from staff_merchant_ids()) >= 89, 'finance sees all merchants';
+  assert (select count(*) from admin_requests where kind = 'qr_code') = 0, 'finance no qr requests';
+  assert (select count(*) from user_stats where user_id <> auth.uid()) = 0, 'finance cannot read stats';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ begin
+  assert (admin_overview()->>'scope') = 'all', 'ops overview all';
+  assert (select count(*) from admin_requests where kind = 'cashback') = 0, 'ops does not see cashback';
+  assert (select count(*) from user_stats) >= 5, 'ops reads stats';
 end $$;
 reset role;

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireStaff } from "@/lib/auth";
+import { inScope, requireStaff } from "@/lib/auth";
 import { Badge, Button, Input, PageHeader, Select, Table, Td } from "@/components/ui";
 import { ExportButtons } from "@/components/export-buttons";
 import { dateTime, egp } from "@/lib/format";
@@ -20,11 +20,11 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
   const sp = await searchParams;
   const g = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : "");
   const f = { status: g("status"), channel: g("channel"), payment: g("payment"), from: g("from"), to: g("to"), merchant: g("merchant") };
-  const { supabase, can } = await requireStaff("redemptions_view");
+  const { supabase, can, merchantScope } = await requireStaff("redemptions_view");
   const t = await getT();
-  let query = supabase.from("redemptions")
+  let query = inScope(supabase.from("redemptions")
     .select("id, created_at, verification_code, original_amount, discount_amount, final_amount, status, flag_reason, xp_awarded, channel, payment_method, first_time_at_merchant, merchant:merchants(id, name, merchant_code), perk:perks(title), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), student:profiles(full_name, student_code, user_code)")
-    .order("created_at", { ascending: false }).limit(200);
+    .order("created_at", { ascending: false }).limit(200), merchantScope);
   if (f.status) query = query.eq("status", f.status);
   if (f.channel) query = query.eq("channel", f.channel);
   if (f.payment) query = query.eq("payment_method", f.payment);
@@ -33,7 +33,7 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
   if (f.to) query = query.lte("created_at", `${f.to}T23:59:59+02:00`);
   const [{ data }, { data: merchants }] = await Promise.all([
     query.returns<Row[]>(),
-    supabase.from("merchants").select("id, name").order("name").limit(1000),
+    inScope(supabase.from("merchants").select("id, name").order("name").limit(1000), merchantScope, "id"),
   ]);
   const review = can("redemptions_review");
   return (

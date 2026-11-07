@@ -19,7 +19,8 @@ type BranchRow = { id: string; name: string; address: string | null; is_active: 
 export default async function AdminMerchantPage({ params, searchParams }: PageProps<"/admin/merchants/[id]">) {
   const { id } = await params;
   const { invite_error } = await searchParams;
-  const { supabase, can } = await requireStaff("merchants_view");
+  const { supabase, can, merchantScope } = await requireStaff("merchants_view");
+  if (merchantScope && !merchantScope.includes(id)) notFound();
   const t = await getT();
   const { data: merchant } = await supabase.from("merchants").select("*").eq("id", id).maybeSingle<Merchant>();
   if (!merchant) notFound();

@@ -1,4 +1,4 @@
-import { requireMerchant } from "@/lib/auth";
+import { merchantCan, requireMerchant, type MerchantArea } from "@/lib/auth";
 import { Shell, type NavItem } from "@/components/shell";
 import { Badge } from "@/components/ui";
 import { getT } from "@/lib/i18n/server";
@@ -6,19 +6,21 @@ import { MEMBER_ROLE_LABEL } from "@/lib/labels";
 import { switchMerchant } from "./actions";
 
 export default async function MerchantLayout({ children }: LayoutProps<"/merchant">) {
-  const { merchant, memberships, profile, user, memberRole, canSeeMoney, branchScope } = await requireMerchant();
+  const { merchant, memberships, profile, user, memberRole, branchScope } = await requireMerchant();
   const t = await getT();
   const online = merchant.channel !== "in_store";
-  const nav: NavItem[] = [
-    { href: "/merchant", label: t("Dashboard"), icon: "📊", exact: true },
-    { href: "/merchant/redemptions", label: t("Transactions"), icon: "🧾" },
-    ...(online ? [{ href: "/merchant/online", label: t("Online orders"), icon: "🌐" }] : []),
-    ...(!branchScope ? [{ href: "/merchant/perks", label: t("Perks"), icon: "🎁" }] : []),
-    { href: "/merchant/branches", label: branchScope ? t("My branch & QR") : t("Branches & QR"), icon: "📍" },
-    ...(canSeeMoney ? [{ href: "/merchant/payouts", label: t("Payouts"), icon: "💰" }] : []),
-    ...(memberRole === "owner" || memberRole === "manager" ? [{ href: "/merchant/team", label: t("Team"), icon: "👥" }] : []),
-    { href: "/merchant/profile", label: t("Business profile"), icon: "🏪" },
+  const items: (NavItem & { area: MerchantArea })[] = [
+    { area: "dashboard", href: "/merchant", label: branchScope ? t("My branch dashboard") : t("Dashboard"), icon: "📊", exact: true },
+    { area: "transactions", href: "/merchant/redemptions", label: t("Transactions"), icon: "🧾" },
+    ...(online ? [{ area: "online" as const, href: "/merchant/online", label: t("Online orders"), icon: "🌐" }] : []),
+    { area: "perks", href: "/merchant/perks", label: t("Perks"), icon: "🎁" },
+    { area: "branches", href: "/merchant/branches", label: branchScope ? t("My branch & QR") : t("Branches & QR"), icon: "📍" },
+    { area: "payouts", href: "/merchant/payouts", label: t("Payouts"), icon: "💰" },
+    { area: "team", href: "/merchant/team", label: t("Team"), icon: "👥" },
+    { area: "profile", href: "/merchant/profile", label: t("Business profile"), icon: "🏪" },
   ];
+  // Each staff role sees only its own areas
+  const nav: NavItem[] = items.filter((i) => merchantCan(memberRole, i.area)).map((i) => ({ href: i.href, label: i.label, icon: i.icon, exact: i.exact }));
   const top = (
     <div className="mb-2 rounded-2xl bg-zinc-50 p-3">
       {memberships.length > 1 ? (

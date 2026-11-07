@@ -2,7 +2,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { MERCHANT_COOKIE, requireMerchant } from "@/lib/auth";
+import { MERCHANT_COOKIE, requireMerchant, requireMerchantArea } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addMember } from "@/lib/members";
 import { parsePerkForm } from "@/lib/perk-form";
@@ -181,7 +181,7 @@ const ONLINE_ERRORS: Record<string, string> = {
 };
 
 export async function confirmOnlineCode(_: ActionState, fd: FormData): Promise<ActionState> {
-  const { supabase } = await requireMerchant();
+  const { supabase } = await requireMerchantArea("online");
   const amount = Number(str(fd, "amount"));
   const { data, error } = await supabase.rpc("confirm_online_code", { p_code: str(fd, "code"), p_amount: amount > 0 ? amount : null });
   if (error) return { error: error.message };
@@ -192,7 +192,7 @@ export async function confirmOnlineCode(_: ActionState, fd: FormData): Promise<A
 }
 
 export async function reportOnlineOrder(_: ActionState, fd: FormData): Promise<ActionState> {
-  const { supabase, merchant } = await requireMerchant();
+  const { supabase, merchant } = await requireMerchantArea("online");
   const { data, error } = await supabase.rpc("report_online_order", {
     p_merchant_id: merchant.id, p_ref: str(fd, "ref"), p_order_ref: str(fd, "order_ref"), p_amount: Number(str(fd, "amount")),
   });

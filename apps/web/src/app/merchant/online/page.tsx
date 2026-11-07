@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireMerchant } from "@/lib/auth";
+import { requireMerchantArea } from "@/lib/auth";
 import { Badge, Card, Field, Input, PageHeader, Table, Td } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/action-form";
 import { dateTime, egp } from "@/lib/format";
@@ -12,7 +12,7 @@ type Order = { id: string; order_ref: string; amount: number; cashback_amount: n
 type Code = { id: string; code: string; status: string; created_at: string; perk: { title: string } | null };
 
 export default async function OnlinePage() {
-  const { supabase, merchant } = await requireMerchant();
+  const { supabase, merchant } = await requireMerchantArea("online");
   if (merchant.channel === "in_store") redirect("/merchant");
   const t = await getT();
   const [{ data: orders }, { data: codes }] = await Promise.all([
