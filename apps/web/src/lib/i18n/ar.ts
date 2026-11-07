@@ -1,5 +1,12 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "VAT 14% on commission (EGP)": "ضريبة القيمة المضافة 14% على العمولة (جنيه)",
+  "VAT 14% on commission": "ضريبة القيمة المضافة 14% على العمولة",
+  "Settlement amount (EGP)": "مبلغ التسوية (جنيه)",
+  "Collected by": "المحصِّل",
+  "Perkly (in app)": "Perkly (داخل التطبيق)",
+  "Merchant (cashier)": "التاجر (الكاشير)",
+  "commission {c} + VAT {v}": "عمولة {c} + ضريبة {v}",
   "All branches · in-app payments minus Perkly commission (negative = commission you owe Perkly)": "كل الفروع · مدفوعات التطبيق ناقص عمولة Perkly (بالسالب = عمولة مستحقة عليك لـ Perkly)",
   "Amount (empty = all)": "المبلغ (فارغ = الكل)",
   "Amount to settle (EGP)": "المبلغ المطلوب تسويته (جنيه)",

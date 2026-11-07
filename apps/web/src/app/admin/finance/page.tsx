@@ -70,7 +70,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
           <LinkButton href="/admin/finance?view=all" variant={view === "all" ? "primary" : "secondary"}>{t("All merchants")}</LinkButton>
         </div>
       </div>
-      <Table head={[t("Merchant"), t("Brand type"), t("In-app sales"), t("Due to merchant"), t("Commission on cashier sales"), t("Net to settle"), t("Open settlements"), t("Bank")]} empty={t("Nothing due 🎉")}>
+      <Table head={[t("Merchant"), t("Brand type"), t("In-app sales"), t("Due to merchant"), t("Commission on cashier sales"), t("VAT 14% on commission"), t("Net to settle"), t("Open settlements"), t("Bank")]} empty={t("Nothing due 🎉")}>
         {rows.map((b) => (
           <tr key={b.merchant_id}>
             <Td><Link href={`/admin/merchants/${b.merchant_id}`} className="font-semibold hover:text-perk-purple">{b.merchant_name}</Link><div className="font-mono text-xs text-zinc-500">{b.merchant_code}</div></Td>
@@ -78,6 +78,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
             <Td>{egp(b.in_app_gross)}</Td>
             <Td>{egp(b.due_to_merchant)}</Td>
             <Td>{egp(b.commission_owed)}</Td>
+            <Td>{egp(b.vat)}</Td>
             <Td className="font-bold text-perk-purple">{egp(b.net_to_settle)}<div className="text-xs font-normal text-zinc-500">{Number(b.net_to_settle) > 0 ? t("Perkly pays merchant") : Number(b.net_to_settle) < 0 ? t("Merchant pays Perkly commission") : ""}</div></Td>
             <Td>{egp(b.pending_settlements)}</Td>
             <Td className="text-xs">{b.bank_name ? <>{b.bank_name}<div className="font-mono text-zinc-500">{b.iban}</div></> : <span className="text-amber-600">{t("Missing")}</span>}</Td>
@@ -96,7 +97,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
             <Td>{s.merchant.name}<div className="font-mono text-xs text-zinc-500">{s.merchant.merchant_code}</div></Td>
             <Td className="text-xs">{s.period_start} → {s.period_end}</Td>
             <Td>{s.lines}</Td>
-            <Td className="font-bold">{egp(Math.abs(s.amount))}<div className="text-xs font-normal text-zinc-500">{s.amount >= 0 ? t("Perkly pays merchant") : t("Merchant pays Perkly commission")}</div></Td>
+            <Td className="font-bold">{egp(Math.abs(s.amount))}<div className="text-xs font-normal text-zinc-500">{s.amount >= 0 ? t("Perkly pays merchant") : t("Merchant pays Perkly commission")}</div><div className="text-xs font-normal text-zinc-500">{t("commission {c} + VAT {v}", { c: egp(s.commission), v: egp(s.vat) })}</div></Td>
             <Td>{egp(s.paid_amount)}<div className="text-xs text-zinc-500">{t("{amount} remaining", { amount: egp(Math.abs(s.amount) - Number(s.paid_amount)) })}</div></Td>
             <Td><Badge tone={s.status === "paid" ? "paid" : s.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(s.status))}</Badge>{s.reference && <div className="font-mono text-xs text-zinc-500">{s.reference}</div>}</Td>
             <Td>

@@ -48,13 +48,14 @@ export const CATEGORIES = ["Food", "Coffee", "Fashion", "Beauty", "Fitness", "En
 export interface Balance {
   merchant_id: string; merchant_code: string; merchant_name: string; brand_type: string;
   in_app_gross: number; in_app_commission: number; due_to_merchant: number; cashier_sales: number; commission_owed: number;
+  /** 14% VAT on Perkly commission (unsettled) */ vat: number;
   /** + Perkly pays the merchant, − merchant pays Perkly (unsettled transactions) */ net_to_settle: number;
   /** remaining on open settlements (signed) */ pending_settlements: number; paid_out: number; received_from_merchant: number;
   last_paid_at: string | null; bank_name: string | null; iban: string | null;
 }
 export interface Settlement {
   id: string; merchant_id: string; period_start: string | null; period_end: string; gross_amount: number; commission: number;
-  amount: number; lines: number; status: "pending" | "partially_paid" | "paid"; paid_amount: number; reference: string | null; created_at: string; paid_at: string | null;
+  amount: number; lines: number; status: "pending" | "partially_paid" | "paid"; paid_amount: number; vat: number; reference: string | null; created_at: string; paid_at: string | null;
 }
 export interface AdminRequest {
   id: string; kind: "qr_code" | "perk" | "cashback" | "payout"; merchant_id: string | null; ref_id: string; title: string;

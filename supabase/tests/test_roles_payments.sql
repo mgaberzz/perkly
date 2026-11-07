@@ -133,7 +133,8 @@ begin
   assert r->>'payment_status' = 'paid' and r->>'payment_ref' like 'TEST-%', 'test payment';
   assert (r->>'final_amount')::numeric = 270, 'paid 270';
   assert (select commission_amount from redemptions where id = (r->>'redemption_id')::uuid) = 27, 'commission 10%';
-  assert (select merchant_net from redemptions where id = (r->>'redemption_id')::uuid) = 243, 'merchant net';
+  assert (select vat_amount from redemptions where id = (r->>'redemption_id')::uuid) = 3.78, 'VAT 14% of 27 commission';
+  assert (select merchant_net from redemptions where id = (r->>'redemption_id')::uuid) = 239.22, 'merchant net = 270 - 27 - 3.78';
   assert (select qr_code_id from redemptions where id = (r->>'redemption_id')::uuid) = current_setting('test.new_qr')::uuid, 'cashier tracked';
   assert redeem_perk('x', current_setting('test.costa_perk')::uuid, null, null, null, 'in_app')->>'error' = 'invalid_qr', 'bad qr';
 end $$;
@@ -143,7 +144,7 @@ select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b
 do $$
 declare s jsonb;
 begin
-  assert (select due_to_merchant from merchant_balances(current_setting('test.costa_id')::uuid)) = 243, 'due to merchant';
+  assert (select due_to_merchant from merchant_balances(current_setting('test.costa_id')::uuid)) = 239.22, 'due to merchant';
   s := merchant_stats(current_setting('test.costa_id')::uuid, 30);
   assert jsonb_array_length(s->'by_cashier') >= 1, 'by cashier';
   assert (s->>'new_customer_pct')::int + (s->>'recurring_customer_pct')::int = 100, 'new vs recurring';
@@ -313,4 +314,14 @@ begin
     end if;
     update redemptions set created_at = created_at - interval '16 minutes' where user_id = '00000000-0000-0000-0000-0000000000f1';
   end loop;
+end $$;
+
+-- ── VAT on commission (migration 12): the 112 EGP example ──
+do $$ begin
+  assert round(89.60 * 5 / 100, 2) = 4.48 and round(4.48 * vat_pct() / 100, 2) = 0.63, 'example maths';
+  assert not exists (select 1 from redemptions where final_amount is not null
+                       and merchant_net <> final_amount - commission_amount - vat_amount), 'merchant net = paid - commission - VAT';
+  assert not exists (select 1 from redemptions where vat_amount <> round(coalesce(commission_amount, 0) * 0.14, 2)), 'VAT is 14% of commission';
+  assert not exists (select 1 from redemptions where payment_method = 'merchant'
+                       and settle_amount <> -(commission_amount + vat_amount)), 'cashier: merchant owes commission + VAT';
 end $$;
