@@ -6,8 +6,9 @@ export type TxFilters = {
   status?: string; channel?: string; payment?: string; from?: string; to?: string;
   merchant?: string; category?: string; city?: string; campus?: string; age?: string;
   /** "1" = not yet in a settlement (and not reversed) */ unsettled?: string; settlement?: string;
+  /** "new" | "recurring" */ customer?: string; /** perk title */ perk?: string; qr?: string; branch?: string;
 };
-export const TX_FILTER_KEYS = ["status", "channel", "payment", "from", "to", "merchant", "category", "city", "campus", "age", "unsettled", "settlement"] as const;
+export const TX_FILTER_KEYS = ["status", "channel", "payment", "from", "to", "merchant", "category", "city", "campus", "age", "unsettled", "settlement", "customer", "perk", "qr", "branch"] as const;
 
 export function readTxFilters(get: (k: string) => string | null | undefined): TxFilters {
   const f: TxFilters = {};
@@ -33,6 +34,7 @@ export function txSelect(select: string, f: TxFilters) {
   if (f.category) s = s.replace(/merchant:merchants\(/, "merchant:merchants!inner(category, ");
   if ((f.city && f.city !== "online") || (f.campus && f.campus !== "none")) s = s.replace(/branch:merchant_branches\(/, "branch:merchant_branches!inner(city, campus_id, ");
   if (f.age) s = s.replace(/student:profiles\(/, "student:profiles!inner(birth_date, ");
+  if (f.perk) s = s.replace(/perk:perks\(/, "perk:perks!inner(");
   return s;
 }
 
@@ -45,6 +47,11 @@ export function applyTxFilters<Q extends Record<string, any>>(q: Q, f: TxFilters
   if (f.merchant) x = x.eq("merchant_id", f.merchant);
   if (f.unsettled === "1") x = x.is("settlement_id", null).neq("status", "reversed").or("payment_method.eq.merchant,payment_status.eq.paid");
   if (f.settlement) x = x.eq("settlement_id", f.settlement);
+  if (f.customer === "new") x = x.eq("first_time_at_merchant", true);
+  if (f.customer === "recurring") x = x.eq("first_time_at_merchant", false);
+  if (f.perk) x = x.eq("perk.title", f.perk);
+  if (f.qr) x = x.eq("qr_code_id", f.qr);
+  if (f.branch) x = x.eq("branch_id", f.branch);
   if (f.from) x = x.gte("created_at", `${f.from}T00:00:00+02:00`);
   if (f.to) x = x.lte("created_at", `${f.to}T23:59:59+02:00`);
   if (f.category) x = x.eq("merchant.category", f.category);

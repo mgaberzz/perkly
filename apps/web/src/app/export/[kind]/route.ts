@@ -53,8 +53,8 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
       let q = applyTxFilters(supabase.from("redemptions").select(txSelect(staff ? `${TX_SELECT}, student:profiles(student_code, user_code)` : TX_SELECT, f))
         .order("created_at", { ascending: false }).range(page * 1000, page * 1000 + 999), f);
       if (merchantId) q = q.eq("merchant_id", merchantId);
-      if (branch) q = q.eq("branch_id", branch);
-      if (sp.get("qr")) q = q.eq("qr_code_id", sp.get("qr")!);
+      if (branchScope) q = q.eq("branch_id", branchScope);
+      else if (branch && !f.branch) q = q.eq("branch_id", branch);
       const { data, error } = await q.returns<Tx[]>();
       if (error) return new Response(error.message, { status: 400 });
       rows.push(...(data ?? []));

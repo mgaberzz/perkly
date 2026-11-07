@@ -25,6 +25,8 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
   const days = Number(sp.days) || 30;
   const branch = branchScope?.id ?? (typeof sp.branch === "string" && sp.branch ? sp.branch : null);
   const qr = typeof sp.qr === "string" && sp.qr ? sp.qr : null;
+  // Every number opens /merchant/explain with the same branch / cashier filters
+  const filt = `${branch && !branchScope ? `&branch=${branch}` : ""}${qr ? `&qr=${qr}` : ""}`;
 
   const [{ data, error }, { data: branches }, { data: qrs }, { data: balance }] = await Promise.all([
     supabase.rpc("merchant_stats", { p_merchant_id: merchant.id, p_days: days, p_branch_id: branch, p_qr_id: qr }),
@@ -41,10 +43,11 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
   const n = Math.min(days, 30);
   const series = Array.from({ length: n }, (_, i) => {
     const d = new Date(now - (n - 1 - i) * 86400000).toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
-    return { label: d.slice(8), value: dayMap.get(d) ?? 0 };
+    return { label: d.slice(8), value: dayMap.get(d) ?? 0, href: `/merchant/explain?metric=transactions&from=${d}&to=${d}${filt}` };
   });
   const hours = Array.from({ length: 24 }, (_, h) => ({ label: String(h), value: s.by_hour?.find((x) => x.hour === h)?.count ?? 0 }));
   const peak = hours.reduce((a, b) => (b.value > a.value ? b : a), hours[0]);
+  const tx = (extra = "") => `/merchant/explain?metric=transactions&days=${days}${filt}${extra}`;
   const link = (d: number) => `/merchant?days=${d}${branch && !branchScope ? `&branch=${branch}` : ""}${qr ? `&qr=${qr}` : ""}`;
   const visibleQrs = (qrs ?? []).filter((q) => !branch || q.branch_id === branch);
 
@@ -73,14 +76,14 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
       {error && <p className="mb-4 text-sm text-red-600">{error.message}</p>}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat accent label={t("Redemptions")} value={s.redemptions ?? 0} hint={t("{n} flagged for review", { n: s.flagged ?? 0 })} />
-        <Stat label={t("Unique students")} value={s.unique_students ?? 0} hint={t("{a} new · {b} recurring", { a: s.new_students ?? 0, b: s.recurring_students ?? 0 })} />
-        <Stat label={t("New vs recurring customers")} value={`${s.new_customer_pct ?? 0}% / ${s.recurring_customer_pct ?? 0}%`} hint={t("Share of unique students in this period")} />
-        <Stat label={t("Revenue after discount")} value={<Amount v={s.revenue_after_discount} />} hint={t("Discount given {amount}", { amount: egp(s.discount_given) })} />
+        <Link href={tx()} className="block transition hover:-translate-y-0.5"><Stat accent label={t("Redemptions")} value={s.redemptions ?? 0} hint={t("{n} flagged for review", { n: s.flagged ?? 0 })} /></Link>
+        <Link href={tx()} className="block transition hover:-translate-y-0.5"><Stat label={t("Unique students")} value={s.unique_students ?? 0} hint={t("{a} new · {b} recurring", { a: s.new_students ?? 0, b: s.recurring_students ?? 0 })} /></Link>
+        <Stat label={t("New vs recurring customers")} value={<><Link href={tx("&customer=new")} className="hover:underline">{s.new_customer_pct ?? 0}%</Link> / <Link href={tx("&customer=recurring")} className="hover:underline">{s.recurring_customer_pct ?? 0}%</Link></>} hint={t("Click a % to see those customers")} />
+        <Link href={tx()} className="block transition hover:-translate-y-0.5"><Stat label={t("Revenue after discount")} value={<Amount v={s.revenue_after_discount} />} hint={t("Discount given {amount}", { amount: egp(s.discount_given) })} /></Link>
       </div>
 
       {balance && (
-        <Link href="/merchant/payouts" className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-perk-purple/30 bg-perk-purple/5 p-4">
+        <Link href="/merchant/explain?metric=to_settle" className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-perk-purple/30 bg-perk-purple/5 p-4">
           <div>
             <div className="text-xs font-semibold uppercase tracking-wide text-perk-purple">{t("To be settled to your bank account")}</div>
             <div className="text-2xl font-extrabold">{egp(Number(balance.net_to_settle) + Number(balance.pending_settlements))}</div>
@@ -92,16 +95,16 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Card title={t("Redemptions per day")} className="lg:col-span-2"><BarChart data={series} empty={t("No data yet")} /></Card>
-        <Card title={t("Top perks")}><HBarList data={(s.by_perk ?? []).slice(0, 6).map((p) => ({ label: p.perk, value: p.count }))} empty={t("No data yet")} /></Card>
+        <Card title={t("Top perks")}><HBarList data={(s.by_perk ?? []).slice(0, 6).map((p) => ({ label: p.perk, value: p.count, href: tx(`&perk=${encodeURIComponent(p.perk)}`) }))} empty={t("No data yet")} /></Card>
         <Card title={t("Busiest hours (Cairo)")} className="lg:col-span-2" actions={peak.value ? <span className="text-sm text-zinc-500">{t("Peak")}: {peak.label}:00</span> : null}>
           <BarChart data={hours} empty={t("No data yet")} />
         </Card>
         <Card title={t("By cashier")}>
-          <HBarList data={(s.by_cashier ?? []).map((c) => ({ label: branch ? c.cashier : `${c.cashier} · ${c.branch}`, value: c.count }))} empty={t("No data yet")} />
+          <HBarList data={(s.by_cashier ?? []).map((c) => ({ label: branch ? c.cashier : `${c.cashier} · ${c.branch}`, value: c.count, href: `/merchant/explain?metric=transactions&days=${days}&qr=${c.qr_id}` }))} empty={t("No data yet")} />
         </Card>
         {!branchScope && (
           <Card title={t("By branch")} className="lg:col-span-3">
-            <HBarList data={(s.by_branch ?? []).map((b) => ({ label: `${b.branch} · ${egp(b.revenue)}`, value: b.count }))} empty={t("No data yet")} />
+            <HBarList data={(s.by_branch ?? []).map((b) => ({ label: `${b.branch} · ${egp(b.revenue)}`, value: b.count, href: `/merchant/explain?metric=transactions&days=${days}&branch=${b.branch_id}` }))} empty={t("No data yet")} />
           </Card>
         )}
       </div>

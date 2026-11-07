@@ -1,5 +1,15 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "All branches. Positive = Perkly pays you; negative = you owe Perkly commission + VAT on sales paid at your cashier.": "كل الفروع. موجب = Perkly تدفع لك، سالب = عليك عمولة Perkly والضريبة على المبيعات المدفوعة عند الكاشير.",
+  "Bank transfers from Perkly, recorded by Perkly finance.": "تحويلات بنكية من Perkly، يسجّلها فريق مالية Perkly.",
+  "Click a % to see those customers": "اضغط على النسبة لعرض هؤلاء العملاء",
+  "New customers": "العملاء الجدد",
+  "Recurring customers": "العملاء المتكررون",
+  "On {date}": "يوم {date}",
+  "Open settlements (created, not fully paid)": "تسويات مفتوحة (أُنشئت ولم تُدفع بالكامل)",
+  "Paid in the Perkly app ({n}): paid − commission − VAT": "مدفوع في تطبيق Perkly ({n}): المدفوع − العمولة − الضريبة",
+  "Paid in the Perkly app: paid − commission − VAT": "مدفوع في تطبيق Perkly: المدفوع − العمولة − الضريبة",
+  "Your net": "صافيك",
   "Amount": "المبلغ",
   "Bank transfers Perkly made to merchants, recorded by finance.": "التحويلات البنكية من Perkly للتجار، المسجّلة بواسطة المالية.",
   "Commission + VAT merchants transferred to Perkly, recorded by finance.": "العمولة والضريبة التي حوّلها التجار لـ Perkly، المسجّلة بواسطة المالية.",

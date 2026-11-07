@@ -128,18 +128,24 @@ export function Notice({ tone = "info", children }: { tone?: "info" | "error" | 
 }
 
 /** Simple dependency-free bar chart. */
-export function BarChart({ data, empty = "No data yet" }: { data: { label: string; value: number }[]; empty?: string }) {
+export function BarChart({ data, empty = "No data yet" }: { data: { label: string; value: number; href?: string }[]; empty?: string }) {
   const max = Math.max(1, ...data.map((d) => d.value));
   if (data.length === 0) return <div className="py-10 text-center text-sm text-zinc-500">{empty}</div>;
   return (
     <div className="flex h-44 items-end gap-1">
-      {data.map((d, i) => (
-        <div key={i} className="group flex flex-1 flex-col items-center gap-1" title={`${d.label}: ${d.value}`}>
-          <span className="text-[10px] font-semibold text-zinc-500 opacity-0 group-hover:opacity-100">{d.value}</span>
-          <div className="w-full rounded-t-md perk-gradient" style={{ height: `${(d.value / max) * 100}%`, minHeight: d.value ? 4 : 1 }} />
-          <span className="max-w-full truncate text-[10px] text-zinc-500">{d.label}</span>
-        </div>
-      ))}
+      {data.map((d, i) => {
+        const inner = (
+          <>
+            <span className="text-[10px] font-semibold text-zinc-500 opacity-0 group-hover:opacity-100">{d.value}</span>
+            <div className="w-full rounded-t-md perk-gradient group-hover:opacity-80" style={{ height: `${(d.value / max) * 100}%`, minHeight: d.value ? 4 : 1 }} />
+            <span className="max-w-full truncate text-[10px] text-zinc-500">{d.label}</span>
+          </>
+        );
+        const cls = "group flex h-full flex-1 flex-col items-center justify-end gap-1";
+        return d.href && d.value
+          ? <Link key={i} href={d.href} className={cls} title={`${d.label}: ${d.value}`}>{inner}</Link>
+          : <div key={i} className={cls} title={`${d.label}: ${d.value}`}>{inner}</div>;
+      })}
     </div>
   );
 }

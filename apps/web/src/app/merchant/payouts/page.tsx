@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireMerchantArea } from "@/lib/auth";
 import { Amount, Badge, Card, Field, Input, PageHeader, Select, Stat, Table, Td } from "@/components/ui";
@@ -25,10 +26,10 @@ export default async function PayoutsPage() {
       <PageHeader title={t("Payouts")} subtitle={t("Merchant level — all branches together. When students pay in the Perkly app, Perkly collects the money and transfers it to your bank account minus commission.")}
         actions={<ExportButtons kind="settlements" params={{ scope: "merchant" }} />} />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat accent label={toSettle >= 0 ? t("Total to be settled to you") : t("Commission you owe Perkly")} value={<Amount v={Math.abs(toSettle)} />} hint={t("In-app payments minus commission on cashier sales, incl. open settlements")} />
-        <Stat label={t("In-app sales (unsettled)")} value={<Amount v={b?.in_app_gross} />} hint={t("Perkly commission {amount}", { amount: egp(b?.in_app_commission) })} />
-        <Stat label={t("Paid to you so far")} value={<Amount v={b?.paid_out} />} hint={b?.last_paid_at ? t("Last transfer {date}", { date: date(b.last_paid_at) }) : undefined} />
-        <Stat label={t("Commission on cashier sales")} value={<Amount v={b?.commission_owed} />} hint={t("Deducted in your next settlement")} />
+        <Link href="/merchant/explain?metric=to_settle" className="block transition hover:-translate-y-0.5"><Stat accent label={toSettle >= 0 ? t("Total to be settled to you") : t("Commission you owe Perkly")} value={<Amount v={Math.abs(toSettle)} />} hint={t("In-app payments minus commission on cashier sales, incl. open settlements")} /></Link>
+        <Link href="/merchant/explain?metric=to_settle&kind=in_app" className="block transition hover:-translate-y-0.5"><Stat label={t("In-app sales (unsettled)")} value={<Amount v={b?.in_app_gross} />} hint={t("Perkly commission {amount}", { amount: egp(b?.in_app_commission) })} /></Link>
+        <Link href="/merchant/explain?metric=paid_to_you" className="block transition hover:-translate-y-0.5"><Stat label={t("Paid to you so far")} value={<Amount v={b?.paid_out} />} hint={b?.last_paid_at ? t("Last transfer {date}", { date: date(b.last_paid_at) }) : undefined} /></Link>
+        <Link href="/merchant/explain?metric=to_settle&kind=cashier" className="block transition hover:-translate-y-0.5"><Stat label={t("Commission on cashier sales")} value={<Amount v={b?.commission_owed} />} hint={t("Deducted in your next settlement")} /></Link>
       </div>
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -38,8 +39,8 @@ export default async function PayoutsPage() {
               <tr key={s.id}>
                 <Td>{date(s.created_at)}</Td>
                 <Td className="text-xs">{s.period_start} → {s.period_end}</Td>
-                <Td>{s.lines}</Td>
-                <Td className="font-bold">{egp(Math.abs(s.amount))}<div className="text-xs font-normal text-zinc-500">{s.amount >= 0 ? t("Perkly pays you") : t("You pay Perkly commission")}</div></Td>
+                <Td><Link href={`/merchant/explain?metric=settlement&id=${s.id}`} className="font-semibold text-perk-purple hover:underline">{s.lines}</Link></Td>
+                <Td className="font-bold"><Link href={`/merchant/explain?metric=settlement&id=${s.id}`} className="hover:underline">{egp(Math.abs(s.amount))}</Link><div className="text-xs font-normal text-zinc-500">{s.amount >= 0 ? t("Perkly pays you") : t("You pay Perkly commission")}</div></Td>
                 <Td>{egp(s.paid_amount)}<div className="text-xs text-zinc-500">{t("{amount} remaining", { amount: egp(Math.abs(s.amount) - Number(s.paid_amount)) })}</div></Td>
                 <Td><Badge tone={s.status === "paid" ? "paid" : s.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(s.status))}</Badge>{s.reference && <div className="font-mono text-xs text-zinc-500">{s.reference}</div>}</Td>
               </tr>
