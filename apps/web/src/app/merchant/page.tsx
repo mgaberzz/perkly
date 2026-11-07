@@ -40,7 +40,7 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat accent label="Redemptions" value={s.redemptions ?? 0} hint={`${s.flagged ?? 0} flagged for review`} />
         <Stat label="Unique students" value={s.unique_students ?? 0} hint={`${s.new_students ?? 0} first-time visitors`} />
-        <Stat label="Returning visits" value={`${returningRate}%`} hint="of redemptions" />
+        <Stat label="Recurring customers" value={`${returningRate}%`} hint="of redemptions were repeat visits" />
         <Stat label="Revenue after discount" value={egp(s.revenue_after_discount)} hint={`Discount given ${egp(s.discount_given)}`} />
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-3">

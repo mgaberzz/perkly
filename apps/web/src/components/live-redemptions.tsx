@@ -40,7 +40,7 @@ export function LiveRedemptions({ merchantId, initial }: { merchantId: string; i
         <span className={`h-2.5 w-2.5 rounded-full ${live ? "animate-pulse bg-emerald-500" : "bg-zinc-300"}`} />
         {live ? "Live — new redemptions appear instantly" : "Connecting…"}
       </div>
-      <Table head={["Code", "Time", "Perk", "Branch", "Bill", "Discount", "Student", "Status"]} empty="No redemptions yet. Put your QR on the cashier table and they'll show up here.">
+      <Table head={["Code", "Time", "Perk", "Branch", "Bill", "Discount", "Customer", "Status"]} empty="No redemptions yet. Put your QR on the cashier table and they'll show up here.">
         {rows.map((r) => (
           <tr key={r.id} className={r.id === fresh ? "bg-emerald-50 transition-colors" : ""}>
             <Td><span className="rounded-lg bg-perk-ink px-2 py-1 font-mono text-base font-bold tracking-widest text-white">{r.verification_code}</span></Td>
@@ -49,7 +49,7 @@ export function LiveRedemptions({ merchantId, initial }: { merchantId: string; i
             <Td>{r.branch?.name}</Td>
             <Td>{egp(r.original_amount)}</Td>
             <Td className="font-semibold text-perk-purple">{egp(r.discount_amount)}</Td>
-            <Td>{r.first_time_at_merchant ? <Badge tone="live">New</Badge> : <Badge tone="paused">Returning</Badge>}</Td>
+            <Td>{r.first_time_at_merchant ? <Badge tone="live">New customer</Badge> : <Badge tone="paused">Recurring customer</Badge>}</Td>
             <Td><Badge>{r.status}</Badge></Td>
           </tr>
         ))}
