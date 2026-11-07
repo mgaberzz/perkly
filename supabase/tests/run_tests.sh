@@ -19,4 +19,5 @@ PSQL=(psql -h /tmp -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -q)
 for f in "$DIR"/migrations/*.sql; do echo "migrate: $(basename "$f")"; "${PSQL[@]}" -f "$f"; done
 "${PSQL[@]}" -f "$DIR/seed.sql"
 "${PSQL[@]}" -f "$DIR/tests/test_redemption.sql"
+"${PSQL[@]}" -f "$DIR/tests/test_roles_payments.sql"
 echo "ALL TESTS PASSED"
