@@ -18,7 +18,7 @@ function RootStack() {
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="merchant/[id]" options={{ headerShown: true, headerTransparent: true, title: '' }} />
-      <Stack.Screen name="redeem/[code]" options={{ headerShown: true, title: 'Redeem', presentation: 'modal' }} />
+      <Stack.Screen name="redeem/[code]" options={{ headerShown: false, presentation: 'modal' }} />
       <Stack.Screen name="success" options={{ gestureEnabled: false, animation: 'fade' }} />
       <Stack.Screen name="history" options={{ headerShown: true, title: 'Savings history' }} />
       <Stack.Screen name="perk/[id]" />

@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Stack, router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { Button, Card, DiscountBadge, Empty, MerchantLogo, T } from '@/components/ui';
@@ -12,6 +13,7 @@ import { brand, CATEGORY_EMOJI, gradient, useTheme } from '@/lib/theme';
 export default function MerchantScreen() {
   const { c } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useSafeAreaInsets();
   const { merchants, origin: coords, favorites, toggleFavorite, campus } = useSession();
   const m = merchants.find((x) => x.id === id);
   const [weekCount, setWeekCount] = useState<number | null>(null);
@@ -32,13 +34,6 @@ export default function MerchantScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
-      <Stack.Screen options={{
-        headerRight: () => (
-          <Pressable onPress={() => toggleFavorite(m.id)} hitSlop={12} style={{ backgroundColor: '#ffffffdd', borderRadius: 18, padding: 6 }}>
-            <Text style={{ fontSize: 20 }}>{fav ? '❤️' : '🤍'}</Text>
-          </Pressable>
-        ),
-      }} />
       <ScrollView contentContainerStyle={{ paddingBottom: 140 }}>
         {m.cover_url ? (
           <Image source={{ uri: m.cover_url }} style={{ height: 240 }} contentFit="cover" />
@@ -104,6 +99,10 @@ export default function MerchantScreen() {
           ))}
         </View>
       </ScrollView>
+      <Pressable onPress={() => toggleFavorite(m.id)} hitSlop={12}
+        style={{ position: 'absolute', right: 16, top: insets.top + 8, backgroundColor: '#ffffffdd', borderRadius: 20, padding: 8 }}>
+        <Text style={{ fontSize: 20 }}>{fav ? '❤️' : '🤍'}</Text>
+      </Pressable>
       <View style={{ position: 'absolute', left: 20, right: 20, bottom: 30 }}>
         <Button title="Scan to Redeem" icon="📷" onPress={() => router.push('/scan')} />
       </View>

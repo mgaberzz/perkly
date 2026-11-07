@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Empty, MerchantLogo, Screen, T } from '@/components/ui';
@@ -27,13 +27,20 @@ export default function Redeem() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Look the code up once per scanned code (guards against re-renders/remounts re-firing it)
+  const lookedUp = useRef<string | null>(null);
   useEffect(() => {
+    if (!code || lookedUp.current === code) return;
+    lookedUp.current = code;
+    let active = true;
     supabase.rpc('lookup_qr', { p_code: code }).then(({ data, error: err }) => {
+      if (!active) return;
       if (err) return setLookup({ ok: false, error: 'network' });
       const res = data as Lookup;
       setLookup(res);
       if (res.ok && res.perks.length) setPerkId(res.perks[0].id);
     });
+    return () => { active = false; };
   }, [code]);
 
   const perk = useMemo(() => (lookup?.ok ? lookup.perks.find((p) => p.id === perkId) : undefined), [lookup, perkId]);
@@ -92,7 +99,6 @@ export default function Redeem() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Stack.Screen options={{ headerShown: false }} />
       <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingBottom: 40 }}>
         <SafeAreaView edges={['top']} style={{ paddingHorizontal: 20, gap: 14 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>

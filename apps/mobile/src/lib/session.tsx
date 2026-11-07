@@ -110,8 +110,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       let perm = await Location.getForegroundPermissionsAsync();
       if (!perm.granted && ask && perm.canAskAgain) perm = await Location.requestForegroundPermissionsAsync();
       if (!perm.granted) return null;
-      const last = await Location.getLastKnownPositionAsync();
-      const pos = last ?? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
+      const last = await Location.getLastKnownPositionAsync({ maxAge: 5 * 60_000 });
+      const pos = last ?? (await Promise.race([
+        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+      ]));
+      if (!pos) return null;
       const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       setCoords(c);
       return c;
