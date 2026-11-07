@@ -345,3 +345,33 @@ do $$ begin
   assert (select count(*) from insights('merchant', 365)) <= 1, 'account manager sees only own merchants in insights';
 end $$;
 reset role;
+
+-- ── Optional VAT (migration 14) ──
+-- KFC: switch VAT off (operations) → its unsettled transactions lose VAT; settled ones (Costa) keep theirs
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+update merchants set vat_enabled = false where name = 'KFC';
+reset role;
+do $$ begin
+  assert (select vat_enabled from merchants where name = 'KFC') = false, 'ops can switch VAT off';
+  assert not exists (select 1 from redemptions r join merchants m on m.id = r.merchant_id
+                      where m.name = 'KFC' and r.settlement_id is null and r.vat_amount <> 0), 'KFC unsettled VAT = 0';
+  assert not exists (select 1 from redemptions r join merchants m on m.id = r.merchant_id
+                      where m.name = 'KFC' and r.final_amount is not null and r.merchant_net <> r.final_amount - r.commission_amount), 'KFC net = paid - commission';
+  assert exists (select 1 from redemptions where settlement_id is not null and vat_amount > 0), 'settled history keeps VAT';
+end $$;
+-- Finance cannot change a merchant's VAT; only admin can change the rate
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e3', false);
+do $$ begin
+  assert set_vat_rate(0)->>'error' = 'not_allowed', 'finance cannot set rate';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+do $$ begin
+  assert (set_vat_rate(0)->>'ok')::boolean, 'admin sets 0%';
+  assert not exists (select 1 from redemptions where settlement_id is null and vat_amount <> 0), 'VAT off everywhere (unsettled)';
+  assert (set_vat_rate(14)->>'ok')::boolean, 'admin back to 14%';
+  assert exists (select 1 from redemptions r join merchants m on m.id = r.merchant_id where m.vat_enabled and r.settlement_id is null and r.vat_amount > 0)
+         or not exists (select 1 from redemptions r join merchants m on m.id = r.merchant_id where m.vat_enabled and r.settlement_id is null and r.commission_amount > 0), 'VAT back on';
+end $$;
+reset role;

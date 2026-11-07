@@ -13,7 +13,7 @@ export interface Merchant {
   id: string; name: string; category: string; subcategory: string | null; brand_type: string; description: string | null;
   logo_url: string | null; cover_url: string | null; contact_name: string | null; contact_phone: string | null; contact_email: string | null;
   status: "pending" | "live" | "paused" | "churned"; plan: "free" | "pro"; commission_pct: number; created_at: string;
-  merchant_code: string; channel: "in_store" | "online" | "both"; website_url: string | null; affiliate_url: string | null;
+  merchant_code: string; vat_enabled: boolean; channel: "in_store" | "online" | "both"; website_url: string | null; affiliate_url: string | null;
 }
 export interface Branch {
   id: string; merchant_id: string; name: string; address: string | null; city: string | null; campus_id: string | null;

@@ -41,6 +41,11 @@ export function MerchantAdminForm({ action, merchant, withOwner = false, commerc
         <Field label={t("Commission %")} hint={commercial ? t("Perkly's cut per redemption (3–7% typical)") : t("Set by Operations / Admin")}>
           <Input name="commission_pct" type="number" step="0.1" min="0" max="100" defaultValue={merchant?.commission_pct ?? 5} disabled={!commercial} />
         </Field>
+        <label className="flex items-start gap-3 rounded-xl border border-zinc-200 p-3 md:col-span-2">
+          <input type="checkbox" name="vat_enabled" defaultChecked={merchant?.vat_enabled ?? true} disabled={!commercial} className="mt-1 h-4 w-4 accent-perk-purple" />
+          <span><span className="block text-sm font-semibold">{t("Charge VAT on Perkly commission")}</span>
+            <span className="block text-xs text-zinc-500">{commercial ? t("Turn off for VAT-exempt merchants. Changing it recalculates their transactions that are not settled yet.") : t("Set by Operations / Admin")}</span></span>
+        </label>
         <Field label={t("Website (online merchants)")}><Input name="website_url" type="url" defaultValue={merchant?.website_url ?? ""} placeholder="https://" /></Field>
         <Field label={t("Tracked link / affiliate URL")} hint={t("Perkly adds ?perkly_ref=… so the shop can report orders for cashback")}><Input name="affiliate_url" type="url" defaultValue={merchant?.affiliate_url ?? ""} placeholder="https://" /></Field>
         <Field label={t("Logo URL")}><Input name="logo_url" type="url" defaultValue={merchant?.logo_url ?? ""} /></Field>

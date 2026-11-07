@@ -1,5 +1,14 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Net revenue = Perkly commission (excluding VAT, which is passed on to the tax authority). Margin = commission ÷ amount paid. Location uses the branch city; Campus uses the branch's nearest campus; Age range uses the student's date of birth.": "صافي الإيراد = عمولة Perkly (بدون ضريبة القيمة المضافة التي تُورَّد لمصلحة الضرائب). هامش الربح = العمولة ÷ المبلغ المدفوع. الموقع حسب مدينة الفرع، والجامعة حسب أقرب جامعة للفرع، والفئة العمرية حسب تاريخ ميلاد الطالب.",
+  "VAT on commission": "ضريبة القيمة المضافة على العمولة",
+  "VAT on commission (EGP)": "ضريبة القيمة المضافة على العمولة (جنيه)",
+  "Charge VAT on Perkly commission": "تطبيق ضريبة القيمة المضافة على عمولة Perkly",
+  "Turn off for VAT-exempt merchants. Changing it recalculates their transactions that are not settled yet.": "أوقفها للتجار المعفيين من الضريبة. تغييرها يعيد حساب معاملاتهم غير المسوّاة.",
+  "Rate": "النسبة",
+  "Applied to Perkly's commission. 0% turns VAT off for everyone; single merchants can be exempted on their merchant page.": "تُطبّق على عمولة Perkly. 0% توقف الضريبة للجميع، ويمكن إعفاء تاجر بعينه من صفحته.",
+  "Enter a rate between 0 and 100.": "أدخل نسبة بين 0 و100.",
+  "VAT switched off. Unsettled transactions recalculated.": "تم إيقاف الضريبة وإعادة حساب المعاملات غير المسوّاة.",
   "1y": "سنة",
   "Age range": "الفئة العمرية",
   "All time": "منذ البداية",

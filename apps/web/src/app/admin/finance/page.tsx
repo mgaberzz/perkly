@@ -8,7 +8,7 @@ import { date, egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { BRAND_TYPE_LABEL } from "@/lib/labels";
 import { settlementLabel, type Balance, type Settlement } from "@/lib/types";
-import { createSettlements, markSettlementPaid, setPaymentsMode } from "../actions";
+import { createSettlements, markSettlementPaid, setPaymentsMode, setVatRate } from "../actions";
 
 export const metadata = { title: "Finance" };
 
@@ -17,11 +17,12 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
   const t = await getT();
   const sp = await searchParams;
   const view = sp.view === "all" ? "all" : "due";
-  const [{ data: balances }, { data: settlements }, { data: setting }] = await Promise.all([
+  const [{ data: balances }, { data: settlements }, { data: setting }, { data: tax }] = await Promise.all([
     supabase.rpc("merchant_balances"),
     supabase.from("settlements").select("*, merchant:merchants(id, name, merchant_code)").order("created_at", { ascending: false }).limit(100)
       .returns<(Settlement & { merchant: { id: string; name: string; merchant_code: string } })[]>(),
     supabase.from("app_settings").select("value").eq("key", "payments").maybeSingle<{ value: { mode: string; provider: string | null } }>(),
+    supabase.from("app_settings").select("value").eq("key", "tax").maybeSingle<{ value: { vat_pct: number } }>(),
   ]);
   const all = (balances ?? []) as Balance[];
   const sum = (k: keyof Balance) => all.reduce((a, b) => a + Number(b[k] ?? 0), 0);
@@ -45,13 +46,23 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
         <Stat label={t("Received from merchants")} value={<Amount v={sum("received_from_merchant")} />} hint={t("Commission collected")} />
       </div>
 
-      <div className="mb-6 grid gap-6 lg:grid-cols-3">
+      <div className="mb-6 grid gap-6 lg:grid-cols-4">
         <Card title={t("Create settlements")} className="lg:col-span-2">
           <p className="mb-3 text-sm text-zinc-500">{t("Groups every unsettled transaction up to the chosen date into one netted settlement per merchant: in-app payments Perkly owes the merchant, minus the commission the merchant owes Perkly on cashier sales. Transactions show “Not settled yet” until finance records a payment.")}</p>
           <ActionForm action={createSettlements} className="flex flex-wrap items-end gap-3">
             <label className="text-xs text-zinc-500">{t("Up to (Cairo date)")}<Input type="date" name="until" className="w-44" /></label>
             <SubmitButton>{t("Create settlements")}</SubmitButton>
           </ActionForm>
+        </Card>
+        <Card title={t("VAT on commission")}>
+          <div className="mb-3 flex items-center gap-2 text-sm">{t("Rate")}: <Badge tone={Number(tax?.value.vat_pct ?? 14) > 0 ? "live" : "paused"}>{Number(tax?.value.vat_pct ?? 14) > 0 ? `${tax?.value.vat_pct ?? 14}%` : t("off")}</Badge></div>
+          <p className="mb-3 text-xs text-zinc-500">{t("Applied to Perkly's commission. 0% turns VAT off for everyone; single merchants can be exempted on their merchant page.")}</p>
+          {can("settings") && (
+            <ActionForm action={setVatRate} className="flex gap-2">
+              <Input name="vat_pct" type="number" step="0.01" min="0" max="100" defaultValue={tax?.value.vat_pct ?? 14} className="w-24" />
+              <SubmitButton variant="secondary">{t("Save")}</SubmitButton>
+            </ActionForm>
+          )}
         </Card>
         <Card title={t("In-app payments")}>
           <div className="mb-3 flex items-center gap-2 text-sm">{t("Mode")}: <Badge tone={mode === "live" ? "live" : mode === "test" ? "pending" : "paused"}>{t(mode)}</Badge></div>
@@ -73,7 +84,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
           <LinkButton href="/admin/finance?view=all" variant={view === "all" ? "primary" : "secondary"}>{t("All merchants")}</LinkButton>
         </div>
       </div>
-      <Table head={[t("Merchant"), t("Brand type"), t("In-app sales"), t("Due to merchant"), t("Commission on cashier sales"), t("VAT 14% on commission"), t("Net to settle"), t("Open settlements"), t("Bank")]} empty={t("Nothing due 🎉")}>
+      <Table head={[t("Merchant"), t("Brand type"), t("In-app sales"), t("Due to merchant"), t("Commission on cashier sales"), t("VAT on commission"), t("Net to settle"), t("Open settlements"), t("Bank")]} empty={t("Nothing due 🎉")}>
         {rows.map((b) => (
           <tr key={b.merchant_id}>
             <Td><Link href={`/admin/merchants/${b.merchant_id}`} className="font-semibold hover:text-perk-purple">{b.merchant_name}</Link><div className="font-mono text-xs text-zinc-500">{b.merchant_code}</div></Td>

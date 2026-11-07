@@ -49,7 +49,7 @@ export default async function InsightsPage({ searchParams }: PageProps<"/admin/i
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
         <Link href={`/admin/redemptions?from=${from}`}><Stat accent label={t("Total GMV")} value={<Amount v={s.gmv} />} hint={t("{n} transactions", { n: short(s.transactions) })} /></Link>
         <Link href={`/admin/redemptions?from=${from}`}><Stat label={t("Net revenue")} value={<Amount v={s.net_revenue} />} hint={t("Perkly commission, excl. VAT")} /></Link>
-        <Stat label={t("VAT 14% on commission")} value={<Amount v={s.vat} />} />
+        <Stat label={t("VAT on commission")} value={<Amount v={s.vat} />} />
         <Link href="/admin/finance"><Stat label={t("Paid to merchants")} value={<Amount v={s.paid_to_merchants} />} hint={t("All time")} /></Link>
         <Link href="/admin/finance"><Stat label={t("To be paid to merchants")} value={<Amount v={s.to_be_paid_to_merchants} />} hint={t("Open dues now")} /></Link>
       </div>
@@ -95,7 +95,7 @@ export default async function InsightsPage({ searchParams }: PageProps<"/admin/i
           </tr>
         ))}
       </Table>
-      <p className="mt-3 text-xs text-zinc-500">{t("Net revenue = Perkly commission (excluding the 14% VAT, which is passed on to the tax authority). Margin = commission ÷ amount paid. Location uses the branch city; Campus uses the branch's nearest campus; Age range uses the student's date of birth.")}</p>
+      <p className="mt-3 text-xs text-zinc-500">{t("Net revenue = Perkly commission (excluding VAT, which is passed on to the tax authority). Margin = commission ÷ amount paid. Location uses the branch city; Campus uses the branch's nearest campus; Age range uses the student's date of birth.")}</p>
     </>
   );
 }

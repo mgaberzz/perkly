@@ -39,6 +39,7 @@ export default async function ProfilePage() {
             {row(t("Sells"), t(CHANNEL_LABEL[merchant.channel]))}
             {row(t("Plan"), merchant.plan === "pro" ? "Pro" : "Free")}
             {row(t("Perkly commission"), `${merchant.commission_pct}%`)}
+            {row(t("VAT on commission"), merchant.vat_enabled ? t("Yes") : t("No"))}
           </dl>
           {merchant.plan === "free" && (
             <p className="mt-4 rounded-xl bg-perk-purple/10 p-3 text-sm text-perk-purple">

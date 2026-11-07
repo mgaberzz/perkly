@@ -27,6 +27,7 @@ function merchantRow(fd: FormData) {
     status: str(fd, "status") || "pending",
     plan: str(fd, "plan") || "free",
     commission_pct: Number(str(fd, "commission_pct") || 5),
+    vat_enabled: fd.get("vat_enabled") === "on",
   };
 }
 
@@ -50,7 +51,7 @@ export async function updateMerchant(id: string, _: ActionState, fd: FormData): 
   const full = merchantRow(fd);
   // Plan & commission are commercial terms: admin/operations only (the database enforces this too)
   const row: Partial<typeof full> = { ...full };
-  if (!can("commercial_terms")) { delete row.plan; delete row.commission_pct; }
+  if (!can("commercial_terms")) { delete row.plan; delete row.commission_pct; delete row.vat_enabled; }
   if (!row.name || !row.category) return { error: "Name and category are required." };
   if (!(full.commission_pct >= 0 && full.commission_pct <= 100)) return { error: "Commission must be 0–100." };
   const { error } = await supabase.from("merchants").update(row).eq("id", id);
@@ -219,6 +220,19 @@ export async function markSettlementPaid(_: ActionState, fd: FormData): Promise<
   }
   revalidatePath("/admin/finance");
   return { ok: r.status === "paid" ? "Settled in full." : `Partially settled — ${r.remaining} EGP remaining.` };
+}
+
+/** Admin: platform VAT rate on Perkly commission (0 = no VAT). Recalculates unsettled transactions. */
+export async function setVatRate(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireStaff("settings");
+  const pct = Number(str(fd, "vat_pct"));
+  if (!(pct >= 0 && pct <= 100)) return { error: "Enter a rate between 0 and 100." };
+  const { data, error } = await supabase.rpc("set_vat_rate", { p_pct: pct });
+  if (error) return { error: error.message };
+  const r = data as { ok: boolean; error?: string; recalculated?: number };
+  if (!r.ok) return { error: r.error };
+  revalidatePath("/admin", "layout");
+  return { ok: pct === 0 ? "VAT switched off. Unsettled transactions recalculated." : `VAT set to ${pct}%. Unsettled transactions recalculated.` };
 }
 
 export async function setPaymentsMode(fd: FormData) {
