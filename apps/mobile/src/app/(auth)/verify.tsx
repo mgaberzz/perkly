@@ -48,15 +48,16 @@ export default function Verify() {
       </View>
       <TextInput
         value={code}
-        onChangeText={(t) => { const v = t.replace(/\D/g, '').slice(0, 6); setCode(v); if (v.length === 6) verify(v); }}
+        // Supabase can send 6- or 8-digit codes (Auth → Email OTP length); auto-submit at 8, tap Verify for 6
+        onChangeText={(t) => { const v = t.replace(/\D/g, '').slice(0, 8); setCode(v); if (v.length === 8) verify(v); }}
         keyboardType="number-pad"
         textContentType="oneTimeCode"
         autoComplete="sms-otp"
         autoFocus
-        maxLength={6}
-        placeholder="••••••"
+        maxLength={8}
+        placeholder="Enter code"
         placeholderTextColor={c.textMuted}
-        style={{ backgroundColor: c.card, borderRadius: 18, borderWidth: 1, borderColor: c.border, padding: 18, fontSize: 32, letterSpacing: 12, textAlign: 'center', fontWeight: '900', color: c.text }}
+        style={{ backgroundColor: c.card, borderRadius: 18, borderWidth: 1, borderColor: c.border, padding: 18, fontSize: 32, letterSpacing: 6, textAlign: 'center', fontWeight: '900', color: c.text }}
       />
       {error && <T v="small" color={brand.danger}>{error}</T>}
       <Button title="Verify" onPress={() => verify()} loading={loading} disabled={code.length < 6} />
