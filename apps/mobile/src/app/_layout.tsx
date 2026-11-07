@@ -1,4 +1,4 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -10,8 +10,17 @@ import { brand } from '@/lib/theme';
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function RootStack() {
-  const { ready } = useSession();
+  const { ready, session } = useSession();
+  const segments = useSegments();
   useEffect(() => { if (ready) SplashScreen.hideAsync().catch(() => {}); }, [ready]);
+
+  // Signed out anywhere (logout from Settings, expired session…) → back to the welcome screen
+  const inAuth = segments[0] === '(auth)';
+  useEffect(() => {
+    if (!ready || session || inAuth) return;
+    if (router.canDismiss()) router.dismissAll();
+    router.replace('/welcome');
+  }, [ready, session, inAuth]);
   if (!ready) return null;
   return (
     <Stack screenOptions={{ headerShown: false, headerTintColor: brand.purple, headerBackButtonDisplayMode: 'minimal' }}>

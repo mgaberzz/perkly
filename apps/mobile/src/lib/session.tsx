@@ -137,7 +137,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [favorites, userId]);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    // Local sign-out never waits on the network; the session is cleared on this device right away
+    await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+    setSession(null);
   }, []);
 
   useEffect(() => {
