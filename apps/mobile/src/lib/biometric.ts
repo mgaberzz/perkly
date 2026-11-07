@@ -1,9 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { Platform } from 'react-native';
 import { t } from './i18n';
 
 const KEY = 'perkly.biometricLock';
+
+/** iPhone + Expo Go: Apple doesn't let Expo Go use Face ID, so iOS asks for the passcode instead (works in the real app). */
+export const faceIdLimitedHere = Platform.OS === 'ios' && Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 export async function biometricAvailable() {
   if (Platform.OS === 'web') return { ok: false, label: '' };

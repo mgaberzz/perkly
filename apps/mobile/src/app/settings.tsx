@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, Switch, View } from 'react-native';
 import { Card, Screen, T } from '@/components/ui';
-import { biometricAvailable, biometricEnabled, setBiometricEnabled } from '@/lib/biometric';
+import { biometricAvailable, biometricEnabled, faceIdLimitedHere, setBiometricEnabled } from '@/lib/biometric';
 import { fwdChevron, lang, setLanguage, t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
@@ -68,6 +68,7 @@ export default function Settings() {
         {bio.ok
           ? <Row label={`🔐 ${t('Log in with {method}', { method: bio.label })}`} right={<Switch value={bio.on} onValueChange={toggleBio} trackColor={{ true: brand.purple }} />} />
           : <Row label={`🔐 ${t('Biometric login')}`} right={<T v="small">{Platform.OS === 'web' ? t('Phone only') : t('Set up Face ID / fingerprint on your phone first')}</T>} />}
+        {bio.ok && faceIdLimitedHere && <T v="small" style={{ paddingVertical: 10 }}>{t('Testing in Expo Go: iPhone asks for your passcode instead of Face ID. Face ID works in the real Perkly app.')}</T>}
         <Row label={`🌐 ${t('Language')}`} onPress={switchLanguage} right={<T v="small" color={brand.purple}>{lang() === 'ar' ? 'العربية ⇄ English' : 'English ⇄ العربية'}</T>} />
       </Card>
       <T v="label">{t('Notifications')}</T>

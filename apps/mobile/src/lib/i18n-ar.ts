@@ -1,5 +1,6 @@
 // Arabic translations for the student app. Keys are the English text used in the code (see lib/i18n.ts).
 export const AR: Record<string, string> = {
+  "Testing in Expo Go: iPhone asks for your passcode instead of Face ID. Face ID works in the real Perkly app.": "تجربة على Expo Go: الآيفون بيطلب رمز المرور بدل Face ID. Face ID هيشتغل في تطبيق Perkly الحقيقي.",
   "Use code or password instead": "استخدم الكود أو كلمة المرور بدلًا من كده",
   "Log in faster?": "عايز تدخل أسرع؟",
   "Use {method} to open Perkly — you stay signed in, no codes or passwords.": "استخدم {method} لفتح Perkly — هتفضل مسجّل دخول، من غير أكواد ولا كلمات مرور.",
