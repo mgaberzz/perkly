@@ -23,7 +23,8 @@ export async function Shell({ nav, children, top, user, badge }: { nav: NavItem[
         </nav>
         <div className="border-t border-zinc-200 pt-4">
           <div className="truncate px-2 text-sm font-semibold">{user}</div>
-          <LangSwitch className="mt-1" />
+          <Link href="/account/security" className="mt-1 block rounded-xl px-3 py-2 text-sm font-semibold text-zinc-600 hover:bg-zinc-100">🔐 {t("Face ID / fingerprint")}</Link>
+          <LangSwitch />
           {signOut("w-full rounded-xl px-3 py-2 text-start text-sm text-zinc-500 hover:bg-zinc-100")}
         </div>
       </aside>
@@ -35,6 +36,7 @@ export async function Shell({ nav, children, top, user, badge }: { nav: NavItem[
             <div className="absolute end-0 z-20 mt-2 max-h-[80vh] w-64 overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-2 shadow-lg">
               {top}
               {nav.map((n) => <NavLink key={n.href} {...n} />)}
+              <Link href="/account/security" className="block rounded-xl px-3 py-2 text-sm font-semibold text-zinc-600 hover:bg-zinc-100">🔐 {t("Face ID / fingerprint")}</Link>
               <LangSwitch />
               {signOut("w-full rounded-xl px-3 py-2 text-start text-sm text-zinc-500 hover:bg-zinc-100")}
             </div>

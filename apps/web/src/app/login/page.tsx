@@ -4,6 +4,7 @@ import { Field, Input, Notice } from "@/components/ui";
 import { sendReset, signIn } from "./actions";
 import { getT } from "@/lib/i18n/server";
 import { LangSwitch } from "@/components/lang-switch";
+import { PasskeySignIn } from "@/components/passkey";
 
 export const metadata = { title: "Sign in" };
 
@@ -35,6 +36,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           <h2 className="text-2xl font-extrabold">{t("Welcome back 👋")}</h2>
           <p className="mb-6 mt-1 text-sm text-zinc-500">{t("Sign in to the merchant portal or the Perkly team portal.")}</p>
           {error && <div className="mb-4"><Notice tone="error">{error}</Notice></div>}
+          <PasskeySignIn next={next} />
           <ActionForm action={signIn} className="space-y-4">
             <input type="hidden" name="next" value={next} />
             <Field label={t("Email")}><Input name="email" type="email" autoComplete="email" required /></Field>
