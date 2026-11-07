@@ -65,6 +65,8 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "extra": {}
+    "extra": {
+      "supportsRTL": true
+    }
   }
 }

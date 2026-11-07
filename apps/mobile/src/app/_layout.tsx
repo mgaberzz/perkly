@@ -1,11 +1,11 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { BiometricGate } from '@/components/biometric-gate';
-import { t } from '@/lib/i18n';
+import { initLanguage, t } from '@/lib/i18n';
 import { SessionProvider, useSession } from '@/lib/session';
 import { brand } from '@/lib/theme';
 
@@ -46,6 +46,10 @@ function RootStack() {
 
 export default function RootLayout() {
   const scheme = useColorScheme();
+  // Load the saved language before anything renders, so every screen starts in the right language
+  const [langReady, setLangReady] = useState(false);
+  useEffect(() => { initLanguage().finally(() => setLangReady(true)); }, []);
+  if (!langReady) return null;
   return (
     <SafeAreaProvider>
       <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
