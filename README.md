@@ -9,7 +9,7 @@ Discount Tier System, Merchant Training Kit, Branding handbook).
 perkly/
 ├── supabase/              Postgres schema, business logic (RPCs), RLS, seed, SQL tests
 ├── apps/mobile/           Student app — Expo (React Native), iOS / Android / web
-├── apps/web/              Merchant portal (/merchant) + Admin portal (/admin) — Next.js 16
+├── apps/web/              Merchant portal (/merchant) + Perkly team portal (/admin) — Next.js 16, English/العربية
 └── docs/screenshots/      Screens captured from the builds
 ```
 
@@ -56,9 +56,34 @@ a weighted segment **on the server** (XP or a streak freeze) — odds are never 
 +25 new merchant, streak bonus, milestones (3/5/7/14/30 days), freeze tokens, levels 1–7 (Newbie → Campus Legend),
 daily/weekly/monthly quests, badges, referral +50 XP when the friend first redeems, daily open +5 XP, 150 XP/day cap.
 
+## Roles & portals
+
+| Who | Where | Can do |
+|---|---|---|
+| **Admin** | `/admin` | Everything: users & roles, team assignments, payment settings |
+| **Operations** | `/admin` | Create/edit merchants & campaigns, campuses, quests, review transactions, approve cashier QRs |
+| **Account manager** | `/admin` | Only the merchants/campuses assigned in *Team & assignments* |
+| **Finance** | `/admin` | Read-only merchants & transactions, settlements, payouts, cashback approvals, Excel/CSV exports |
+| **Merchant owner / manager** | `/merchant` | Insights (merchant → branch → cashier), new vs recurring %, perks, branches, cashier QRs, payouts, exports |
+| **Branch manager** | `/merchant` | Their branch only: insights, transactions, request cashier QR codes (pending until Perkly approves) |
+| **Cashier** | `/merchant` | Live transactions |
+
+IDs: every person gets `USR-…`, students also `STU-…`, merchants `MER-…`. Brand types: local · chain · mega account.
+
+**Notification center** (`/admin/notifications`): cashier QR requests, high-tier perk approvals, online cashback — approve/reject in one place.
+
+**Money**: students can *pay in the app* (currently **test mode** — no card is charged; connect a gateway such as Paymob later and switch to live).
+Perkly owes the merchant the in-app amount minus commission → Finance creates settlements, transfers, and marks them paid with the bank reference.
+Merchants see "to be settled to your bank account" at merchant level and add their IBAN under *Payouts*.
+
+**Online merchants** (channel = online / both): one-time checkout codes (30 min, single use, validated in the merchant portal)
+and tracked links (`?perkly_ref=PKR…`) — the shop reports orders, finance approves cashback to the student.
+
+**Student app**: Face ID / fingerprint lock (Settings), Student ID card on *Me*, Arabic with right-to-left layout (Settings → Language, or on the welcome screen).
+
 ## Live backend
 
-The Supabase project **Perkly** (`qnvzkjojuumtzpkvjlja`, eu-west-1) has all 6 migrations and the demo seed applied:
+The Supabase project **Perkly** (`qnvzkjojuumtzpkvjlja`, eu-west-1) has all 8 migrations and the demo seed applied:
 10 campuses · 89 demo merchants · 128 branches (each with a cashier QR) · 105 perks · 5 quests · 7 badges.
 The earlier prototype tables were moved, untouched, into the `legacy` schema.
 
@@ -135,8 +160,8 @@ escalation blocking, merchant data isolation, high-tier perk approval, admin-onl
   Anti-fraud comes from the server rules + location check + live success screen + QR rotation.
 - **Brand colors** are placeholders (`#7B2FF7` purple, `#FF3EA5` pink, `#2F80FF` blue, `#16131F` ink) — Notion names
   the colors but has no HEX codes. Change them in `apps/mobile/src/lib/theme.ts` and `apps/web/src/app/globals.css`.
-- **Reference PDF**: used for flows and layout only. Payments, eCards, gifting and bank linking were left out because
-  Perkly discounts are applied at the cashier, not paid in-app. "Flip the cards" and "Claw machine" show as *coming soon*.
+- **Reference PDF**: used for flows and layout only. "Flip the cards" and "Claw machine" show as *coming soon*.
+- **In-app payments are in test mode** until a payment gateway is connected (no real charge). Reversing an in-app transaction does not refund it yet.
 - **Not built yet**: map view (needs `react-native-maps` + API keys), push notifications, image uploads (logo URLs for now),
   Perkly+ subscription, sponsored placements, TikTok XP verification, offline redemption.
 - App icons/splash are Expo defaults — replace in `apps/mobile/assets`.
