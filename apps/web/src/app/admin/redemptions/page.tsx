@@ -5,6 +5,7 @@ import { ExportButtons } from "@/components/export-buttons";
 import { dateTime, egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { setRedemptionStatus } from "../actions";
+import { settlementLabel } from "@/lib/types";
 
 export const metadata = { title: "Transactions" };
 
@@ -14,6 +15,7 @@ type Row = {
   merchant: { id: string; name: string; merchant_code: string }; perk: { title: string }; branch: { name: string } | null;
   qr: { label: string; cashier_name: string | null } | null;
   student: { full_name: string | null; student_code: string | null; user_code: string } | null;
+  settle_amount: number | null; settlement: { status: string } | null;
 };
 
 export default async function AdminRedemptionsPage({ searchParams }: PageProps<"/admin/redemptions">) {
@@ -23,7 +25,7 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
   const { supabase, can, merchantScope } = await requireStaff("redemptions_view");
   const t = await getT();
   let query = inScope(supabase.from("redemptions")
-    .select("id, created_at, verification_code, original_amount, discount_amount, final_amount, status, flag_reason, xp_awarded, channel, payment_method, first_time_at_merchant, merchant:merchants(id, name, merchant_code), perk:perks(title), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), student:profiles(full_name, student_code, user_code)")
+    .select("id, created_at, verification_code, original_amount, discount_amount, final_amount, status, flag_reason, xp_awarded, channel, payment_method, first_time_at_merchant, merchant:merchants(id, name, merchant_code), perk:perks(title), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), student:profiles(full_name, student_code, user_code), settle_amount, settlement:settlements(status)")
     .order("created_at", { ascending: false }).limit(200), merchantScope);
   if (f.status) query = query.eq("status", f.status);
   if (f.channel) query = query.eq("channel", f.channel);
@@ -49,7 +51,7 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
         <label className="text-xs text-zinc-500">{t("To")}<Input type="date" name="to" defaultValue={f.to} className="w-40" /></label>
         <Button variant="secondary">{t("Filter")}</Button>
       </form>
-      <Table head={[t("Time"), t("Student"), t("Merchant"), t("Branch / cashier"), t("Perk"), t("Bill"), t("Discount"), t("Payment"), t("Status"), ""]} empty={t("No transactions.")}>
+      <Table head={[t("Time"), t("Student"), t("Merchant"), t("Branch / cashier"), t("Perk"), t("Bill"), t("Discount"), t("Payment"), t("To settle"), t("Status"), ""]} empty={t("No transactions.")}>
         {(data ?? []).map((r) => (
           <tr key={r.id}>
             <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
@@ -60,6 +62,7 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
             <Td>{egp(r.original_amount)}</Td>
             <Td>{egp(r.discount_amount)}</Td>
             <Td><Badge tone={r.payment_method === "in_app" ? "active" : "paused"}>{r.payment_method === "in_app" ? t("In app") : t("Cashier")}</Badge></Td>
+            <Td className="whitespace-nowrap">{r.status === "reversed" ? "—" : <>{egp(r.settle_amount)}<div className="mt-1"><Badge tone={r.settlement?.status === "paid" ? "paid" : r.settlement?.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(r.settlement?.status))}</Badge></div></>}</Td>
             <Td><Badge tone={r.status}>{t(r.status)}</Badge>{r.flag_reason && <div className="mt-1 text-xs text-zinc-500">{r.flag_reason}</div>}</Td>
             <Td className="whitespace-nowrap text-end">
               {review && r.status !== "success" && (

@@ -6,7 +6,7 @@ import { ExportButtons } from "@/components/export-buttons";
 import { date, egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { BRAND_TYPE_LABEL } from "@/lib/labels";
-import type { Balance, Settlement } from "@/lib/types";
+import { settlementLabel, type Balance, type Settlement } from "@/lib/types";
 import { createSettlements, markSettlementPaid, setPaymentsMode } from "../actions";
 
 export const metadata = { title: "Finance" };
@@ -24,9 +24,10 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
   ]);
   const all = (balances ?? []) as Balance[];
   const sum = (k: keyof Balance) => all.reduce((a, b) => a + Number(b[k] ?? 0), 0);
-  const rows = view === "all" ? all : all.filter((b) => Number(b.due_to_merchant) > 0 || Number(b.pending_settlements) > 0 || Number(b.commission_owed) > 0);
-  rows.sort((a, b) => Number(b.due_to_merchant) - Number(a.due_to_merchant));
-  const pending = (settlements ?? []).filter((s) => s.status === "pending");
+  const rows = view === "all" ? all : all.filter((b) => Number(b.net_to_settle) !== 0 || Number(b.pending_settlements) !== 0);
+  rows.sort((a, b) => Math.abs(Number(b.net_to_settle)) - Math.abs(Number(a.net_to_settle)));
+  const pending = (settlements ?? []).filter((s) => s.status !== "paid");
+  const net = sum("net_to_settle");
   const mode = setting?.value.mode ?? "off";
 
   return (
@@ -35,15 +36,15 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
         actions={<ExportButtons kind="balances" params={{ all: view === "all" ? "1" : undefined }} />} />
 
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat accent label={t("Due to merchants")} value={egp(sum("due_to_merchant"))} hint={t("Not yet in a settlement")} />
-        <Stat label={t("Pending payouts")} value={egp(sum("pending_settlements"))} hint={t("{n} settlement(s) to transfer", { n: pending.length })} />
-        <Stat label={t("Paid out")} value={egp(sum("paid_out"))} />
-        <Stat label={t("Commission to invoice")} value={egp(sum("commission_owed"))} hint={t("On sales paid at the cashier")} />
+        <Stat accent label={t("Net to settle")} value={egp(net)} hint={t("In-app sales owed to merchants minus commission on cashier sales — not yet in a settlement")} />
+        <Stat label={t("Open settlements")} value={egp(sum("pending_settlements"))} hint={t("{n} settlement(s) not fully paid", { n: pending.length })} />
+        <Stat label={t("Paid to merchants")} value={egp(sum("paid_out"))} />
+        <Stat label={t("Received from merchants")} value={egp(sum("received_from_merchant"))} hint={t("Commission collected")} />
       </div>
 
       <div className="mb-6 grid gap-6 lg:grid-cols-3">
         <Card title={t("Create settlements")} className="lg:col-span-2">
-          <p className="mb-3 text-sm text-zinc-500">{t("Groups every unsettled in-app payment up to the chosen date into one payout per merchant. Then transfer the money and mark each payout as paid with the bank reference.")}</p>
+          <p className="mb-3 text-sm text-zinc-500">{t("Groups every unsettled transaction up to the chosen date into one netted settlement per merchant: in-app payments Perkly owes the merchant, minus the commission the merchant owes Perkly on cashier sales. Transactions show “Not settled yet” until finance records a payment.")}</p>
           <ActionForm action={createSettlements} className="flex flex-wrap items-end gap-3">
             <label className="text-xs text-zinc-500">{t("Up to (Cairo date)")}<Input type="date" name="until" className="w-44" /></label>
             <SubmitButton>{t("Create settlements")}</SubmitButton>
@@ -69,17 +70,16 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
           <LinkButton href="/admin/finance?view=all" variant={view === "all" ? "primary" : "secondary"}>{t("All merchants")}</LinkButton>
         </div>
       </div>
-      <Table head={[t("Merchant"), t("Brand type"), t("In-app sales"), t("Commission"), t("Due to merchant"), t("Pending payouts"), t("Paid out"), t("Commission to invoice"), t("Bank")]} empty={t("Nothing due 🎉")}>
+      <Table head={[t("Merchant"), t("Brand type"), t("In-app sales"), t("Due to merchant"), t("Commission on cashier sales"), t("Net to settle"), t("Open settlements"), t("Bank")]} empty={t("Nothing due 🎉")}>
         {rows.map((b) => (
           <tr key={b.merchant_id}>
             <Td><Link href={`/admin/merchants/${b.merchant_id}`} className="font-semibold hover:text-perk-purple">{b.merchant_name}</Link><div className="font-mono text-xs text-zinc-500">{b.merchant_code}</div></Td>
             <Td>{t(BRAND_TYPE_LABEL[b.brand_type] ?? b.brand_type)}</Td>
             <Td>{egp(b.in_app_gross)}</Td>
-            <Td>{egp(b.in_app_commission)}</Td>
-            <Td className="font-bold text-perk-purple">{egp(b.due_to_merchant)}</Td>
-            <Td>{egp(b.pending_settlements)}</Td>
-            <Td>{egp(b.paid_out)}</Td>
+            <Td>{egp(b.due_to_merchant)}</Td>
             <Td>{egp(b.commission_owed)}</Td>
+            <Td className="font-bold text-perk-purple">{egp(b.net_to_settle)}<div className="text-xs font-normal text-zinc-500">{Number(b.net_to_settle) > 0 ? t("Perkly pays merchant") : Number(b.net_to_settle) < 0 ? t("Merchant pays Perkly commission") : ""}</div></Td>
+            <Td>{egp(b.pending_settlements)}</Td>
             <Td className="text-xs">{b.bank_name ? <>{b.bank_name}<div className="font-mono text-zinc-500">{b.iban}</div></> : <span className="text-amber-600">{t("Missing")}</span>}</Td>
           </tr>
         ))}
@@ -89,21 +89,23 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
         <h2 className="font-bold">{t("Settlements")}</h2>
         <ExportButtons kind="settlements" />
       </div>
-      <Table head={[t("Created"), t("Merchant"), t("Period"), t("Transactions"), t("Payout"), t("Status"), ""]} empty={t("No settlements yet.")}>
+      <Table head={[t("Created"), t("Merchant"), t("Period"), t("Transactions"), t("Net amount"), t("Paid"), t("Status"), ""]} empty={t("No settlements yet.")}>
         {(settlements ?? []).map((s) => (
           <tr key={s.id}>
             <Td>{date(s.created_at)}</Td>
             <Td>{s.merchant.name}<div className="font-mono text-xs text-zinc-500">{s.merchant.merchant_code}</div></Td>
             <Td className="text-xs">{s.period_start} → {s.period_end}</Td>
             <Td>{s.lines}</Td>
-            <Td className="font-bold">{egp(s.amount)}<div className="text-xs font-normal text-zinc-500">{t("of {gross} · commission {c}", { gross: egp(s.gross_amount), c: egp(s.commission) })}</div></Td>
-            <Td><Badge tone={s.status}>{t(s.status)}</Badge>{s.reference && <div className="font-mono text-xs text-zinc-500">{s.reference}</div>}</Td>
+            <Td className="font-bold">{egp(Math.abs(s.amount))}<div className="text-xs font-normal text-zinc-500">{s.amount >= 0 ? t("Perkly pays merchant") : t("Merchant pays Perkly commission")}</div></Td>
+            <Td>{egp(s.paid_amount)}<div className="text-xs text-zinc-500">{t("{amount} remaining", { amount: egp(Math.abs(s.amount) - Number(s.paid_amount)) })}</div></Td>
+            <Td><Badge tone={s.status === "paid" ? "paid" : s.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(s.status))}</Badge>{s.reference && <div className="font-mono text-xs text-zinc-500">{s.reference}</div>}</Td>
             <Td>
-              {s.status === "pending" && (
-                <ActionForm action={markSettlementPaid} className="flex gap-2">
+              {s.status !== "paid" && (
+                <ActionForm action={markSettlementPaid} className="flex flex-wrap gap-2">
                   <input type="hidden" name="id" value={s.id} />
-                  <Input name="reference" placeholder={t("Bank reference")} className="w-36 text-xs" required />
-                  <SubmitButton variant="secondary" className="text-xs">{t("Mark paid")}</SubmitButton>
+                  <Input name="amount" type="number" step="0.01" min="0.01" placeholder={t("Amount (empty = all)")} className="w-32 text-xs" />
+                  <Input name="reference" placeholder={t("Bank reference")} className="w-32 text-xs" required />
+                  <SubmitButton variant="secondary" className="text-xs">{t("Record payment")}</SubmitButton>
                 </ActionForm>
               )}
             </Td>

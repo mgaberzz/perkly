@@ -56,10 +56,10 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
         <PageHeader title={t("Hi {name} 👋", { name: first })} subtitle={`${t("Finance")} · ${subtitle} · ${t("Last {days} days", { days })}`} actions={periods} />
         {alerts}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <Stat accent label={t("Due to merchants")} value={egp(sum("due_to_merchant"))} hint={t("Not yet in a settlement")} />
-          <Stat label={t("Pending payouts")} value={egp(sum("pending_settlements"))} />
-          <Stat label={t("Paid out")} value={egp(sum("paid_out"))} />
-          <Stat label={t("Commission to invoice")} value={egp(sum("commission_owed"))} hint={t("On sales paid at the cashier")} />
+          <Stat accent label={t("Net to settle")} value={egp(sum("net_to_settle"))} hint={t("Not yet in a settlement")} />
+          <Stat label={t("Open settlements")} value={egp(sum("pending_settlements"))} />
+          <Stat label={t("Paid to merchants")} value={egp(sum("paid_out"))} />
+          <Stat label={t("Received from merchants")} value={egp(sum("received_from_merchant"))} hint={t("Commission collected")} />
         </div>
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
           <Card title={t("Transactions per day")} className="lg:col-span-2"><BarChart data={series} empty={t("No data yet")} /></Card>

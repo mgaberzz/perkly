@@ -162,17 +162,27 @@ end $$;
 -- Finance settles and marks paid
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e3', false);
 do $$
-declare r jsonb; v_id uuid;
+declare r jsonb; v_id uuid; v_net numeric;
 begin
   assert (select iban from merchant_balances(current_setting('test.costa_id')::uuid)) like 'EG38%', 'finance sees iban';
-  r := create_settlements();
-  assert (r->>'ok')::boolean and (r->>'settlements')::int = 1 and (r->>'total')::numeric = 243, 'settlement created: ' || r::text;
-  assert (select due_to_merchant from merchant_balances(current_setting('test.costa_id')::uuid)) = 0, 'nothing left due';
-  assert (select pending_settlements from merchant_balances(current_setting('test.costa_id')::uuid)) = 243, 'pending payout';
+  v_net := (select net_to_settle from merchant_balances(current_setting('test.costa_id')::uuid));
+  assert v_net = (select sum(settle_amount) from redemptions where merchant_id = current_setting('test.costa_id')::uuid and status <> 'reversed'), 'net = in-app net − cashier commission';
+  assert (select count(*) from redemptions where merchant_net is null and final_amount is not null) = 0, 'every priced transaction has a net';
+  r := create_settlements(null, current_setting('test.costa_id')::uuid);
+  assert (r->>'ok')::boolean and (r->>'settlements')::int = 1 and (r->>'total')::numeric = v_net, 'settlement created: ' || r::text;
+  assert (select net_to_settle from merchant_balances(current_setting('test.costa_id')::uuid)) = 0, 'nothing left unsettled';
+  assert (select pending_settlements from merchant_balances(current_setting('test.costa_id')::uuid)) = v_net, 'pending payout';
   select id into v_id from settlements where merchant_id = current_setting('test.costa_id')::uuid;
+  assert (select bool_and(settlement_status_label(s.status) = 'Not settled yet') from redemptions r2 join settlements s on s.id = r2.settlement_id where s.id = v_id), 'not settled until finance pays';
   assert mark_settlement_paid(v_id, '')->>'error' = 'reference_required', 'needs reference';
-  assert (mark_settlement_paid(v_id, 'TRX-1')->>'ok')::boolean, 'paid';
-  assert (select paid_out from merchant_balances(current_setting('test.costa_id')::uuid)) = 243, 'paid out';
+  -- partial payment: 100 now
+  assert (record_settlement_payment(v_id, 100, 'TRX-1')->>'status') = 'partially_paid', 'partial';
+  assert (select bool_and(settlement_status_label(s.status) = 'Partially settled') from redemptions r2 join settlements s on s.id = r2.settlement_id where s.id = v_id), 'partially settled';
+  assert record_settlement_payment(v_id, 100000, 'TRX-X')->>'error' = 'more_than_remaining', 'cannot overpay';
+  assert (mark_settlement_paid(v_id, 'TRX-2')->>'ok')::boolean, 'rest paid';
+  assert (select status from settlements where id = v_id) = 'paid', 'settled';
+  assert (select count(*) from settlement_payments where settlement_id = v_id) = 2, 'two payments recorded';
+  assert (select paid_out from merchant_balances(current_setting('test.costa_id')::uuid)) = abs(v_net), 'paid out';
 end $$;
 
 -- ── Online: one-time code ──

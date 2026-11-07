@@ -203,14 +203,22 @@ export async function createSettlements(_: ActionState, fd: FormData): Promise<A
   return { ok: r.settlements ? `${r.settlements} settlement(s) created · ${r.total} EGP` : "Nothing due to settle." };
 }
 
+/** Finance approval: record a full or partial payment against a settlement. */
 export async function markSettlementPaid(_: ActionState, fd: FormData): Promise<ActionState> {
   const { supabase } = await requireStaff("finance");
-  const { data, error } = await supabase.rpc("mark_settlement_paid", { p_id: str(fd, "id"), p_reference: str(fd, "reference") });
+  const raw = str(fd, "amount");
+  const amount = raw === "" ? null : Number(raw);
+  if (amount != null && !(amount > 0)) return { error: "Enter a valid amount." };
+  const { data, error } = await supabase.rpc("record_settlement_payment", { p_id: str(fd, "id"), p_amount: amount, p_reference: str(fd, "reference") });
   if (error) return { error: error.message };
-  const r = data as { ok: boolean; error?: string };
-  if (!r.ok) return { error: r.error === "reference_required" ? "Enter the bank transfer reference." : r.error };
+  const r = data as { ok: boolean; error?: string; status?: string; remaining?: number };
+  if (!r.ok) {
+    if (r.error === "reference_required") return { error: "Enter the bank transfer reference." };
+    if (r.error === "more_than_remaining") return { error: `That's more than the remaining ${r.remaining} EGP.` };
+    return { error: r.error };
+  }
   revalidatePath("/admin/finance");
-  return { ok: "Marked as paid." };
+  return { ok: r.status === "paid" ? "Settled in full." : `Partially settled — ${r.remaining} EGP remaining.` };
 }
 
 export async function setPaymentsMode(fd: FormData) {

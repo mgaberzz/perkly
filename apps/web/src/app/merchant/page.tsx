@@ -83,8 +83,8 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
         <Link href="/merchant/payouts" className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-perk-purple/30 bg-perk-purple/5 p-4">
           <div>
             <div className="text-xs font-semibold uppercase tracking-wide text-perk-purple">{t("To be settled to your bank account")}</div>
-            <div className="text-2xl font-extrabold">{egp(Number(balance.due_to_merchant) + Number(balance.pending_settlements))}</div>
-            <div className="text-xs text-zinc-500">{t("All branches · from in-app payments, after Perkly commission")}</div>
+            <div className="text-2xl font-extrabold">{egp(Number(balance.net_to_settle) + Number(balance.pending_settlements))}</div>
+            <div className="text-xs text-zinc-500">{t("All branches · in-app payments minus Perkly commission (negative = commission you owe Perkly)")}</div>
           </div>
           <span className="text-sm font-semibold text-perk-purple">{t("Payouts")} →</span>
         </Link>

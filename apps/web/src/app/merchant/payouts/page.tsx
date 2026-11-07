@@ -5,7 +5,7 @@ import { ActionForm, SubmitButton } from "@/components/action-form";
 import { ExportButtons } from "@/components/export-buttons";
 import { date, egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
-import type { Balance, Settlement } from "@/lib/types";
+import { settlementLabel, type Balance, type Settlement } from "@/lib/types";
 import { saveBankAccount } from "../actions";
 
 export const metadata = { title: "Payouts" };
@@ -19,28 +19,29 @@ export default async function PayoutsPage() {
     supabase.from("settlements").select("*").eq("merchant_id", merchant.id).order("created_at", { ascending: false }).limit(50).returns<Settlement[]>(),
     supabase.from("merchant_bank_accounts").select("*").eq("merchant_id", merchant.id).maybeSingle<{ bank_name: string | null; account_name: string | null; iban: string | null; payout_schedule: string }>(),
   ]);
-  const toSettle = Number(b?.due_to_merchant ?? 0) + Number(b?.pending_settlements ?? 0);
+  const toSettle = Number(b?.net_to_settle ?? 0) + Number(b?.pending_settlements ?? 0);
   return (
     <>
       <PageHeader title={t("Payouts")} subtitle={t("Merchant level — all branches together. When students pay in the Perkly app, Perkly collects the money and transfers it to your bank account minus commission.")}
         actions={<ExportButtons kind="settlements" params={{ scope: "merchant" }} />} />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat accent label={t("Total to be settled to you")} value={egp(toSettle)} hint={t("Due now + payouts in progress")} />
+        <Stat accent label={toSettle >= 0 ? t("Total to be settled to you") : t("Commission you owe Perkly")} value={egp(Math.abs(toSettle))} hint={t("In-app payments minus commission on cashier sales, incl. open settlements")} />
         <Stat label={t("In-app sales (unsettled)")} value={egp(b?.in_app_gross)} hint={t("Perkly commission {amount}", { amount: egp(b?.in_app_commission) })} />
-        <Stat label={t("Paid out so far")} value={egp(b?.paid_out)} hint={b?.last_paid_at ? t("Last transfer {date}", { date: date(b.last_paid_at) }) : undefined} />
-        <Stat label={t("Commission on cashier sales")} value={egp(b?.commission_owed)} hint={t("Invoiced separately by Perkly")} />
+        <Stat label={t("Paid to you so far")} value={egp(b?.paid_out)} hint={b?.last_paid_at ? t("Last transfer {date}", { date: date(b.last_paid_at) }) : undefined} />
+        <Stat label={t("Commission on cashier sales")} value={egp(b?.commission_owed)} hint={t("Deducted in your next settlement")} />
       </div>
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <h2 className="mb-3 font-bold">{t("Settlements")}</h2>
-          <Table head={[t("Created"), t("Period"), t("Transactions"), t("Payout"), t("Status")]} empty={t("No payouts yet. They appear here once students pay in the app.")}>
+          <Table head={[t("Created"), t("Period"), t("Transactions"), t("Net amount"), t("Paid"), t("Status")]} empty={t("No payouts yet. They appear here once students pay in the app.")}>
             {(settlements ?? []).map((s) => (
               <tr key={s.id}>
                 <Td>{date(s.created_at)}</Td>
                 <Td className="text-xs">{s.period_start} → {s.period_end}</Td>
                 <Td>{s.lines}</Td>
-                <Td className="font-bold">{egp(s.amount)}<div className="text-xs font-normal text-zinc-500">{t("of {gross} · commission {c}", { gross: egp(s.gross_amount), c: egp(s.commission) })}</div></Td>
-                <Td><Badge tone={s.status}>{t(s.status)}</Badge>{s.reference && <div className="font-mono text-xs text-zinc-500">{s.reference}</div>}</Td>
+                <Td className="font-bold">{egp(Math.abs(s.amount))}<div className="text-xs font-normal text-zinc-500">{s.amount >= 0 ? t("Perkly pays you") : t("You pay Perkly commission")}</div></Td>
+                <Td>{egp(s.paid_amount)}<div className="text-xs text-zinc-500">{t("{amount} remaining", { amount: egp(Math.abs(s.amount) - Number(s.paid_amount)) })}</div></Td>
+                <Td><Badge tone={s.status === "paid" ? "paid" : s.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(s.status))}</Badge>{s.reference && <div className="font-mono text-xs text-zinc-500">{s.reference}</div>}</Td>
               </tr>
             ))}
           </Table>

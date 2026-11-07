@@ -2,19 +2,20 @@ import type { NextRequest } from "next/server";
 import { getSession, isStaffRole, can, requireMerchant } from "@/lib/auth";
 import { cairo, fileResponse, type Column } from "@/lib/export";
 import { getLang, getT } from "@/lib/i18n/server";
-import type { Balance, Settlement } from "@/lib/types";
+import { settlementLabel, type Balance, type Settlement } from "@/lib/types";
 
 type Tx = {
   id: string; created_at: string; verification_code: string; status: string; flag_reason: string | null; first_time_at_merchant: boolean;
   channel: string; payment_method: string; payment_status: string; payment_ref: string | null;
   original_amount: number | null; discount_amount: number | null; final_amount: number | null;
-  commission_amount: number | null; merchant_net: number | null; settlement_id: string | null; xp_awarded: number;
+  commission_amount: number | null; merchant_net: number | null; settle_amount: number | null; settlement_id: string | null; xp_awarded: number;
+  settlement: { status: string; paid_at: string | null; reference: string | null } | null;
   merchant: { merchant_code: string; name: string } | null; branch: { name: string } | null;
   qr: { label: string; cashier_name: string | null } | null; perk: { title: string } | null;
   student?: { student_code: string | null; user_code: string } | null;
 };
 
-const TX_SELECT = "id, created_at, verification_code, status, flag_reason, first_time_at_merchant, channel, payment_method, payment_status, payment_ref, original_amount, discount_amount, final_amount, commission_amount, merchant_net, settlement_id, xp_awarded, merchant:merchants(merchant_code, name), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), perk:perks(title)";
+const TX_SELECT = "id, created_at, verification_code, status, flag_reason, first_time_at_merchant, channel, payment_method, payment_status, payment_ref, original_amount, discount_amount, final_amount, commission_amount, merchant_net, settle_amount, settlement_id, xp_awarded, settlement:settlements(status, paid_at, reference), merchant:merchants(merchant_code, name), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), perk:perks(title)";
 
 const forbidden = () => new Response("Not allowed", { status: 403 });
 
@@ -81,8 +82,13 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
       { header: t("Discount (EGP)"), value: (r) => r.discount_amount, money: true },
       { header: t("Paid (EGP)"), value: (r) => r.final_amount, money: true },
       { header: t("Perkly commission (EGP)"), value: (r) => r.commission_amount, money: true },
-      { header: t("Merchant net (EGP)"), value: (r) => r.merchant_net, money: true },
-      { header: t("Settled"), value: (r) => (r.payment_method === "in_app" ? (r.settlement_id ? t("Yes") : t("No")) : "") },
+      { header: t("Merchant net (EGP)"), value: (r) => r.merchant_net ?? (r.final_amount == null ? t("No bill entered") : null), money: true, width: 16 },
+      { header: t("Amount to settle (EGP)"), value: (r) => (r.status === "reversed" ? 0 : r.settle_amount), money: true, width: 18 },
+      { header: t("Settlement direction"), value: (r) => (r.status === "reversed" ? t("Reversed — nothing to settle") : Number(r.settle_amount ?? 0) > 0 ? t("Perkly pays merchant") : Number(r.settle_amount ?? 0) < 0 ? t("Merchant pays Perkly commission") : t("Nothing to settle")), width: 26 },
+      { header: t("Settlement status"), value: (r) => (r.status === "reversed" ? "—" : t(settlementLabel(r.settlement?.status))), width: 18 },
+      { header: t("Settlement ID"), value: (r) => r.settlement_id, width: 38 },
+      { header: t("Settled on"), value: (r) => (r.settlement?.status === "paid" ? cairo(r.settlement.paid_at) : "") },
+      { header: t("Bank reference"), value: (r) => r.settlement?.reference ?? "" , width: 18 },
       { header: t("Status"), value: (r) => t(r.status) },
       { header: t("Flag"), value: (r) => r.flag_reason },
     ];
@@ -98,17 +104,20 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
       { header: t("Merchant"), value: (r) => r.merchant_name, width: 24 },
       { header: t("Brand type"), value: (r) => r.brand_type },
       { header: t("In-app sales (EGP)"), value: (r) => r.in_app_gross, money: true },
-      { header: t("Perkly commission (EGP)"), value: (r) => r.in_app_commission, money: true },
+      { header: t("Perkly commission on in-app (EGP)"), value: (r) => r.in_app_commission, money: true },
       { header: t("Due to merchant (EGP)"), value: (r) => r.due_to_merchant, money: true },
-      { header: t("Pending payouts (EGP)"), value: (r) => r.pending_settlements, money: true },
-      { header: t("Paid out (EGP)"), value: (r) => r.paid_out, money: true },
       { header: t("Cashier sales (EGP)"), value: (r) => r.cashier_sales, money: true },
-      { header: t("Commission to invoice (EGP)"), value: (r) => r.commission_owed, money: true },
+      { header: t("Commission on cashier sales (EGP)"), value: (r) => r.commission_owed, money: true },
+      { header: t("Net to settle (EGP)"), value: (r) => r.net_to_settle, money: true, width: 18 },
+      { header: t("Direction"), value: (r) => (Number(r.net_to_settle) > 0 ? t("Perkly pays merchant") : Number(r.net_to_settle) < 0 ? t("Merchant pays Perkly commission") : "—"), width: 26 },
+      { header: t("Open settlements remaining (EGP)"), value: (r) => r.pending_settlements, money: true },
+      { header: t("Paid to merchant (EGP)"), value: (r) => r.paid_out, money: true },
+      { header: t("Received from merchant (EGP)"), value: (r) => r.received_from_merchant, money: true },
       { header: t("Last paid"), value: (r) => cairo(r.last_paid_at) },
       { header: t("Bank"), value: (r) => r.bank_name },
       { header: "IBAN", value: (r) => r.iban, width: 32 },
     ];
-    const rows = ((data ?? []) as Balance[]).filter((r) => sp.get("all") === "1" || Number(r.due_to_merchant) > 0 || Number(r.pending_settlements) > 0 || Number(r.commission_owed) > 0);
+    const rows = ((data ?? []) as Balance[]).filter((r) => sp.get("all") === "1" || Number(r.net_to_settle) !== 0 || Number(r.pending_settlements) !== 0);
     return fileResponse(rows, cols, "perkly-merchant-balances", format, rtl);
   }
 
@@ -128,8 +137,11 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
       { header: t("Transactions"), value: (r) => r.lines },
       { header: t("In-app sales (EGP)"), value: (r) => r.gross_amount, money: true },
       { header: t("Perkly commission (EGP)"), value: (r) => r.commission, money: true },
-      { header: t("Payout (EGP)"), value: (r) => r.amount, money: true },
-      { header: t("Status"), value: (r) => t(r.status) },
+      { header: t("Net amount (EGP)"), value: (r) => r.amount, money: true },
+      { header: t("Direction"), value: (r) => (r.amount > 0 ? t("Perkly pays merchant") : r.amount < 0 ? t("Merchant pays Perkly commission") : "—"), width: 26 },
+      { header: t("Paid so far (EGP)"), value: (r) => r.paid_amount, money: true },
+      { header: t("Remaining (EGP)"), value: (r) => Math.abs(r.amount) - Number(r.paid_amount), money: true },
+      { header: t("Status"), value: (r) => t(settlementLabel(r.status)) },
       { header: t("Bank reference"), value: (r) => r.reference, width: 20 },
       { header: t("Paid at"), value: (r) => cairo(r.paid_at) },
     ];

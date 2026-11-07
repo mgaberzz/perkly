@@ -55,7 +55,7 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
         <Stat label={t("Unique students")} value={s.unique_students ?? 0} />
         <Stat label={t("New vs recurring")} value={`${s.new_customer_pct ?? 0}% / ${s.recurring_customer_pct ?? 0}%`} />
         <Stat label={t("Revenue after discount")} value={egp(s.revenue_after_discount)} />
-        <Stat label={t("Due to merchant")} value={egp(balance?.due_to_merchant ?? 0)} hint={t("In-app payments not yet settled")} />
+        <Stat label={t("Net to settle")} value={egp(balance?.net_to_settle ?? 0)} hint={Number(balance?.net_to_settle ?? 0) >= 0 ? t("Perkly pays merchant") : t("Merchant pays Perkly commission")} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

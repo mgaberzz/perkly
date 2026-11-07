@@ -12,7 +12,7 @@ Every request lands in **Admin portal → Notifications**, visible only to the r
 | New cashier QR code | Merchant owner / manager / branch manager | Admin, Operations, Account manager (own merchants) | Notifications · Merchant page | QR starts working at that cashier | QR stays unusable; reason shown to merchant |
 | Hero perk (above 30% off) | Merchant owner / manager | Admin, Operations, Account manager (own merchants) | Notifications · Campaigns & perks | Perk goes live in the app | Perk marked rejected with the reason |
 | Online cashback (tracked-link order) | Online merchant reports the order | Admin, Finance | Notifications | Cashback moves to the student's balance (+20 XP) | Pending cashback removed |
-| Merchant payout (settlement) | Created by Finance from in-app payments | Admin, Finance | Finance & settlements | Marked paid with the bank transfer reference | Stays pending |
+| Settlement payment (full or partial) | Settlement created by Finance (in-app payments netted against commission on cashier sales) | Admin, Finance | Finance & settlements → Record payment | Transactions move from *Not settled yet* to *Partially settled* or *Settled* | Stays *Not settled yet* |
 | Merchant goes live | Merchant signs up / is created | Admin, Operations, Account manager (own) | Merchant page → Status | Merchant and perks visible to students | Stays pending / paused |
 | Commission % and plan | — | Admin, Operations only | Merchant page | New rate applies to future transactions | — |
 | Team roles (operations, finance, account manager) | — | Admin only | Users & roles | Person gets that portal view | — |
