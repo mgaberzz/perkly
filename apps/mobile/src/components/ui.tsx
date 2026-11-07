@@ -1,14 +1,13 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
 import { useEffect, useRef, type ReactNode } from 'react';
-import {
-  ActivityIndicator, Animated, Pressable, ScrollView, StyleSheet, Text, View,
-  type PressableProps, type ScrollViewProps, type StyleProp, type TextProps, type TextStyle, type ViewStyle,
-} from 'react-native';
+import { ActivityIndicator, Animated, Pressable, ScrollView, StyleSheet, View, type PressableProps, type ScrollViewProps, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
+import { Text } from '@/components/text';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import { brand, CATEGORY_EMOJI, gradient, useTheme } from '@/lib/theme';
 import { discountLabel, levelProgress } from '@/lib/format';
 import type { Perk } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 // ───────── Layout ─────────
 export function Screen({ children, scroll = true, edges = ['top'], style, ...rest }: {
@@ -147,8 +146,8 @@ export function XPBar({ totalXp, compact }: { totalXp: number; compact?: boolean
     <View style={{ gap: 6 }}>
       {!compact && (
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <T v="small">Lv {cur.level} · {cur.name}</T>
-          <T v="small">{next ? `${toNext} XP to ${next.name}` : 'Max level 👑'}</T>
+          <T v="small">{t('Lv {n} · {name}', { n: cur.level, name: cur.name })}</T>
+          <T v="small">{next ? t('{n} XP to {name}', { n: toNext, name: next.name }) : t('Max level 👑')}</T>
         </View>
       )}
       <View style={{ height: 10, borderRadius: 999, backgroundColor: c.chip, overflow: 'hidden' }}>

@@ -1,17 +1,19 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { TextInput } from '@/components/text';
 import { MerchantRow } from '@/components/merchant-card';
 import { Chip, Empty, Screen, T } from '@/components/ui';
 import { useSession } from '@/lib/session';
 import { CATEGORIES, CATEGORY_EMOJI, useTheme } from '@/lib/theme';
 import { nearestBranch } from '@/lib/format';
+import { t } from '@/lib/i18n';
 
 type Sort = 'best' | 'near' | 'az';
 const COLLECTIONS = [
-  { key: 'flash', label: '⚡ Flash perks' },
-  { key: 'big', label: '🤑 20%+ off' },
-  { key: 'fav', label: '❤️ My favorites' },
+  { key: 'flash', label: 'Flash perks', icon: '⚡' },
+  { key: 'big', label: '20%+ off', icon: '🤑' },
+  { key: 'fav', label: 'My favorites', icon: '❤️' },
 ];
 
 export default function Explore() {
@@ -41,9 +43,9 @@ export default function Explore() {
 
   return (
     <Screen>
-      <T v="h1">Explore 🧭</T>
+      <T v="h1">{t('Explore')} 🧭</T>
       <TextInput
-        value={q} onChangeText={setQ} placeholder="Search cafes, restaurants, fashion…" placeholderTextColor={c.textMuted}
+        value={q} onChangeText={setQ} placeholder={t('Search cafes, restaurants, fashion…')} placeholderTextColor={c.textMuted}
         style={{ backgroundColor: c.card, borderRadius: 18, borderWidth: 1, borderColor: c.border, padding: 16, fontSize: 16, fontWeight: '600', color: c.text }}
       />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
@@ -54,22 +56,22 @@ export default function Explore() {
               style={{ width: '31%', aspectRatio: 1.25, borderRadius: 20, alignItems: 'center', justifyContent: 'center', gap: 4,
                 backgroundColor: on ? '#7B2FF7' : c.card, borderWidth: 1, borderColor: on ? '#7B2FF7' : c.border }}>
               <T style={{ fontSize: 28 }}>{CATEGORY_EMOJI[k]}</T>
-              <T v="small" color={on ? '#fff' : c.text}>{k}</T>
+              <T v="small" color={on ? '#fff' : c.text} numberOfLines={1}>{t(k)}</T>
             </Pressable>
           );
         })}
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-        {COLLECTIONS.map((x) => <Chip key={x.key} label={x.label} active={collection === x.key} onPress={() => setCollection(collection === x.key ? null : x.key)} />)}
+        {COLLECTIONS.map((x) => <Chip key={x.key} label={`${x.icon} ${t(x.label)}`} active={collection === x.key} onPress={() => setCollection(collection === x.key ? null : x.key)} />)}
         <View style={{ width: 8 }} />
-        {coords && <Chip label="Nearest" active={sort === 'near'} onPress={() => setSort('near')} />}
-        <Chip label="Best deal" active={sort === 'best'} onPress={() => setSort('best')} />
+        {coords && <Chip label={t('Nearest')} active={sort === 'near'} onPress={() => setSort('near')} />}
+        <Chip label={t('Best deal')} active={sort === 'best'} onPress={() => setSort('best')} />
         <Chip label="A–Z" active={sort === 'az'} onPress={() => setSort('az')} />
       </ScrollView>
-      <T v="label">{list.length} places</T>
+      <T v="label">{t('{n} places', { n: list.length })}</T>
       <View style={{ gap: 10 }}>
         {list.map(({ m, d }) => <MerchantRow key={m.id} m={m} distance={d} />)}
-        {list.length === 0 && <Empty emoji="🔍" title="No perks here yet" subtitle="Want us to add some? Tell your ambassador 👇" />}
+        {list.length === 0 && <Empty emoji="🔍" title={t('No perks here yet')} subtitle={t('Want us to add some? Tell your ambassador 👇')} />}
       </View>
     </Screen>
   );

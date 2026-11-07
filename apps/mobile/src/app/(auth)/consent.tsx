@@ -1,11 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Pressable, Text, View } from 'react-native';
+import { Linking, Pressable, View } from 'react-native';
+import { Text } from '@/components/text';
 import { Checkbox } from '@/components/form';
 import { Button, Card, Screen, T } from '@/components/ui';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { brand } from '@/lib/theme';
+import { t } from '@/lib/i18n';
 
 export default function Consent() {
   const { session, refreshProfile } = useSession();
@@ -24,29 +26,28 @@ export default function Consent() {
   return (
     <Screen edges={['top', 'bottom']}>
       <View style={{ gap: 8, marginTop: 12 }}>
-        <T v="label">Step 2 of 2</T>
-        <T v="h1">Almost there! 🎉</T>
+        <T v="label">{t('Step 2 of 2')}</T>
+        <T v="h1">{t('Almost there! 🎉')}</T>
       </View>
       <Card style={{ gap: 12 }}>
-        <T v="h3">How we use your data</T>
+        <T v="h3">{t('How we use your data')}</T>
         <T v="muted">
-          Perkly keeps the minimum it needs to run your account: your phone or email, name, campus and the perks you redeem.
-          Your location is used only to show nearby perks and to confirm you’re in-store when you redeem. We never sell your data.
+          {t('Perkly keeps the minimum it needs to run your account: your phone or email, name, campus and the perks you redeem. Your location is used only to show nearby perks and to confirm you’re in-store when you redeem. We never sell your data.')}
         </T>
-        <T v="h3">Perk drops</T>
-        <T v="muted">Want a heads-up when new perks, flash deals and Boost Weeks drop on your campus? Tick the box below. You can switch it off any time in Settings.</T>
+        <T v="h3">{t('Perk drops')}</T>
+        <T v="muted">{t('Want a heads-up when new perks, flash deals and Boost Weeks drop on your campus? Tick the box below. You can switch it off any time in Settings.')}</T>
       </Card>
       <T v="muted">
-        To use Perkly you need to agree to our{' '}
-        <Text style={{ color: brand.purple, fontWeight: '800' }} onPress={() => Linking.openURL('https://perkly.app/terms')}>Terms of Use</Text> and{' '}
-        <Text style={{ color: brand.purple, fontWeight: '800' }} onPress={() => Linking.openURL('https://perkly.app/privacy')}>Privacy Policy</Text>.
+        {t('To use Perkly you need to agree to our')}{' '}
+        <Text style={{ color: brand.purple, fontWeight: '800' }} onPress={() => Linking.openURL('https://perkly.app/terms')}>{t('Terms of Use')}</Text> {t('and')}{' '}
+        <Text style={{ color: brand.purple, fontWeight: '800' }} onPress={() => Linking.openURL('https://perkly.app/privacy')}>{t('Privacy Policy')}</Text>.
       </T>
-      <Checkbox checked={drops} onChange={setDrops} label="Send me new perk drops 🔥" sub="Push notifications & emails — unsubscribe anytime" />
+      <Checkbox checked={drops} onChange={setDrops} label={t('Send me new perk drops 🔥')} sub={t('Push notifications & emails — unsubscribe anytime')} />
       <View style={{ gap: 6, marginTop: 8 }}>
-        <Button title="Accept all & continue" onPress={() => accept(true)} loading={saving === 'all'} />
+        <Button title={t('Accept all & continue')} onPress={() => accept(true)} loading={saving === 'all'} />
         {!drops && (
           <Pressable onPress={() => accept(false)} style={{ padding: 14 }} disabled={!!saving}>
-            <T style={{ textAlign: 'center', fontWeight: '800' }} color={brand.purple}>{saving === 'basic' ? 'Saving…' : 'Continue without perk drops'}</T>
+            <T style={{ textAlign: 'center', fontWeight: '800' }} color={brand.purple}>{saving === 'basic' ? t('Saving…') : t('Continue without perk drops')}</T>
           </Pressable>
         )}
       </View>

@@ -1,10 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Modal, Pressable, Text, View } from 'react-native';
+import { Animated, Easing, Modal, Pressable, View, useWindowDimensions } from 'react-native';
+import { Text } from '@/components/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from './ui';
 import { brand, gradient, useTheme } from '@/lib/theme';
+import { backChevron, fwdChevron, t } from '@/lib/i18n';
 
 const KEY = 'perkly.seenHowItWorks';
 const STEP_MS = 5000;
@@ -35,11 +37,11 @@ function StepArt({ step }: { step: number }) {
             <Text style={{ color: '#ffffffcc', fontSize: 9 }}>AUC Gate 4 · 80 m</Text>
           </LinearGradient>
           <View style={{ padding: 10, gap: 6 }}>
-            <Text style={{ fontSize: 9, color: '#6B6680' }}>How much are you paying?</Text>
+            <Text style={{ fontSize: 9, color: '#6B6680' }}>{t('How much are you paying?')}</Text>
             <Text style={{ fontSize: 26, fontWeight: '900', color: brand.ink, textAlign: 'right' }}>180.00</Text>
-            <Text style={{ fontSize: 10, fontWeight: '800', color: brand.success }}>You save 27 EGP 🎉</Text>
+            <Text style={{ fontSize: 10, fontWeight: '800', color: brand.success }}>{t('You save {amount} 🎉', { amount: `27 ${t('EGP')}` })}</Text>
             <LinearGradient colors={gradient} style={{ borderRadius: 10, padding: 8, marginTop: 20 }}>
-              <Text style={{ color: '#fff', fontWeight: '900', fontSize: 11, textAlign: 'center' }}>Redeem now</Text>
+              <Text style={{ color: '#fff', fontWeight: '900', fontSize: 11, textAlign: 'center' }}>{t('Redeem now')}</Text>
             </LinearGradient>
           </View>
         </View>,
@@ -49,7 +51,7 @@ function StepArt({ step }: { step: number }) {
           <View style={{ width: 54, height: 54, borderRadius: 27, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ color: brand.success, fontSize: 30, fontWeight: '900' }}>✓</Text>
           </View>
-          <Text style={{ color: '#fff', fontWeight: '900', fontSize: 16 }}>15% OFF</Text>
+          <Text style={{ color: '#fff', fontWeight: '900', fontSize: 16 }}>{t('{n}% OFF', { n: 15 })}</Text>
           <View style={{ backgroundColor: brand.ink, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 }}>
             <Text style={{ color: '#fff', fontWeight: '900', letterSpacing: 3 }}>7F3A</Text>
           </View>
@@ -68,6 +70,8 @@ const STEPS = [
 
 export function HowItWorks({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { c } = useTheme();
+  const { width: winW, height: winH } = useWindowDimensions();
+  const artScale = Math.min(1, (winW - 60) / 280, (winH * 0.36) / 280);
   const [step, setStep] = useState(0);
   const progress = useRef(new Animated.Value(0)).current;
 
@@ -97,18 +101,18 @@ export function HowItWorks({ visible, onClose }: { visible: boolean; onClose: ()
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 16 }}>
           <Pressable onPress={() => (step ? setStep(step - 1) : close())} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: c.card, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontSize: 22, color: c.text }}>{step ? '‹' : '✕'}</Text>
+            <Text style={{ fontSize: 22, color: c.text }}>{step ? backChevron() : '✕'}</Text>
           </Pressable>
-          {!last && <Pressable onPress={close}><Text style={{ color: brand.purple, fontWeight: '800', padding: 10 }}>Skip</Text></Pressable>}
+          {!last && <Pressable onPress={close}><Text style={{ color: brand.purple, fontWeight: '800', padding: 10 }}>{t('Skip')}</Text></Pressable>}
         </View>
         <Pressable style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingHorizontal: 28 }} onPress={() => !last && setStep(step + 1)}>
-          <StepArt step={step} />
-          <Text style={{ color: c.textMuted, fontWeight: '700', marginTop: 16 }}>Step {step + 1}</Text>
-          <Text style={{ color: c.text, fontSize: 28, fontWeight: '900', textAlign: 'center' }}>{STEPS[step].title}</Text>
-          <Text style={{ color: c.textMuted, fontSize: 16, textAlign: 'center', fontWeight: '500' }}>{STEPS[step].body}</Text>
+          <View style={{ transform: [{ scale: artScale }] , height: 280 * artScale, justifyContent: 'center' }}><StepArt step={step} /></View>
+          <Text style={{ color: c.textMuted, fontWeight: '700', marginTop: 16 }}>{t('Step {n}', { n: step + 1 })}</Text>
+          <Text style={{ color: c.text, fontSize: winW < 360 ? 22 : 28, fontWeight: '900', textAlign: 'center' }}>{t(STEPS[step].title)}</Text>
+          <Text style={{ color: c.textMuted, fontSize: 16, textAlign: 'center', fontWeight: '500' }}>{t(STEPS[step].body)}</Text>
         </Pressable>
         <View style={{ padding: 20 }}>
-          {last ? <Button title="Got it!" onPress={close} /> : <Button variant="secondary" title="Next ›" onPress={() => setStep(step + 1)} />}
+          {last ? <Button title={t('Got it!')} onPress={close} /> : <Button variant="secondary" title={`${t('Next')} ${fwdChevron()}`} onPress={() => setStep(step + 1)} />}
         </View>
       </SafeAreaView>
     </Modal>

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Pressable, TextInput, View, type TextInputProps } from 'react-native';
+import { Pressable, View, type TextInputProps } from 'react-native';
+import { TextInput } from '@/components/text';
 import { brand, useTheme } from '@/lib/theme';
 import { T } from './ui';
 

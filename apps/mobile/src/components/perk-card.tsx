@@ -1,8 +1,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/components/text';
 import { T } from './ui';
 import { discountLabel, distanceLabel, timeLeft } from '@/lib/format';
+import { t } from '@/lib/i18n';
 import type { PerkItem } from '@/lib/perks';
 import { useSession } from '@/lib/session';
 import { brand, CATEGORY_EMOJI, useTheme } from '@/lib/theme';
@@ -45,17 +47,17 @@ export function PerkCard({ item, width = 230 }: { item: PerkItem; width?: number
         <View style={{ padding: 12, gap: 4 }}>
           <T v="small" numberOfLines={1}>{merchant.name}</T>
           <T v="h3" numberOfLines={2} style={{ minHeight: 44 }}>{perk.title}</T>
-          <T v="small" numberOfLines={1}>📍 {item.branchName ?? merchant.name}{item.distance != null ? ` (${distanceLabel(item.distance)})` : ''}</T>
+          <T v="small" numberOfLines={1}>{item.branchName ? `📍 ${item.branchName}` : `🌐 ${t('Online')}`}{item.distance != null ? ` (${distanceLabel(item.distance)})` : ''}</T>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
             <View style={{ backgroundColor: '#FF3EA51A', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 }}>
               <Text style={{ color: brand.pink, fontWeight: '800', fontSize: 12 }}>
-                {perk.is_flash && perk.end_at ? `⏳ ${timeLeft(perk.end_at)}` : item.redeemed ? `${item.redeemed} redeemed` : 'New ✨'}
+                {perk.is_flash && perk.end_at ? `⏳ ${timeLeft(perk.end_at)}` : item.redeemed ? t('{n} redeemed', { n: item.redeemed }) : t('New ✨')}
               </Text>
             </View>
             <Heart merchantId={merchant.id} />
           </View>
           <View style={{ height: 1, backgroundColor: c.border, marginVertical: 6 }} />
-          <T v="small">{Number(perk.min_spend) > 0 ? `Min spend ${Number(perk.min_spend)} EGP` : 'No minimum spend'}</T>
+          <T v="small">{Number(perk.min_spend) > 0 ? t('Min spend {amount}', { amount: `${Number(perk.min_spend)} ${t('EGP')}` }) : t('No minimum spend')}</T>
         </View>
       </View>
     </Pressable>
@@ -75,11 +77,11 @@ export function PerkRow({ item }: { item: PerkItem }) {
         </View>
       </LinearGradient>
       <View style={{ flex: 1, gap: 3 }}>
-        <T v="small" numberOfLines={1}>{merchant.subcategory ?? merchant.category}</T>
+        <T v="small" numberOfLines={1}>{merchant.subcategory ?? t(merchant.category)}</T>
         <T v="h3" numberOfLines={1}>{merchant.name}</T>
         <T v="muted" numberOfLines={1} style={{ fontSize: 13 }}>{perk.title}</T>
-        <T v="small" numberOfLines={1}>📍 {item.branchName}{item.distance != null ? ` (${distanceLabel(item.distance)})` : ''}</T>
-        {item.redeemed > 0 && <T v="small" color={brand.pink}>🔥 {item.redeemed} redeemed this month</T>}
+        <T v="small" numberOfLines={1}>{item.branchName ? `📍 ${item.branchName}` : `🌐 ${t('Online')}`}{item.distance != null ? ` (${distanceLabel(item.distance)})` : ''}</T>
+        {item.redeemed > 0 && <T v="small" color={brand.pink}>🔥 {t('{n} redeemed this month', { n: item.redeemed })}</T>}
       </View>
     </Pressable>
   );
@@ -93,7 +95,7 @@ export function CollectionCard({ title, emoji, tag, colors, onPress }: { title: 
           <Text style={{ color: '#fff', fontWeight: '800', fontSize: 12 }}>{tag}</Text>
         </View>
         <Text style={{ fontSize: 64, position: 'absolute', right: -6, top: 36, opacity: 0.9 }}>{emoji}</Text>
-        <Text style={{ color: '#fff', fontWeight: '900', fontSize: 18 }}>{title}</Text>
+        <Text style={{ color: '#fff', fontWeight: '900', fontSize: 18 }} numberOfLines={3}>{title}</Text>
       </LinearGradient>
     </Pressable>
   );
@@ -105,11 +107,11 @@ export function UnderlineTabs({ tabs, value, onChange, big }: { tabs: string[]; 
   return (
     <View style={{ borderBottomWidth: 1, borderBottomColor: c.border }}>
       <View style={{ flexDirection: 'row', gap: big ? 24 : 20 }}>
-        {tabs.map((t) => {
-          const on = t === value;
+        {tabs.map((tab) => {
+          const on = tab === value;
           return (
-            <Pressable key={t} onPress={() => onChange(t)} style={{ paddingVertical: 10 }}>
-              <Text style={{ fontSize: big ? 24 : 15, fontWeight: big ? '900' : '700', color: on ? c.text : c.textMuted, opacity: on ? 1 : big ? 0.45 : 1 }}>{t}</Text>
+            <Pressable key={tab} onPress={() => onChange(tab)} style={{ paddingVertical: 10 }}>
+              <Text style={{ fontSize: big ? 24 : 15, fontWeight: big ? '900' : '700', color: on ? c.text : c.textMuted, opacity: on ? 1 : big ? 0.45 : 1 }}>{t(tab)}</Text>
               {!big && <View style={{ height: 4, borderRadius: 2, marginTop: 6, backgroundColor: on ? brand.pink : 'transparent' }} />}
             </Pressable>
           );

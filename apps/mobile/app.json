@@ -12,8 +12,10 @@
       "bundleIdentifier": "app.perkly.student",
       "infoPlist": {
         "NSCameraUsageDescription": "Perkly uses your camera to scan the merchant's QR code.",
-        "NSLocationWhenInUseUsageDescription": "Perkly uses your location to show nearby perks and confirm you're in-store when you redeem."
-      }
+        "NSLocationWhenInUseUsageDescription": "Perkly uses your location to show nearby perks and confirm you're in-store when you redeem.",
+        "NSFaceIDUsageDescription": "Perkly uses Face ID so only you can open your account."
+      },
+      "supportsTablet": false
     },
     "android": {
       "adaptiveIcon": {
@@ -51,11 +53,18 @@
         {
           "locationWhenInUsePermission": "Perkly uses your location to show nearby perks and confirm you're in-store when you redeem."
         }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Perkly uses Face ID so only you can open your account."
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {}
   }
 }

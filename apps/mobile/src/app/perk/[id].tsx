@@ -1,7 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Linking, Platform, Pressable, ScrollView, Share, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, Share, View } from 'react-native';
+import { Text } from '@/components/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { HowItWorks } from '@/components/how-it-works';
 import { Heart } from '@/components/perk-card';
@@ -10,6 +11,8 @@ import { Button, Empty, T } from '@/components/ui';
 import { DAYS } from '@/lib/days';
 import { discountLabel, distanceLabel, distanceM, egp, timeLeft } from '@/lib/format';
 import { usePerkItems } from '@/lib/perks';
+import { OnlineActions } from '@/components/online-actions';
+import { backChevron, fwdChevron, locale, t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { brand, CATEGORY_EMOJI, gradient, useTheme } from '@/lib/theme';
 
@@ -30,27 +33,27 @@ export default function PerkDetail() {
       .sort((a, z) => (a.d ?? 1e12) - (z.d ?? 1e12));
   }, [item, origin]);
 
-  if (!item) return <SafeAreaView style={{ flex: 1, backgroundColor: c.bg, justifyContent: 'center' }}><Empty emoji="🫥" title="This perk isn't available anymore" /></SafeAreaView>;
+  if (!item) return <SafeAreaView style={{ flex: 1, backgroundColor: c.bg, justifyContent: 'center' }}><Empty emoji="🫥" title={t("This perk isn't available anymore")} /></SafeAreaView>;
   const { perk, merchant } = item;
 
   const fine = [
-    Number(perk.min_spend) > 0 ? `Minimum spend of ${egp(perk.min_spend)} on one bill.` : 'No minimum spend.',
-    perk.max_discount_amount ? `Discount capped at ${egp(perk.max_discount_amount)} per visit.` : null,
-    'Scan the Perkly QR at the cashier and show the live green screen before paying.',
-    'Up to 2 Perkly redemptions per place per day, and one every 15 minutes.',
-    'Screenshots of the success screen are not accepted.',
+    Number(perk.min_spend) > 0 ? t('Minimum spend of {amount} on one bill.', { amount: egp(perk.min_spend) }) : t('No minimum spend.'),
+    perk.max_discount_amount ? t('Discount capped at {amount} per visit.', { amount: egp(perk.max_discount_amount) }) : null,
+    merchant.channel === 'online' ? t('Use your one-time code at checkout on the shop website.') : t('Scan the Perkly QR at the cashier and show the live green screen before paying.'),
+    t('Up to 2 Perkly redemptions per place per day, and one every 15 minutes.'),
+    t('Screenshots of the success screen are not accepted.'),
     perk.terms,
   ].filter(Boolean) as string[];
 
   const validity = perk.end_at
-    ? `Valid until ${new Date(perk.end_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}${perk.is_flash ? ` · ⏳ ${timeLeft(perk.end_at)}` : ''}`
-    : 'Valid every day, no expiry';
+    ? `${t('Valid until {date}', { date: new Date(perk.end_at).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: 'numeric' }) })}${perk.is_flash ? ` · ⏳ ${timeLeft(perk.end_at)}` : ''}`
+    : t('Valid every day, no expiry');
 
   const Row = ({ icon, text, onPress }: { icon: string; text: string; onPress?: () => void }) => (
     <Pressable onPress={onPress} disabled={!onPress} style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: c.border }}>
       <Text style={{ fontSize: 20 }}>{icon}</Text>
       <T style={{ flex: 1 }}>{text}</T>
-      {onPress && <Text style={{ fontSize: 22, color: c.text }}>›</Text>}
+      {onPress && <Text style={{ fontSize: 22, color: c.text }}>{fwdChevron()}</Text>}
     </Pressable>
   );
 
@@ -60,7 +63,7 @@ export default function PerkDetail() {
         <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 260, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
           <SafeAreaView edges={['top']} style={{ flex: 1, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              {[{ t: '‹', f: () => router.back() }, { t: '↗', f: () => Share.share({ message: `${perk.title} at ${merchant.name} — on Perkly 💜` }) }].map((b) => (
+              {[{ t: backChevron(), f: () => router.back() }, { t: '↗', f: () => Share.share({ message: t('{perk} at {place} — on Perkly 💜', { perk: perk.title, place: merchant.name }) }) }].map((b) => (
                 <Pressable key={b.t} onPress={b.f} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#0005', alignItems: 'center', justifyContent: 'center' }}>
                   <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800' }}>{b.t}</Text>
                 </Pressable>
@@ -71,34 +74,36 @@ export default function PerkDetail() {
         </LinearGradient>
 
         <View style={{ paddingHorizontal: 20, paddingTop: 20, gap: 6 }}>
-          <Pressable onPress={() => router.push(`/merchant/${merchant.id}`)}><T v="small" color={brand.purple}>{merchant.name} · {merchant.subcategory ?? merchant.category} ›</T></Pressable>
+          <Pressable onPress={() => router.push(`/merchant/${merchant.id}`)}><T v="small" color={brand.purple}>{merchant.name} · {merchant.subcategory ?? t(merchant.category)} {fwdChevron()}</T></Pressable>
           <T v="h1" style={{ fontSize: 26 }}>{perk.title}</T>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 18, backgroundColor: c.card, borderWidth: 1, borderColor: c.border }}>
             <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: brand.pink }} />
-            <T v="h3" style={{ flex: 1 }}>{Number(perk.min_spend) > 0 ? `MIN ${egp(perk.min_spend)}` : 'NO MIN SPEND'}</T>
+            <T v="h3" style={{ flex: 1 }}>{Number(perk.min_spend) > 0 ? t('MIN {amount}', { amount: egp(perk.min_spend) }) : t('NO MIN SPEND')}</T>
             <View style={{ width: 1, height: 20, backgroundColor: c.border }} />
             <T v="h3" color={brand.pink}>{discountLabel(perk)}</T>
           </View>
-          {item.redeemed > 0 && <T v="small" color={brand.pink} style={{ marginTop: 4 }}>🔥 {item.redeemed} students redeemed this month</T>}
+          {item.redeemed > 0 && <T v="small" color={brand.pink} style={{ marginTop: 4 }}>🔥 {t('{n} students redeemed this month', { n: item.redeemed })}</T>}
 
           <View style={{ marginTop: 8 }}>
             <Row icon="⏰" text={validity} />
-            <Row icon="🏬" text={branches.length === 1 ? `Use at ${branches[0].name}${branches[0].d != null ? ` (${distanceLabel(branches[0].d)})` : ''}` : `You can use this at ${branches.length} branches`} onPress={() => setBranchesOpen(true)} />
-            <Row icon="📅" text={perk.valid_days ? `Only on ${perk.valid_days.map((d) => DAYS[d]).join(', ')}` : 'Every day of the week'} />
+            {branches.length > 0 && <Row icon="🏬" text={branches.length === 1 ? `${t('Use at {place}', { place: branches[0].name })}${branches[0].d != null ? ` (${distanceLabel(branches[0].d)})` : ''}` : t('You can use this at {n} branches', { n: branches.length })} onPress={() => setBranchesOpen(true)} />}
+            <Row icon="📅" text={perk.valid_days ? t('Only on {days}', { days: perk.valid_days.map((d) => t(DAYS[d])).join('، ') }) : t('Every day of the week')} />
           </View>
 
-          <T v="h2" style={{ marginTop: 20 }}>Fine print</T>
+          {merchant.channel !== 'in_store' && <View style={{ marginTop: 16 }}><OnlineActions merchant={merchant} perk={perk} /></View>}
+
+          <T v="h2" style={{ marginTop: 20 }}>{t('Fine print')}</T>
           {(moreTerms ? fine : fine.slice(0, 3)).map((f) => (
-            <View key={f} style={{ flexDirection: 'row', gap: 10, paddingRight: 8 }}><T>•</T><T style={{ flex: 1 }}>{f}</T></View>
+            <View key={f} style={{ flexDirection: 'row', gap: 10, paddingEnd: 8 }}><T>•</T><T style={{ flex: 1 }}>{f}</T></View>
           ))}
-          {fine.length > 3 && <Pressable onPress={() => setMoreTerms(!moreTerms)}><T color={brand.pink} style={{ fontWeight: '800', marginTop: 4 }}>{moreTerms ? 'See less' : 'See more'}</T></Pressable>}
+          {fine.length > 3 && <Pressable onPress={() => setMoreTerms(!moreTerms)}><T color={brand.pink} style={{ fontWeight: '800', marginTop: 4 }}>{moreTerms ? t('See less') : t('See more')}</T></Pressable>}
 
-          <Row icon="💡" text="How does Perkly work?" onPress={() => setHowOpen(true)} />
+          <Row icon="💡" text={t('How does Perkly work?')} onPress={() => setHowOpen(true)} />
 
-          <T v="h2" style={{ marginTop: 20 }}>About {merchant.name}</T>
-          <T v="muted" numberOfLines={moreAbout ? undefined : 3}>{merchant.description ?? `${merchant.name} gives students instant discounts with Perkly.`}</T>
-          {(merchant.description?.length ?? 0) > 140 && <Pressable onPress={() => setMoreAbout(!moreAbout)}><T color={brand.pink} style={{ fontWeight: '800' }}>{moreAbout ? 'Show less' : 'Show more'}</T></Pressable>}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}><T v="muted">Type</T><T>{merchant.subcategory ?? merchant.category}</T></View>
+          <T v="h2" style={{ marginTop: 20 }}>{t('About {place}', { place: merchant.name })}</T>
+          <T v="muted" numberOfLines={moreAbout ? undefined : 3}>{merchant.description ?? t('{place} gives students instant discounts with Perkly.', { place: merchant.name })}</T>
+          {(merchant.description?.length ?? 0) > 140 && <Pressable onPress={() => setMoreAbout(!moreAbout)}><T color={brand.pink} style={{ fontWeight: '800' }}>{moreAbout ? t('Show less') : t('Show more')}</T></Pressable>}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}><T v="muted">{t('Type')}</T><T>{merchant.subcategory ?? t(merchant.category)}</T></View>
         </View>
       </ScrollView>
 
@@ -107,11 +112,13 @@ export default function PerkDetail() {
           <View style={{ width: 52, height: 52, borderRadius: 16, borderWidth: 1, borderColor: c.border, alignItems: 'center', justifyContent: 'center' }}>
             <Heart merchantId={merchant.id} size={26} />
           </View>
-          <Button title={`Scan to redeem • ${discountLabel(perk)}`} onPress={() => router.push('/scan')} style={{ flex: 1 }} />
+          {merchant.channel === 'online'
+            ? <Button title={t('Shop online • {deal}', { deal: discountLabel(perk) })} onPress={() => router.push(`/merchant/${merchant.id}`)} style={{ flex: 1 }} />
+            : <Button title={t('Scan to redeem • {deal}', { deal: discountLabel(perk) })} onPress={() => router.push('/scan')} style={{ flex: 1 }} />}
         </View>
       </SafeAreaView>
 
-      <Sheet visible={branchesOpen} onClose={() => setBranchesOpen(false)} title="Where to use it">
+      <Sheet visible={branchesOpen} onClose={() => setBranchesOpen(false)} title={t('Where to use it')}>
         <ScrollView style={{ flexGrow: 0 }}>
           {branches.map((b) => (
             <Pressable key={b.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: c.border }}

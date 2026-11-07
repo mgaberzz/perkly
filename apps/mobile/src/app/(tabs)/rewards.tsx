@@ -1,8 +1,10 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '@/components/text';
 import { Card, Chip, GradientCard, Screen, SectionHeader, StreakFlame, T, XPBar } from '@/components/ui';
 import { levelProgress } from '@/lib/format';
+import { fwdChevron, t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { brand, useTheme } from '@/lib/theme';
@@ -58,45 +60,45 @@ export default function Rewards() {
 
   return (
     <Screen>
-      <T v="h1">Rewards 🏆</T>
+      <T v="h1">{t('Rewards')} 🏆</T>
 
       <GradientCard style={{ gap: 14 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View>
-            <Text style={{ color: '#ffffffcc', fontWeight: '800', fontSize: 12, letterSpacing: 1 }}>LEVEL {cur.level}</Text>
+            <Text style={{ color: '#ffffffcc', fontWeight: '800', fontSize: 12, letterSpacing: 1 }}>{t('LEVEL {n}', { n: cur.level })}</Text>
             <Text style={{ color: '#fff', fontWeight: '900', fontSize: 26 }}>{cur.name}</Text>
-            <Text style={{ color: '#ffffffdd', fontWeight: '700' }}>{stats?.total_xp ?? 0} XP total</Text>
+            <Text style={{ color: '#ffffffdd', fontWeight: '700' }}>{t('{n} XP total', { n: stats?.total_xp ?? 0 })}</Text>
           </View>
           <View style={{ backgroundColor: '#ffffff26', borderRadius: 20, padding: 12, alignItems: 'center' }}>
             <StreakFlame days={streak} size={34} />
-            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 11 }}>day streak</Text>
+            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 11 }}>{t('day streak')}</Text>
           </View>
         </View>
         <View style={{ backgroundColor: '#ffffff', borderRadius: 16, padding: 12 }}><XPBar totalXp={stats?.total_xp ?? 0} /></View>
         <Text style={{ color: '#fff', fontWeight: '700' }}>
-          {streak === 0 ? 'Redeem a perk today to start a streak 🔥'
-            : nextMilestone ? `${nextMilestone - streak} more day${nextMilestone - streak === 1 ? '' : 's'} to your ${nextMilestone}-day bonus!`
-              : 'Legendary streak. Keep it alive 👑'}
-          {stats?.freeze_tokens ? `  ·  ❄️ ${stats.freeze_tokens} freeze` : ''}
+          {streak === 0 ? t('Redeem a perk today to start a streak 🔥')
+            : nextMilestone ? t('{n} more day(s) to your {m}-day bonus!', { n: nextMilestone - streak, m: nextMilestone })
+              : t('Legendary streak. Keep it alive 👑')}
+          {stats?.freeze_tokens ? `  ·  ❄️ ${t('{n} freeze', { n: stats.freeze_tokens })}` : ''}
         </Text>
       </GradientCard>
 
       <Card onPress={() => router.push('/arcade')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderColor: '#FFD25A', borderWidth: 2 }}>
         <Text style={{ fontSize: 40 }}>🎡</Text>
         <View style={{ flex: 1 }}>
-          <T v="h3">Arcade · Spin the wheel</T>
-          <T v="small">{stats?.spin_tickets ?? 0} ticket{stats?.spin_tickets === 1 ? '' : 's'} · every spin wins XP or a streak freeze</T>
+          <T v="h3">{t('Arcade · Spin the wheel')}</T>
+          <T v="small">{t('{n} ticket(s) · every spin wins XP or a streak freeze', { n: stats?.spin_tickets ?? 0 })}</T>
         </View>
-        <T v="h3" color={brand.purple}>Play ›</T>
+        <T v="h3" color={brand.purple}>{t('Play')} {fwdChevron()}</T>
       </Card>
 
-      <SectionHeader title="Quests 🎯" />
+      <SectionHeader title={`${t('Quests')} 🎯`} />
       {(['daily', 'weekly', 'monthly'] as const).map((type) => {
         const list = quests.filter((q) => q.quest_type === type);
         if (!list.length) return null;
         return (
           <View key={type} style={{ gap: 10 }}>
-            <T v="label">{type}</T>
+            <T v="label">{t(type)}</T>
             {list.map((q) => {
               const p = progress.find((x) => x.quest_id === q.id && x.period_start === periodStart(type));
               const done = !!p?.completed_at;
@@ -105,8 +107,8 @@ export default function Rewards() {
                 <Card key={q.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: done ? 0.7 : 1 }}>
                   <Text style={{ fontSize: 28 }}>{done ? '✅' : q.emoji ?? '🎯'}</Text>
                   <View style={{ flex: 1, gap: 6 }}>
-                    <T v="h3">{q.title}</T>
-                    {q.description ? <T v="small">{q.description}</T> : null}
+                    <T v="h3">{t(q.title)}</T>
+                    {q.description ? <T v="small">{t(q.description)}</T> : null}
                     <View style={{ height: 8, borderRadius: 999, backgroundColor: c.chip, overflow: 'hidden' }}>
                       <View style={{ width: `${pct * 100}%`, height: '100%', backgroundColor: done ? brand.success : brand.purple }} />
                     </View>
@@ -122,38 +124,38 @@ export default function Rewards() {
         );
       })}
 
-      <SectionHeader title="Badges 🏅" />
+      <SectionHeader title={`${t('Badges')} 🏅`} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {badges.map((b) => {
           const got = mine.has(b.id);
           return (
-            <View key={b.id} style={{ width: '31%', borderRadius: 20, padding: 12, alignItems: 'center', gap: 4, backgroundColor: c.card, borderWidth: 1, borderColor: got ? brand.purple : c.border, opacity: got ? 1 : 0.45 }}>
+            <View key={b.id} style={{ width: '31%', minWidth: 96, flexGrow: 1, borderRadius: 20, padding: 12, alignItems: 'center', gap: 4, backgroundColor: c.card, borderWidth: 1, borderColor: got ? brand.purple : c.border, opacity: got ? 1 : 0.45 }}>
               <Text style={{ fontSize: 30 }}>{got ? b.emoji : '🔒'}</Text>
-              <T v="small" style={{ textAlign: 'center' }} color={c.text}>{b.name}</T>
+              <T v="small" style={{ textAlign: 'center' }} color={c.text}>{t(b.name)}</T>
             </View>
           );
         })}
       </View>
 
-      <SectionHeader title="This week's leaderboard 🥇" />
+      <SectionHeader title={`${t("This week's leaderboard")} 🥇`} />
       <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Chip label="My campus" active={scope === 'campus'} onPress={() => setScope('campus')} />
-        <Chip label="Nationwide" active={scope === 'all'} onPress={() => setScope('all')} />
+        <Chip label={t('My campus')} active={scope === 'campus'} onPress={() => setScope('campus')} />
+        <Chip label={t('Nationwide')} active={scope === 'all'} onPress={() => setScope('all')} />
       </View>
       <Card style={{ gap: 0, paddingVertical: 4 }}>
-        {leaders.length === 0 && <T v="muted" style={{ padding: 12 }}>No XP earned this week yet — be #1 👀</T>}
+        {leaders.length === 0 && <T v="muted" style={{ padding: 12 }}>{t('No XP earned this week yet — be #1 👀')}</T>}
         {leaders.map((l) => (
           <View key={l.user_id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: c.border, backgroundColor: l.is_me ? '#7B2FF712' : undefined, borderRadius: 12, paddingHorizontal: 6 }}>
             <T v="h3" style={{ width: 32 }}>{l.rank <= 3 ? ['🥇', '🥈', '🥉'][l.rank - 1] : `#${l.rank}`}</T>
             <View style={{ flex: 1 }}>
-              <T v="h3">{l.display_name}{l.is_me ? ' (you)' : ''}</T>
+              <T v="h3">{l.display_name}{l.is_me ? ` (${t('you')})` : ''}</T>
               {scope === 'all' && l.campus_name ? <T v="small">{l.campus_name}</T> : null}
             </View>
             <T v="h3" color={brand.purple}>{l.xp} XP</T>
           </View>
         ))}
       </Card>
-      <T v="small" style={{ textAlign: 'center' }}>Leaderboards reset every Monday.</T>
+      <T v="small" style={{ textAlign: 'center' }}>{t('Leaderboards reset every Monday.')}</T>
     </Screen>
   );
 }

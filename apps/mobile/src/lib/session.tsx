@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase } from './supabase';
 import type { Campus, Merchant, Profile, Stats } from './types';
+import { t } from './i18n';
 
 type Coords = { lat: number; lng: number } | null;
 /** Where the student is browsing: around their GPS position, or a chosen campus/area. */
@@ -37,7 +38,7 @@ type Ctx = {
 const SessionContext = createContext<Ctx | null>(null);
 
 const MERCHANT_SELECT =
-  'id, name, category, subcategory, description, logo_url, cover_url, ' +
+  'id, name, category, subcategory, description, logo_url, cover_url, channel, website_url, affiliate_url, ' +
   'perks(id, title, description, terms, discount_type, discount_value, max_discount_amount, min_spend, is_flash, end_at, branch_id, priority_score, valid_days), ' +
   'branches:merchant_branches(id, name, address, lat, lng, campus_id)';
 
@@ -78,7 +79,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const refreshProfile = useCallback(async () => {
     if (!userId) return;
     const [{ data: p }, { data: s }, { data: f }] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, phone, email, campus_id, referral_code, status, role, birth_date, marketing_opt_in, terms_accepted_at, referred_by').eq('id', userId).single<Profile>(),
+      supabase.from('profiles').select('id, full_name, phone, email, campus_id, referral_code, status, role, birth_date, marketing_opt_in, terms_accepted_at, referred_by, user_code, student_code').eq('id', userId).single<Profile>(),
       supabase.from('user_stats').select('*').eq('user_id', userId).single<Stats>(),
       supabase.from('favorites').select('merchant_id').eq('user_id', userId),
     ]);
@@ -168,7 +169,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (coords) return coords;
     return campus?.lat != null && campus?.lng != null ? { lat: campus.lat, lng: campus.lng } : null;
   }, [area, coords, campus]);
-  const areaLabel = area.kind === 'campus' ? area.campus.name : coords ? 'Near you' : campus ? `Around ${campus.short_name ?? campus.name}` : 'Egypt';
+  const areaLabel = area.kind === 'campus' ? area.campus.name : coords ? t('Near you') : campus ? t('Around {place}', { place: campus.short_name ?? campus.name }) : t('Egypt');
 
   const value = useMemo<Ctx>(() => ({
     ready, session, profile, stats, campus, merchants, coords, favorites,

@@ -1,14 +1,15 @@
+import { locale, t } from './i18n';
 import type { Merchant, Perk } from './types';
 
 export const egp = (n: number | null | undefined) =>
-  n == null ? '—' : `${Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 })} EGP`;
+  n == null ? '—' : `${Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 })} ${t('EGP')}`;
 
 export function discountLabel(p: Pick<Perk, 'discount_type' | 'discount_value'>) {
   switch (p.discount_type) {
-    case 'percentage': return `${Number(p.discount_value)}% OFF`;
-    case 'amount': return `${Number(p.discount_value)} EGP OFF`;
-    case 'bogo': return 'BUY 1 GET 1';
-    default: return 'BUNDLE';
+    case 'percentage': return t('{n}% OFF', { n: Number(p.discount_value) });
+    case 'amount': return t('{n} EGP OFF', { n: Number(p.discount_value) });
+    case 'bogo': return t('BUY 1 GET 1');
+    default: return t('BUNDLE');
   }
 }
 
@@ -25,16 +26,16 @@ export function distanceM(a: { lat: number; lng: number }, b: { lat: number; lng
 }
 
 export const distanceLabel = (m: number | null | undefined) =>
-  m == null ? '' : m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(1)} km`;
+  m == null ? '' : m < 1000 ? t('{n} m', { n: Math.round(m / 10) * 10 }) : t('{n} km', { n: (m / 1000).toFixed(1) });
 
 export function timeLeft(iso: string | null) {
   if (!iso) return '';
   const ms = new Date(iso).getTime() - Date.now();
-  if (ms <= 0) return 'Ended';
+  if (ms <= 0) return t('Ended');
   const h = Math.floor(ms / 3600000);
-  if (h >= 24) return `${Math.floor(h / 24)}d left`;
-  if (h >= 1) return `${h}h left`;
-  return `${Math.max(1, Math.floor(ms / 60000))}m left`;
+  if (h >= 24) return t('{n}d left', { n: Math.floor(h / 24) });
+  if (h >= 1) return t('{n}h left', { n: h });
+  return t('{n}m left', { n: Math.max(1, Math.floor(ms / 60000)) });
 }
 
 export const LEVELS = [
@@ -44,13 +45,15 @@ export const LEVELS = [
 ];
 
 export function levelProgress(totalXp: number) {
-  const cur = [...LEVELS].reverse().find((l) => totalXp >= l.xp) ?? LEVELS[0];
-  const next = LEVELS.find((l) => l.level === cur.level + 1);
+  const found = [...LEVELS].reverse().find((l) => totalXp >= l.xp) ?? LEVELS[0];
+  const cur = { ...found, name: t(found.name) };
+  const nx = LEVELS.find((l) => l.level === cur.level + 1);
+  const next = nx ? { ...nx, name: t(nx.name) } : undefined;
   if (!next) return { cur, next: null, pct: 1, toNext: 0 };
   return { cur, next, pct: (totalXp - cur.xp) / (next.xp - cur.xp), toNext: next.xp - totalXp };
 }
 
-export const firstName = (n: string | null | undefined) => (n ?? '').trim().split(/\s+/)[0] || 'there';
+export const firstName = (n: string | null | undefined) => (n ?? '').trim().split(/\s+/)[0] || t('there');
 
 /** Distance (m) from the user to a merchant's closest branch. */
 export function nearestBranch(m: Merchant, coords: { lat: number; lng: number } | null) {
@@ -59,3 +62,7 @@ export function nearestBranch(m: Merchant, coords: { lat: number; lng: number } 
   return d.length ? Math.min(...d) : null;
 }
 
+
+/** Short date in the app language, e.g. "12 Nov" */
+export const shortDate = (iso: string, opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }) =>
+  new Date(iso).toLocaleDateString(locale(), opts);

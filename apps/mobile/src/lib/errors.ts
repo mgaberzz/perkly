@@ -1,3 +1,5 @@
+import { t } from './i18n';
+
 // Friendly copy for redemption errors (Notion: UX spec §6 + QR PRD §9)
 const MESSAGES: Record<string, string> = {
   invalid_qr: "Hmm, that's not a Perkly code. Try scanning the QR on the cashier table 🔄",
@@ -15,5 +17,11 @@ const MESSAGES: Record<string, string> = {
   account_restricted: 'Your account is restricted. Contact Perkly support.',
   not_authenticated: 'Please log in again.',
   network: 'Wi-Fi acting up? No worries 💜 Try again soon.',
+  payments_unavailable: "Paying in the app isn't available right now — pay at the cashier.",
+  invalid_payment_method: 'Pick how you want to pay.',
+  not_online: "This place doesn't sell online on Perkly.",
+  invalid_code: "That code doesn't exist.",
+  expired_code: 'That code has expired — get a new one.',
+  already_used: 'That code was already used.',
 };
-export const friendlyError = (code: string | undefined) => MESSAGES[code ?? ''] ?? 'Oops! Something went wrong. Try again 🔄';
+export const friendlyError = (code: string | undefined) => t(MESSAGES[code ?? ''] ?? 'Oops! Something went wrong. Try again 🔄');

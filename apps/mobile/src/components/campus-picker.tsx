@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { TextInput } from '@/components/text';
 import { supabase } from '@/lib/supabase';
 import { brand, useTheme } from '@/lib/theme';
 import type { Campus } from '@/lib/types';
 import { Sheet } from './sheet';
 import { T } from './ui';
+import { t } from '@/lib/i18n';
 
 let cache: Campus[] | null = null;
 export function useCampuses() {
@@ -28,8 +30,8 @@ export function CampusPicker({ visible, onClose, onPick, selectedId }: {
     return s ? campuses.filter((x) => `${x.name} ${x.short_name ?? ''} ${x.city}`.toLowerCase().includes(s)) : campuses;
   }, [campuses, q]);
   return (
-    <Sheet visible={visible} onClose={onClose} title="Pick your campus">
-      <TextInput value={q} onChangeText={setQ} placeholder="🔍  University, school or area" placeholderTextColor={c.textMuted}
+    <Sheet visible={visible} onClose={onClose} title={t('Pick your campus')}>
+      <TextInput value={q} onChangeText={setQ} placeholder={`🔍  ${t('University, school or area')}`} placeholderTextColor={c.textMuted}
         style={{ backgroundColor: c.bg, borderRadius: 16, padding: 14, fontSize: 16, fontWeight: '600', color: c.text }} />
       <ScrollView style={{ flexGrow: 0 }} keyboardShouldPersistTaps="handled">
         {list.map((x) => (
@@ -44,7 +46,7 @@ export function CampusPicker({ visible, onClose, onPick, selectedId }: {
             {x.id === selectedId && <T color={brand.purple} style={{ fontWeight: '900' }}>✓</T>}
           </Pressable>
         ))}
-        {list.length === 0 && <T v="muted" style={{ padding: 12 }}>No match — pick the closest one, more campuses are coming 💜</T>}
+        {list.length === 0 && <T v="muted" style={{ padding: 12 }}>{t('No match — pick the closest one, more campuses are coming 💜')}</T>}
       </ScrollView>
     </Sheet>
   );

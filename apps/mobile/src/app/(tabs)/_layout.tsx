@@ -1,7 +1,9 @@
 import { Redirect } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '@/components/text';
+import { t } from '@/lib/i18n';
 import { onboardingStep, useSession } from '@/lib/session';
 import { brand, gradient, useTheme } from '@/lib/theme';
 
@@ -26,12 +28,12 @@ export default function TabsLayout() {
         tabBarLabelStyle: { fontWeight: '700', fontSize: 11 },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: icon('🏠') }} />
-      <Tabs.Screen name="explore" options={{ title: 'Explore', tabBarIcon: icon('🧭') }} />
+      <Tabs.Screen name="index" options={{ title: t('Home'), tabBarIcon: icon('🏠') }} />
+      <Tabs.Screen name="explore" options={{ title: t('Explore'), tabBarIcon: icon('🧭') }} />
       <Tabs.Screen
         name="scan"
         options={{
-          title: 'Scan & Save',
+          title: t('Scan & Save'),
           tabBarIcon: () => (
             <LinearGradient colors={gradient} style={{ width: 58, height: 58, borderRadius: 29, marginTop: -26, alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: c.card }}>
               <View><Text style={{ fontSize: 24 }}>📷</Text></View>
@@ -40,8 +42,8 @@ export default function TabsLayout() {
           tabBarLabelStyle: { fontWeight: '900', fontSize: 11, color: brand.purple },
         }}
       />
-      <Tabs.Screen name="rewards" options={{ title: 'Rewards', tabBarIcon: icon('🏆') }} />
-      <Tabs.Screen name="profile" options={{ title: 'Me', tabBarIcon: icon('😎') }} />
+      <Tabs.Screen name="rewards" options={{ title: t('Rewards'), tabBarIcon: icon('🏆') }} />
+      <Tabs.Screen name="profile" options={{ title: t('Me'), tabBarIcon: icon('😎') }} />
     </Tabs>
   );
 }

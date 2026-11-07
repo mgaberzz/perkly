@@ -3,9 +3,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useMemo, useState } from 'react';
-import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/components/text';
 import { Button, Card, DiscountBadge, Empty, MerchantLogo, T } from '@/components/ui';
 import { bestPerk, distanceLabel, distanceM, egp, timeLeft } from '@/lib/format';
+import { OnlineActions } from '@/components/online-actions';
+import { t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { brand, CATEGORY_EMOJI, gradient, useTheme } from '@/lib/theme';
@@ -26,7 +29,7 @@ export default function MerchantScreen() {
     .map((b) => ({ ...b, d: coords && b.lat != null && b.lng != null ? distanceM(coords, { lat: b.lat, lng: b.lng }) : null }))
     .sort((a, b) => (a.d ?? 1e12) - (b.d ?? 1e12)), [m, coords]);
 
-  if (!m) return <View style={{ flex: 1, backgroundColor: c.bg, justifyContent: 'center' }}><Empty emoji="🫥" title="This place isn't on Perkly right now" /></View>;
+  if (!m) return <View style={{ flex: 1, backgroundColor: c.bg, justifyContent: 'center' }}><Empty emoji="🫥" title={t("This place isn't on Perkly right now")} /></View>;
 
   const best = bestPerk(m.perks);
   const fav = favorites.has(m.id);
@@ -48,18 +51,21 @@ export default function MerchantScreen() {
               <MerchantLogo name={m.name} category={m.category} uri={m.logo_url} size={60} />
               <View style={{ flex: 1 }}>
                 <T v="h2">{m.name}</T>
-                <T v="muted">{CATEGORY_EMOJI[m.category]} {m.subcategory ?? m.category}</T>
+                <T v="muted">{CATEGORY_EMOJI[m.category]} {m.subcategory ?? t(m.category)}</T>
               </View>
             </View>
-            {best && <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><T v="h3">Save up to</T><DiscountBadge perk={best} size="lg" /></View>}
+            {best && <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><T v="h3">{t('Save up to')}</T><DiscountBadge perk={best} size="lg" /></View>}
             {m.description ? <T v="muted">{m.description}</T> : null}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {weekCount != null && weekCount > 0 && <Tag text={`🔥 ${weekCount} students redeemed this week`} />}
-              {onCampus && <Tag text={`🎓 Near ${campus?.short_name ?? 'your campus'}`} />}
+              {weekCount != null && weekCount > 0 && <Tag text={`🔥 ${t('{n} students redeemed this week', { n: weekCount })}`} />}
+              {m.channel !== 'in_store' && <Tag text={`🌐 ${m.channel === 'online' ? t('Online only') : t('In-store + online')}`} />}
+              {onCampus && <Tag text={`🎓 ${t('Near {place}', { place: campus?.short_name ?? t('your campus') })}`} />}
             </View>
           </Card>
 
-          <T v="label">Perks</T>
+          <OnlineActions merchant={m} perk={best} />
+
+          <T v="label">{t('Perks')}</T>
           {m.perks.map((p) => (
             <Card key={p.id} onPress={() => router.push(`/perk/${p.id}`)}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
@@ -69,17 +75,17 @@ export default function MerchantScreen() {
               {p.description ? <T v="muted">{p.description}</T> : null}
               <T v="small">
                 {[
-                  Number(p.min_spend) > 0 ? `Min spend ${egp(p.min_spend)}` : null,
-                  p.max_discount_amount ? `Max ${egp(p.max_discount_amount)} off` : null,
+                  Number(p.min_spend) > 0 ? t('Min spend {amount}', { amount: egp(p.min_spend) }) : null,
+                  p.max_discount_amount ? t('Max {amount} off', { amount: egp(p.max_discount_amount) }) : null,
                   p.end_at ? `⏳ ${timeLeft(p.end_at)}` : null,
-                  p.branch_id ? `Only at ${m.branches.find((b) => b.id === p.branch_id)?.name ?? 'one branch'}` : null,
-                ].filter(Boolean).join(' · ') || 'Valid at all branches'}
+                  p.branch_id ? t('Only at {place}', { place: m.branches.find((b) => b.id === p.branch_id)?.name ?? t('one branch') }) : null,
+                ].filter(Boolean).join(' · ') || t('Valid at all branches')}
               </T>
               {p.terms ? <T v="small">ℹ️ {p.terms}</T> : null}
             </Card>
           ))}
 
-          <T v="label">Branches</T>
+          {branches.length > 0 && <T v="label">{t('Branches')}</T>}
           {branches.map((b) => (
             <Card key={b.id} onPress={() => {
               if (b.lat == null || b.lng == null) return;
@@ -103,9 +109,11 @@ export default function MerchantScreen() {
         style={{ position: 'absolute', right: 16, top: insets.top + 8, backgroundColor: '#ffffffdd', borderRadius: 20, padding: 8 }}>
         <Text style={{ fontSize: 20 }}>{fav ? '❤️' : '🤍'}</Text>
       </Pressable>
-      <View style={{ position: 'absolute', left: 20, right: 20, bottom: 30 }}>
-        <Button title="Scan to Redeem" icon="📷" onPress={() => router.push('/scan')} />
-      </View>
+      {m.channel !== 'online' && (
+        <View style={{ position: 'absolute', left: 20, right: 20, bottom: 30 }}>
+          <Button title={t('Scan to Redeem')} icon="📷" onPress={() => router.push('/scan')} />
+        </View>
+      )}
     </View>
   );
 }

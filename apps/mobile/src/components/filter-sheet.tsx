@@ -4,10 +4,11 @@ import { Checkbox } from './form';
 import { Sheet } from './sheet';
 import { Button, Chip, T } from './ui';
 import type { Filters, SortKey } from '@/lib/perks';
+import { t } from '@/lib/i18n';
 
-const SORTS: { key: SortKey; label: string }[] = [
-  { key: 'nearest', label: '📍 Nearest' }, { key: 'discount', label: '🤑 Biggest discount' },
-  { key: 'popular', label: '🔥 Most redeemed' }, { key: 'ending', label: '⏳ Ending soon' },
+const SORTS: { key: SortKey; label: string; icon: string }[] = [
+  { key: 'nearest', label: 'Nearest', icon: '📍' }, { key: 'discount', label: 'Biggest discount', icon: '🤑' },
+  { key: 'popular', label: 'Most redeemed', icon: '🔥' }, { key: 'ending', label: 'Ending soon', icon: '⏳' },
 ];
 
 export function FilterSortSheet({ visible, onClose, sort, filters, onApply }: {
@@ -16,18 +17,18 @@ export function FilterSortSheet({ visible, onClose, sort, filters, onApply }: {
   const [s, setS] = useState(sort);
   const [f, setF] = useState(filters);
   return (
-    <Sheet visible={visible} onClose={onClose} title="Filter & sort" height="75%">
-      <T v="label">Sort by</T>
+    <Sheet visible={visible} onClose={onClose} title={t('Filter & sort')} height="75%">
+      <T v="label">{t('Sort by')}</T>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {SORTS.map((x) => <Chip key={x.key} label={x.label} active={s === x.key} onPress={() => setS(x.key)} />)}
+        {SORTS.map((x) => <Chip key={x.key} label={`${x.icon} ${t(x.label)}`} active={s === x.key} onPress={() => setS(x.key)} />)}
       </View>
-      <T v="label" style={{ marginTop: 8 }}>Show only</T>
-      <Checkbox checked={f.flashOnly} onChange={(v) => setF({ ...f, flashOnly: v })} label="⚡ Flash perks" />
-      <Checkbox checked={f.noMinSpend} onChange={(v) => setF({ ...f, noMinSpend: v })} label="🪙 No minimum spend" />
-      <Checkbox checked={f.big} onChange={(v) => setF({ ...f, big: v })} label="🦸 20% off or more" />
+      <T v="label" style={{ marginTop: 8 }}>{t('Show only')}</T>
+      <Checkbox checked={f.flashOnly} onChange={(v) => setF({ ...f, flashOnly: v })} label={`⚡ ${t('Flash perks')}`} />
+      <Checkbox checked={f.noMinSpend} onChange={(v) => setF({ ...f, noMinSpend: v })} label={`🪙 ${t('No minimum spend')}`} />
+      <Checkbox checked={f.big} onChange={(v) => setF({ ...f, big: v })} label={`🦸 ${t('20% off or more')}`} />
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
-        <Button variant="secondary" title="Reset" style={{ flex: 1 }} onPress={() => { setS('nearest'); setF({ flashOnly: false, noMinSpend: false, big: false }); }} />
-        <Button title="Show results" style={{ flex: 2 }} onPress={() => { onApply(s, f); onClose(); }} />
+        <Button variant="secondary" title={t('Reset')} style={{ flex: 1 }} onPress={() => { setS('nearest'); setF({ flashOnly: false, noMinSpend: false, big: false }); }} />
+        <Button title={t('Show results')} style={{ flex: 2 }} onPress={() => { onApply(s, f); onClose(); }} />
       </View>
     </Sheet>
   );

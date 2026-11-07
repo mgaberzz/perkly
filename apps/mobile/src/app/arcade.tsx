@@ -3,9 +3,11 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Animated, Easing, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Text } from '@/components/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
+import { backChevron, fwdChevron, t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { brand } from '@/lib/theme';
@@ -36,7 +38,7 @@ function Wheel({ size }: { size: number }) {
           <G key={label}>
             <Path d={wedge(i, r)} fill={COLORS[i]} stroke="#E9E3F5" strokeWidth={1} />
             <G rotation={mid} origin="0, 0">
-              <SvgText x={0} y={-r * 0.62} fill={dark ? '#fff' : brand.ink} fontSize={size * 0.055} fontWeight="900" fontFamily={FONT} textAnchor="middle">{label}</SvgText>
+              <SvgText x={0} y={-r * 0.62} fill={dark ? '#fff' : brand.ink} fontSize={size * 0.055} fontWeight="900" fontFamily={FONT} textAnchor="middle">{label.startsWith('Freeze') ? `${t('Freeze')} ❄️` : label}</SvgText>
             </G>
           </G>
         );
@@ -65,7 +67,9 @@ export default function Arcade() {
   const [tour, setTour] = useState(-1);
   const rotation = useRef(new Animated.Value(0)).current;
   const total = useRef(0);
-  const size = 300;
+  const { width, height } = useWindowDimensions();
+  // Fits small phones (SE / mini) and short screens
+  const size = Math.max(220, Math.min(300, width - 72, height * 0.38));
 
   useEffect(() => { setTickets(stats?.spin_tickets ?? 0); }, [stats?.spin_tickets]);
   useEffect(() => { AsyncStorage.getItem(TOUR_KEY).then((v) => { if (!v) setTour(0); }); }, []);
@@ -103,8 +107,8 @@ export default function Arcade() {
         <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }}>
           {/* Marquee sign */}
           <LinearGradient colors={[brand.pink, '#C2188B']} style={{ borderRadius: 18, borderWidth: 3, borderColor: GOLD, paddingVertical: 14, flexDirection: 'row', alignItems: 'center' }}>
-            <Pressable onPress={() => router.back()} hitSlop={12} style={{ paddingHorizontal: 16 }}><Text style={{ color: GOLD, fontSize: 28, fontWeight: '900' }}>‹</Text></Pressable>
-            <Text style={{ flex: 1, textAlign: 'center', color: GOLD, fontSize: 30, fontWeight: '900', letterSpacing: 2, marginRight: 44 }}>ARCADE</Text>
+            <Pressable onPress={() => router.back()} hitSlop={12} style={{ paddingHorizontal: 16 }}><Text style={{ color: GOLD, fontSize: 28, fontWeight: '900' }}>{backChevron()}</Text></Pressable>
+            <Text style={{ flex: 1, textAlign: 'center', color: GOLD, fontSize: 30, fontWeight: '900', letterSpacing: 2, marginEnd: 44 }} numberOfLines={1} adjustsFontSizeToFit>{t('ARCADE')}</Text>
           </LinearGradient>
 
           {/* Screen */}
@@ -117,10 +121,10 @@ export default function Arcade() {
                 <Text>⚡</Text><Text style={{ color: '#fff', fontWeight: '900' }}>{stats?.total_xp ?? 0}</Text>
               </View>
               <View style={{ flex: 1 }} />
-              <Pressable onPress={() => setTour(0)}><Text style={{ color: '#fff', fontWeight: '800' }}>How it works?</Text></Pressable>
+              <Pressable onPress={() => setTour(0)}><Text style={{ color: '#fff', fontWeight: '800' }}>{t('How it works?')}</Text></Pressable>
             </View>
-            <Text style={{ color: '#fff', fontSize: 26, fontWeight: '900', lineHeight: 30 }}>SPIN{'\n'}THE WHEEL</Text>
-            <Text style={{ color: '#ffffffcc', fontWeight: '600' }}>Every spin wins · 1 🎟️ per spin</Text>
+            <Text style={{ color: '#fff', fontSize: 26, fontWeight: '900', lineHeight: 30 }}>{t('SPIN\nTHE WHEEL')}</Text>
+            <Text style={{ color: '#ffffffcc', fontWeight: '600' }}>{t('Every spin wins · 1 🎟️ per spin')}</Text>
 
             <View style={{ alignItems: 'center', marginTop: 8 }}>
               <View style={{ position: 'absolute', top: -4, zIndex: 2, width: 0, height: 0, borderLeftWidth: 16, borderRightWidth: 16, borderTopWidth: 28,
@@ -130,35 +134,35 @@ export default function Arcade() {
 
             <Pressable onPress={spin} disabled={spinning} style={({ pressed }) => ({ alignSelf: 'center', marginTop: 8, transform: [{ scale: pressed ? 0.96 : 1 }] })}>
               <LinearGradient colors={tickets > 0 ? [GOLD, '#FF9F1C'] : ['#6B6680', '#4B4560']} style={{ borderRadius: 999, paddingHorizontal: 56, paddingVertical: 14 }}>
-                <Text style={{ color: brand.ink, fontWeight: '900', fontSize: 22, letterSpacing: 2 }}>{spinning ? 'SPINNING…' : 'SPIN'}</Text>
+                <Text style={{ color: brand.ink, fontWeight: '900', fontSize: 22, letterSpacing: 2 }}>{spinning ? t('SPINNING…') : t('SPIN')}</Text>
               </LinearGradient>
             </Pressable>
           </View>
 
           {/* Shelf */}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            {(['missions', 'prizes'] as const).map((t) => (
-              <Pressable key={t} onPress={() => setTab(t)} style={{ borderRadius: 14, borderWidth: 2, borderColor: tab === t ? GOLD : '#8B5CF6', backgroundColor: tab === t ? brand.pink : '#ffffff14', paddingHorizontal: 18, paddingVertical: 10 }}>
-                <Text style={{ color: GOLD, fontWeight: '900', fontSize: 18, letterSpacing: 1 }}>{t.toUpperCase()}</Text>
+            {(['missions', 'prizes'] as const).map((k) => (
+              <Pressable key={k} onPress={() => setTab(k)} style={{ borderRadius: 14, borderWidth: 2, borderColor: tab === k ? GOLD : '#8B5CF6', backgroundColor: tab === k ? brand.pink : '#ffffff14', paddingHorizontal: 18, paddingVertical: 10 }}>
+                <Text style={{ color: GOLD, fontWeight: '900', fontSize: 18, letterSpacing: 1 }}>{t(k === 'missions' ? 'MISSIONS' : 'PRIZES')}</Text>
               </Pressable>
             ))}
           </View>
           {tab === 'missions' ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-              {[{ e: '🎡', t: 'Spin the wheel', live: true }, { e: '🃏', t: 'Flip the cards', live: false }, { e: '🕹️', t: 'Claw machine', live: false }].map((m) => (
-                <View key={m.t} style={{ width: 130, height: 150, borderRadius: 18, backgroundColor: '#ffffff1a', borderWidth: 2, borderColor: m.live ? GOLD : '#ffffff33', padding: 12, justifyContent: 'space-between', opacity: m.live ? 1 : 0.6 }}>
+              {[{ e: '🎡', name: 'Spin the wheel', live: true }, { e: '🃏', name: 'Flip the cards', live: false }, { e: '🕹️', name: 'Claw machine', live: false }].map((m) => (
+                <View key={m.name} style={{ width: 130, height: 150, borderRadius: 18, backgroundColor: '#ffffff1a', borderWidth: 2, borderColor: m.live ? GOLD : '#ffffff33', padding: 12, justifyContent: 'space-between', opacity: m.live ? 1 : 0.6 }}>
                   <Text style={{ fontSize: 44 }}>{m.e}</Text>
-                  <Text style={{ color: '#fff', fontWeight: '900' }}>{m.t}</Text>
-                  <Text style={{ color: m.live ? GOLD : '#ffffffaa', fontWeight: '800', fontSize: 12 }}>{m.live ? 'Playing now' : 'Coming soon'}</Text>
+                  <Text style={{ color: '#fff', fontWeight: '900' }}>{t(m.name)}</Text>
+                  <Text style={{ color: m.live ? GOLD : '#ffffffaa', fontWeight: '800', fontSize: 12 }}>{m.live ? t('Playing now') : t('Coming soon')}</Text>
                 </View>
               ))}
             </ScrollView>
           ) : (
             <View style={{ gap: 8 }}>
-              {[['⚡', 'XP boosts', '+10 to +100 XP added to your level instantly'], ['❄️', 'Streak freeze', 'Miss a day without losing your streak (max 3)'], ['🎁', 'Partner prizes', 'Free drinks & merch from campus partners — coming soon']].map(([e, t, d]) => (
-                <View key={t} style={{ flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: '#ffffff14', borderRadius: 16, padding: 14 }}>
+              {[['⚡', 'XP boosts', '+10 to +100 XP added to your level instantly'], ['❄️', 'Streak freeze', 'Miss a day without losing your streak (max 3)'], ['🎁', 'Partner prizes', 'Free drinks & merch from campus partners — coming soon']].map(([e, name, d]) => (
+                <View key={name} style={{ flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: '#ffffff14', borderRadius: 16, padding: 14 }}>
                   <Text style={{ fontSize: 28 }}>{e}</Text>
-                  <View style={{ flex: 1 }}><Text style={{ color: '#fff', fontWeight: '900' }}>{t}</Text><Text style={{ color: '#ffffffbb', fontWeight: '600' }}>{d}</Text></View>
+                  <View style={{ flex: 1 }}><Text style={{ color: '#fff', fontWeight: '900' }}>{t(name)}</Text><Text style={{ color: '#ffffffbb', fontWeight: '600' }}>{t(d)}</Text></View>
                 </View>
               ))}
             </View>
@@ -170,16 +174,16 @@ export default function Arcade() {
       <Modal visible={tour >= 0} transparent animationType="fade" onRequestClose={endTour}>
         <View style={{ flex: 1, backgroundColor: '#000a' }}>
           {tour >= 0 && (
-            <View style={{ position: 'absolute', left: 20, right: 60, top: TOUR[tour].top, backgroundColor: '#fff', borderRadius: 20, padding: 18, gap: 12 }}>
+            <View style={{ position: 'absolute', left: 20, right: 20, top: Math.min(TOUR[tour].top, height - 280), backgroundColor: '#fff', borderRadius: 20, padding: 18, gap: 12 }}>
               <Text style={{ fontWeight: '900', color: brand.ink }}>{tour + 1}/{TOUR.length}</Text>
-              <Text style={{ fontWeight: '800', fontSize: 16, color: brand.ink }}>{TOUR[tour].text}</Text>
+              <Text style={{ fontWeight: '800', fontSize: 16, color: brand.ink }}>{t(TOUR[tour].text)}</Text>
               <Pressable onPress={() => (tour < TOUR.length - 1 ? setTour(tour + 1) : endTour())} style={{ alignSelf: 'flex-end' }}>
-                <Text style={{ color: brand.purple, fontWeight: '900', fontSize: 16 }}>{tour < TOUR.length - 1 ? 'Next ›' : 'Let’s play ›'}</Text>
+                <Text style={{ color: brand.purple, fontWeight: '900', fontSize: 16 }}>{tour < TOUR.length - 1 ? `${t('Next')} ${fwdChevron()}` : `${t('Let’s play')} ${fwdChevron()}`}</Text>
               </Pressable>
             </View>
           )}
           <Pressable onPress={endTour} style={{ position: 'absolute', right: 20, bottom: 50, backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 22, paddingVertical: 12 }}>
-            <Text style={{ color: brand.purple, fontWeight: '900' }}>Skip ›</Text>
+            <Text style={{ color: brand.purple, fontWeight: '900' }}>{t('Skip')} {fwdChevron()}</Text>
           </Pressable>
         </View>
       </Modal>
@@ -191,21 +195,21 @@ export default function Arcade() {
             {result?.ok ? (
               <>
                 <Text style={{ fontSize: 60 }}>{result.reward_type === 'freeze' ? '❄️' : '🎉'}</Text>
-                <Text style={{ fontSize: 28, fontWeight: '900', color: brand.ink }}>{result.reward_type === 'freeze' ? 'Streak freeze!' : `+${result.amount} XP`}</Text>
+                <Text style={{ fontSize: 28, fontWeight: '900', color: brand.ink }}>{result.reward_type === 'freeze' ? t('Streak freeze!') : `+${result.amount} XP`}</Text>
                 <Text style={{ color: '#6B6680', fontWeight: '600', textAlign: 'center' }}>
-                  {result.reward_type === 'freeze' ? 'Your streak is safe if you miss a day.' : 'Added to your level. Keep going!'} {result.tickets_left} ticket{result.tickets_left === 1 ? '' : 's'} left.
+                  {result.reward_type === 'freeze' ? t('Your streak is safe if you miss a day.') : t('Added to your level. Keep going!')} {t('{n} ticket(s) left.', { n: result.tickets_left })}
                 </Text>
               </>
             ) : (
               <>
                 <Text style={{ fontSize: 60 }}>🎟️</Text>
-                <Text style={{ fontSize: 24, fontWeight: '900', color: brand.ink }}>{result?.error === 'no_tickets' ? 'Out of tickets' : 'Oops!'}</Text>
+                <Text style={{ fontSize: 24, fontWeight: '900', color: brand.ink }}>{result?.error === 'no_tickets' ? t('Out of tickets') : t('Oops!')}</Text>
                 <Text style={{ color: '#6B6680', fontWeight: '600', textAlign: 'center' }}>
-                  {result?.error === 'no_tickets' ? 'Redeem a perk today or finish a quest to earn another spin.' : 'Wi-Fi acting up? Try again in a sec 💜'}
+                  {result?.error === 'no_tickets' ? t('Redeem a perk today or finish a quest to earn another spin.') : t('Wi-Fi acting up? Try again in a sec 💜')}
                 </Text>
               </>
             )}
-            <Text style={{ color: brand.purple, fontWeight: '900', marginTop: 8 }}>Tap to close</Text>
+            <Text style={{ color: brand.purple, fontWeight: '900', marginTop: 8 }}>{t('Tap to close')}</Text>
           </View>
         </Pressable>
       </Modal>

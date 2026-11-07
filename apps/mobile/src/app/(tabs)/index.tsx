@@ -1,21 +1,23 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Dimensions, FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Text } from '@/components/text';
 import { LocationBar } from '@/components/area';
 import { HowItWorks } from '@/components/how-it-works';
 import { PerkCard } from '@/components/perk-card';
 import { Card, Empty, Screen, SectionHeader, T, XPBar } from '@/components/ui';
 import { egp, firstName } from '@/lib/format';
+import { fwdChevron, t } from '@/lib/i18n';
 import { applySortFilter, NO_FILTERS, usePerkItems } from '@/lib/perks';
 import { useSession } from '@/lib/session';
 import { brand, CATEGORY_EMOJI, useTheme } from '@/lib/theme';
 
 const SHORTCUTS = ['Food', 'Coffee', 'Fashion', 'Beauty', 'Fitness', 'Entertainment', 'Electronics'] as const;
-const W = Dimensions.get('window').width;
 
 export default function Home() {
   const { c } = useTheme();
+  const { width: W } = useWindowDimensions();
   const { profile, stats, campus, merchants, refreshMerchants, refreshProfile, refreshLocation } = useSession();
   const items = usePerkItems();
   const [refreshing, setRefreshing] = useState(false);
@@ -37,9 +39,9 @@ export default function Home() {
   const trending = useMemo(() => applySortFilter(items.filter((x) => x.merchant.branches.some((b) => b.campus_id === campus?.id)), 'popular', NO_FILTERS).slice(0, 10), [items, campus]);
 
   const BANNERS = [
-    { colors: ['#7B2FF7', '#FF3EA5'] as const, emoji: '🎡', title: 'Spin the wheel', body: `${stats?.spin_tickets ?? 0} ticket${stats?.spin_tickets === 1 ? '' : 's'} waiting — win XP & streak freezes`, onPress: () => router.push('/arcade') },
-    { colors: ['#2F80FF', '#7B2FF7'] as const, emoji: '📷', title: 'How Perkly works', body: 'Scan the QR at the cashier → save instantly', onPress: () => setHowOpen(true) },
-    { colors: ['#FF3EA5', '#FF7A59'] as const, emoji: '💜', title: 'Invite friends, earn XP', body: `Share code ${profile?.referral_code ?? ''} · +50 XP each`, onPress: () => router.push('/profile') },
+    { colors: ['#7B2FF7', '#FF3EA5'] as const, emoji: '🎡', title: t('Spin the wheel'), body: t('{n} ticket(s) waiting — win XP & streak freezes', { n: stats?.spin_tickets ?? 0 }), onPress: () => router.push('/arcade') },
+    { colors: ['#2F80FF', '#7B2FF7'] as const, emoji: '📷', title: t('How Perkly works'), body: t('Scan the QR at the cashier → save instantly'), onPress: () => setHowOpen(true) },
+    { colors: ['#FF3EA5', '#FF7A59'] as const, emoji: '💜', title: t('Invite friends, earn XP'), body: t('Share code {code} · +50 XP each', { code: profile?.referral_code ?? '' }), onPress: () => router.push('/profile') },
   ];
 
   return (
@@ -49,17 +51,17 @@ export default function Home() {
       {/* Search pill with favorites + scan shortcuts */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: c.card, borderRadius: 999, borderWidth: 1, borderColor: c.border, paddingHorizontal: 16, paddingVertical: 12 }}>
         <Pressable onPress={() => router.push({ pathname: '/explore', params: { fav: '1' } })} hitSlop={8}><Text style={{ fontSize: 18, color: brand.pink }}>♥</Text></Pressable>
-        <Pressable onPress={() => router.push('/explore')} style={{ flex: 1 }}><T v="muted">🔍  Search cafés, burgers, gyms…</T></Pressable>
+        <Pressable onPress={() => router.push('/explore')} style={{ flex: 1 }}><T v="muted" numberOfLines={1}>🔍  {t('Search cafés, burgers, gyms…')}</T></Pressable>
         <View style={{ width: 1, height: 22, backgroundColor: c.border }} />
         <Pressable onPress={() => router.push('/scan')} hitSlop={8}><Text style={{ fontSize: 18 }}>📷</Text></Pressable>
       </View>
 
       {/* Wallet-style stats strip */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8 }}>
         {[
-          { icon: '💸', value: egp(stats?.total_saved ?? 0), label: 'Saved', to: '/history' as const },
-          { icon: '🔥', value: `${stats?.current_streak ?? 0} days`, label: 'Streak', to: '/rewards' as const },
-          { icon: '🎟️', value: `x${stats?.spin_tickets ?? 0}`, label: 'Spins', to: '/arcade' as const },
+          { icon: '💸', value: egp(stats?.total_saved ?? 0), label: t('Saved'), to: '/history' as const },
+          { icon: '🔥', value: t('{n} days', { n: stats?.current_streak ?? 0 }), label: t('Streak'), to: '/rewards' as const },
+          { icon: '🎟️', value: `x${stats?.spin_tickets ?? 0}`, label: t('Spins'), to: '/arcade' as const },
           { icon: '⚡', value: `${stats?.total_xp ?? 0}`, label: 'XP', to: '/rewards' as const },
         ].map((s) => (
           <Pressable key={s.label} onPress={() => router.push(s.to)} style={{ alignItems: 'flex-start' }}>
@@ -77,7 +79,7 @@ export default function Home() {
             <View style={{ width: 54, height: 54, borderRadius: 18, backgroundColor: c.chip, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ fontSize: 26 }}>{k === 'More' ? '🧩' : CATEGORY_EMOJI[k]}</Text>
             </View>
-            <T v="small" color={c.text} numberOfLines={1}>{k === 'Entertainment' ? 'Fun' : k}</T>
+            <T v="small" color={c.text} numberOfLines={1}>{t(k === 'Entertainment' ? 'Fun' : k)}</T>
           </Pressable>
         ))}
       </View>
@@ -89,9 +91,9 @@ export default function Home() {
           {BANNERS.map((b) => (
             <Pressable key={b.title} onPress={b.onPress} style={{ width: W, paddingHorizontal: 20 }}>
               <LinearGradient colors={b.colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 130, borderRadius: 24, padding: 18, justifyContent: 'center', overflow: 'hidden' }}>
-                <Text style={{ position: 'absolute', right: 10, bottom: -6, fontSize: 90, opacity: 0.9 }}>{b.emoji}</Text>
-                <Text style={{ color: '#fff', fontWeight: '900', fontSize: 22, maxWidth: '70%' }}>{b.title}</Text>
-                <Text style={{ color: '#ffffffdd', fontWeight: '700', marginTop: 4, maxWidth: '68%' }}>{b.body}</Text>
+                <Text style={{ position: 'absolute', right: 10, bottom: -6, fontSize: Math.min(90, W * 0.22), opacity: 0.9 }}>{b.emoji}</Text>
+                <Text style={{ color: '#fff', fontWeight: '900', fontSize: 22, maxWidth: '70%' }} numberOfLines={2}>{b.title}</Text>
+                <Text style={{ color: '#ffffffdd', fontWeight: '700', marginTop: 4, maxWidth: '68%' }} numberOfLines={2}>{b.body}</Text>
               </LinearGradient>
             </Pressable>
           ))}
@@ -102,37 +104,37 @@ export default function Home() {
       </View>
 
       <Card onPress={() => router.push('/rewards')}>
-        <T v="h3">Hey {firstName(profile?.full_name)} 👋 keep levelling up</T>
+        <T v="h3">{t('Hey {name} 👋 keep levelling up', { name: firstName(profile?.full_name) })}</T>
         <XPBar totalXp={stats?.total_xp ?? 0} />
       </Card>
 
       {flash.length > 0 && (
         <View style={{ gap: 12 }}>
-          <SectionHeader title="Ending soon ⏳" action="See all ›" onAction={() => router.push({ pathname: '/collection/[key]', params: { key: 'flash' } })} />
+          <SectionHeader title={t('Ending soon ⏳')} action={`${t('See all')} ${fwdChevron()}`} onAction={() => router.push({ pathname: '/collection/[key]', params: { key: 'flash' } })} />
           <FlatList horizontal data={flash} keyExtractor={(x) => x.perk.id} showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: 12 }} renderItem={({ item }) => <PerkCard item={item} />} />
         </View>
       )}
 
       <View style={{ gap: 12 }}>
-        <SectionHeader title="Near you 📍" action="See all ›" onAction={() => router.push({ pathname: '/category/[name]', params: { name: 'All' } })} />
+        <SectionHeader title={t('Near you 📍')} action={`${t('See all')} ${fwdChevron()}`} onAction={() => router.push({ pathname: '/category/[name]', params: { name: 'All' } })} />
         {nearby.length ? (
           <FlatList horizontal data={nearby} keyExtractor={(x) => x.perk.id} showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: 12 }} renderItem={({ item }) => <PerkCard item={item} />} />
-        ) : <Card><T v="muted">Nothing within 5 km of this area yet — tap “Change” above to look somewhere else.</T></Card>}
+        ) : <Card><T v="muted">{t('Nothing within 5 km of this area yet — tap “Change” above to look somewhere else.')}</T></Card>}
       </View>
 
       <View style={{ gap: 12 }}>
         <View style={{ gap: 2 }}>
-          <SectionHeader title={`Trending at ${campus?.short_name ?? 'your campus'} 🔥`} />
-          <T v="muted">Handpicked perks students love this week</T>
+          <SectionHeader title={t('Trending at {place} 🔥', { place: campus?.short_name ?? t('your campus') })} />
+          <T v="muted">{t('Handpicked perks students love this week')}</T>
         </View>
         {trending.length ? (
           <FlatList horizontal data={trending} keyExtractor={(x) => x.perk.id} showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: 12 }} renderItem={({ item }) => <PerkCard item={item} />} />
-        ) : <Empty emoji="💜" title="New perks coming tomorrow" subtitle="We're adding merchants around your campus." />}
+        ) : <Empty emoji="💜" title={t('New perks coming tomorrow')} subtitle={t("We're adding merchants around your campus.")} />}
       </View>
-      <T v="small" style={{ textAlign: 'center' }}>{merchants.length} places on Perkly</T>
+      <T v="small" style={{ textAlign: 'center' }}>{t('{n} places on Perkly', { n: merchants.length })}</T>
       <HowItWorks visible={howOpen} onClose={() => setHowOpen(false)} />
     </Screen>
   );
