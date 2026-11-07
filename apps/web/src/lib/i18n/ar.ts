@@ -1,5 +1,13 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Other": "أخرى",
+  "Week of {date}": "أسبوع {date}",
+  "Weekly trend: total GMV and net revenue": "الاتجاه الأسبوعي: إجمالي المبيعات وصافي الإيراد",
+  "Daily trend: total GMV and net revenue": "الاتجاه اليومي: إجمالي المبيعات وصافي الإيراد",
+  "Click a bar to see its transactions": "اضغط على أي عمود لعرض معاملاته",
+  "Share of net revenue by {dim}": "نسبة صافي الإيراد حسب {dim}",
+  "Margin by {dim}": "هامش الربح حسب {dim}",
+  "Net revenue trend — top {n} by {dim}": "اتجاه صافي الإيراد — أعلى {n} حسب {dim}",
   "All branches. Positive = Perkly pays you; negative = you owe Perkly commission + VAT on sales paid at your cashier.": "كل الفروع. موجب = Perkly تدفع لك، سالب = عليك عمولة Perkly والضريبة على المبيعات المدفوعة عند الكاشير.",
   "Bank transfers from Perkly, recorded by Perkly finance.": "تحويلات بنكية من Perkly، يسجّلها فريق مالية Perkly.",
   "Click a % to see those customers": "اضغط على النسبة لعرض هؤلاء العملاء",

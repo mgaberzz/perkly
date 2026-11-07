@@ -5,6 +5,7 @@ import { ExportButtons } from "@/components/export-buttons";
 import { egpShort, periodStart, short } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { AGE_LABEL } from "@/lib/tx-filters";
+import { ComboChart, DonutChart, LineChart } from "@/components/charts";
 
 export const metadata = { title: "Insights" };
 
@@ -28,10 +29,13 @@ export default async function InsightsPage({ searchParams }: PageProps<"/admin/i
   const dim = DIMS.find((d) => d.key === sp.dim) ?? DIMS[0];
   const days = Number(sp.days) || 30;
   const from = periodStart(days);
-  const [{ data, error }, { data: sum }] = await Promise.all([
+  const [{ data, error }, { data: sum }, { data: seriesRows }] = await Promise.all([
     supabase.rpc("insights", { p_dimension: dim.key, p_days: days }),
     supabase.rpc("finance_summary", { p_days: days }),
+    supabase.rpc("insights_series", { p_dimension: dim.key, p_days: days }),
   ]);
+  type Pt = { day: string; key: string; transactions: number; gmv: number; commission: number };
+  const pts = (seriesRows ?? []) as Pt[];
   const rows = (data ?? []) as Row[];
   const s = (sum ?? {}) as Summary;
   const label = (r: Row) => (dim.key === "age" ? t(AGE_LABEL[r.key] ?? r.label) : dim.key === "sector" ? t(r.label) : t(r.label));
@@ -39,6 +43,40 @@ export default async function InsightsPage({ searchParams }: PageProps<"/admin/i
   const drill = (r: Row) => `/admin/redemptions?${dim.param}=${encodeURIComponent(r.key)}&from=${from}`;
   const link = (k: string, d: number) => `/admin/insights?dim=${k}&days=${d}`;
   const total = rows.reduce((a, r) => a + Number(r.commission), 0);
+
+  // ── Chart buckets: days (≤ 90 days) or weeks (longer periods) ──
+  const weekly = days > 90;
+  const bucketOf = (d: string) => {
+    if (!weekly) return d;
+    const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7));
+    return x.toISOString().slice(0, 10);
+  };
+  const buckets: string[] = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(`${from}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + i);
+    const b = bucketOf(d.toISOString().slice(0, 10));
+    if (buckets[buckets.length - 1] !== b) buckets.push(b);
+  }
+  const bucketEnd = (b: string) => {
+    if (!weekly) return b;
+    const x = new Date(`${b}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + 6); return x.toISOString().slice(0, 10);
+  };
+  const fmt = (b: string) => `${b.slice(8)}/${b.slice(5, 7)}`;
+  const byBucket = new Map<string, { gmv: number; rev: number; n: number }>();
+  for (const p of pts) {
+    const b = bucketOf(p.day); const v = byBucket.get(b) ?? { gmv: 0, rev: 0, n: 0 };
+    v.gmv += Number(p.gmv); v.rev += Number(p.commission); v.n += Number(p.transactions); byBucket.set(b, v);
+  }
+  const trend = buckets.map((b) => {
+    const v = byBucket.get(b) ?? { gmv: 0, rev: 0, n: 0 };
+    return { label: fmt(b), bar: v.gmv, line: v.rev, href: `/admin/redemptions?from=${b}&to=${bucketEnd(b)}`,
+      title: `${weekly ? t("Week of {date}", { date: fmt(b) }) : fmt(b)}\n${t("Total GMV")}: ${egpShort(v.gmv)}\n${t("Net revenue")}: ${egpShort(v.rev)}\n${t("{n} transactions", { n: v.n })}` };
+  });
+  const top5 = rows.slice(0, 5);
+  const lines = top5.map((r) => ({
+    label: label(r), href: drill(r),
+    values: buckets.map((b) => pts.filter((p) => p.key === r.key && bucketOf(p.day) === b).reduce((a, p) => a + Number(p.commission), 0)),
+  }));
 
   return (
     <>
@@ -54,6 +92,11 @@ export default async function InsightsPage({ searchParams }: PageProps<"/admin/i
         <Link href="/admin/explain?metric=to_be_paid"><Stat label={t("To be paid to merchants")} value={<Amount v={s.to_be_paid_to_merchants} />} hint={t("Open dues now")} /></Link>
       </div>
 
+      <Card title={weekly ? t("Weekly trend: total GMV and net revenue") : t("Daily trend: total GMV and net revenue")} className="mb-6"
+        actions={<span className="text-xs text-zinc-500">{t("Click a bar to see its transactions")}</span>}>
+        <ComboChart days={trend} barLabel={t("Total GMV")} lineLabel={t("Net revenue")} empty={t("No data yet")} />
+      </Card>
+
       <div className="mb-4 flex flex-wrap gap-2">
         {DIMS.map((d) => (
           <Link key={d.key} href={link(d.key, days)}
@@ -62,6 +105,18 @@ export default async function InsightsPage({ searchParams }: PageProps<"/admin/i
           </Link>
         ))}
       </div>
+
+      <div className="mb-6 grid gap-6 lg:grid-cols-2">
+        <Card title={t("Share of net revenue by {dim}", { dim: t(dim.label.toLowerCase()) })}>
+          <DonutChart slices={rows.map((r) => ({ label: label(r), value: Number(r.commission), href: drill(r) }))} empty={t("No data yet")} otherLabel={t("Other")} />
+        </Card>
+        <Card title={t("Margin by {dim}", { dim: t(dim.label.toLowerCase()) })}>
+          <HBarList data={rows.slice(0, 12).map((r) => ({ label: label(r), value: Number(r.margin_pct), href: drill(r) }))} format={(n) => `${Number(n.toFixed(1))}%`} empty={t("No data yet")} />
+        </Card>
+      </div>
+      <Card title={t("Net revenue trend — top {n} by {dim}", { n: top5.length, dim: t(dim.label.toLowerCase()) })} className="mb-6">
+        <LineChart labels={buckets.map(fmt)} series={lines} empty={t("No data yet")} />
+      </Card>
 
       <div className="mb-6 grid gap-6 lg:grid-cols-2">
         <Card title={t("Net revenue by {dim}", { dim: t(dim.label.toLowerCase()) })}>

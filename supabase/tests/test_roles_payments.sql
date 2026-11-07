@@ -375,3 +375,12 @@ do $$ begin
          or not exists (select 1 from redemptions r join merchants m on m.id = r.merchant_id where m.vat_enabled and r.settlement_id is null and r.commission_amount > 0), 'VAT back on';
 end $$;
 reset role;
+
+-- ── Insights series (migration 15) ──
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e3', false);
+do $$ begin
+  assert (select sum(gmv) from insights_series('sector', 365)) = (select sum(gmv) from insights('sector', 365)), 'series adds up to insights';
+  assert (select sum(transactions) from insights_series('merchant', 365)) = (select count(*) from redemptions where status <> 'reversed'), 'series covers all';
+end $$;
+reset role;
