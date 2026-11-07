@@ -275,3 +275,32 @@ do $$ begin
   assert (select count(*) from user_stats) >= 5, 'ops reads stats';
 end $$;
 reset role;
+
+-- ── Daily rule: 4 per merchant per day (migration 10) ──
+do $$ begin
+  assert public.max_redemptions_per_merchant_per_day() = 4, 'daily limit is 4';
+end $$;
+-- Student f redeems at KFC 4 times (cooldown skipped by backdating 16 min each time), the 5th is refused
+insert into auth.users (id, email, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000f1', 'four@perkly.test', '{"full_name":"Fatma Four"}');
+select q.code as k_code, b.lat as k_lat, b.lng as k_lng, p.id as k_perk
+  from branch_qr_codes q join merchant_branches b on b.id = q.branch_id join merchants m on m.id = b.merchant_id
+  join perks p on p.merchant_id = m.id and p.min_spend = 0 and p.status = 'active'
+ where m.name = 'KFC' and q.status = 'approved' and q.is_active limit 1 \gset
+select set_config('test.k_code', :'k_code', false), set_config('test.k_perk', :'k_perk', false),
+       set_config('test.k_lat', :'k_lat', false), set_config('test.k_lng', :'k_lng', false);
+do $$
+declare r jsonb; i int; v_hour int := extract(hour from now() at time zone 'Africa/Cairo');
+begin
+  if v_hour < 2 then raise notice 'skipping daily-limit test right after midnight'; return; end if;
+  for i in 1..5 loop
+    perform set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000f1', true);
+    set local role authenticated;
+    r := redeem_perk(current_setting('test.k_code'), current_setting('test.k_perk')::uuid, 100,
+                     current_setting('test.k_lat')::float8, current_setting('test.k_lng')::float8);
+    reset role;
+    if i <= 4 then assert (r->>'ok')::boolean, 'redemption ' || i || ' should pass: ' || r::text;
+    else assert r->>'error' = 'daily_merchant_limit' and (r->>'limit')::int = 4, '5th should be refused: ' || r::text;
+    end if;
+    update redemptions set created_at = created_at - interval '16 minutes' where user_id = '00000000-0000-0000-0000-0000000000f1';
+  end loop;
+end $$;

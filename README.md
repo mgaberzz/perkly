@@ -18,7 +18,7 @@ perkly/
 1. Every merchant branch has a **cashier QR** (`PK-XXXXXXXXXXXXXXXX`), printed from the merchant portal and placed on the cashier table.
 2. The student taps **Scan**, scans it, picks a perk and (optionally) types the bill amount.
 3. `redeem_perk()` validates everything **server-side** and records the redemption:
-   QR active · merchant live · perk active today · min spend · **max 2/day per merchant** · **15-min cooldown** ·
+   QR active · merchant live · perk active today · min spend · **max 4/day per merchant** (setting `redemption_rules`) · **15-min cooldown** ·
    per-student limit · daily cap · **location check** (rejects >1 km away, flags >300 m or no location for admin review).
 4. The student shows a **green success screen** with a ticking clock, animation and a 4-character code — a screenshot
    looks frozen. The same code appears instantly on the merchant's **Redemptions** page.

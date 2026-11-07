@@ -32,7 +32,7 @@ export async function PerkForm({
         </Field>
         <Field label={t("Max discount (EGP)")} hint={t("Optional cap per redemption")}><Input name="max_discount_amount" type="number" step="0.01" min="0" defaultValue={perk?.max_discount_amount ?? ""} /></Field>
         <Field label={t("Minimum spend (EGP)")}><Input name="min_spend" type="number" step="0.01" min="0" defaultValue={perk?.min_spend ?? 0} /></Field>
-        <Field label={t("Uses per student")} hint={t("Lifetime limit. Empty = unlimited (still max 2/day per merchant)")}><Input name="max_uses_per_user" type="number" min="1" defaultValue={perk?.max_uses_per_user ?? ""} /></Field>
+        <Field label={t("Uses per student")} hint={t("Lifetime limit. Empty = unlimited (still max 4/day per merchant)")}><Input name="max_uses_per_user" type="number" min="1" defaultValue={perk?.max_uses_per_user ?? ""} /></Field>
         <Field label={t("Daily cap")} hint={t("Total redemptions per day, all students")}><Input name="daily_cap" type="number" min="1" defaultValue={perk?.daily_cap ?? ""} /></Field>
         <Field label={t("Starts (Cairo time)")}><Input name="start_at" type="datetime-local" defaultValue={isoToCairoLocal(perk?.start_at)} /></Field>
         <Field label={t("Ends (Cairo time)")}><Input name="end_at" type="datetime-local" defaultValue={isoToCairoLocal(perk?.end_at)} /></Field>

@@ -10,7 +10,7 @@ const MESSAGES: Record<string, string> = {
   below_min_spend: "Your bill is below this perk's minimum spend.",
   invalid_amount: 'Enter a valid bill amount.',
   too_soon: 'You just used Perkly here! Try again in 15 minutes ⏳',
-  daily_merchant_limit: "You've hit today's limit here (2 per day). See you tomorrow 💜",
+  daily_merchant_limit: "You've hit today's limit here (4 per day). See you tomorrow 💜",
   perk_limit_reached: "You've already used this perk the max number of times.",
   perk_sold_out_today: 'This perk is sold out for today 😭 Try another one.',
   too_far: "Looks like you're not at this branch. Scan the code in-store 📍",

@@ -237,7 +237,7 @@ export const AR: Record<string, string> = {
   "Last {days} days": "آخر {days} يوم",
   "Latitude": "خط العرض",
   "Level / XP": "المستوى / XP",
-  "Lifetime limit. Empty = unlimited (still max 2/day per merchant)": "حد مدى الحياة. فارغ = بلا حد (بحد أقصى مرتين يوميًا لكل تاجر)",
+  "Lifetime limit. Empty = unlimited (still max 4/day per merchant)": "حد مدى الحياة. فارغ = بلا حد (بحد أقصى 4 مرات يوميًا لكل تاجر)",
   "Limits": "الحدود",
   "Live feed. Match the 4-character code on the student's screen with the newest row before applying the discount.": "تحديث مباشر. طابق الكود المكوّن من 4 أحرف على شاشة الطالب مع أحدث صف قبل تطبيق الخصم.",
   "Live merchants": "التجار النشطون",

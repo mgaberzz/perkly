@@ -40,7 +40,7 @@ export default function PerkDetail() {
     Number(perk.min_spend) > 0 ? t('Minimum spend of {amount} on one bill.', { amount: egp(perk.min_spend) }) : t('No minimum spend.'),
     perk.max_discount_amount ? t('Discount capped at {amount} per visit.', { amount: egp(perk.max_discount_amount) }) : null,
     merchant.channel === 'online' ? t('Use your one-time code at checkout on the shop website.') : t('Scan the Perkly QR at the cashier and show the live green screen before paying.'),
-    t('Up to 2 Perkly redemptions per place per day, and one every 15 minutes.'),
+    t('Up to 4 Perkly redemptions per place per day, and one every 15 minutes.'),
     t('Screenshots of the success screen are not accepted.'),
     perk.terms,
   ].filter(Boolean) as string[];
