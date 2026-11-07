@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
-import { BarChart, Card, HBarList, LinkButton, Notice, PageHeader, Stat } from "@/components/ui";
+import { Amount, BarChart, Card, HBarList, LinkButton, Notice, PageHeader, Stat } from "@/components/ui";
+import { MoneySummary } from "@/components/money-summary";
 import { ExportButtons } from "@/components/export-buttons";
 import { egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
@@ -55,11 +56,12 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
       <>
         <PageHeader title={t("Hi {name} 👋", { name: first })} subtitle={`${t("Finance")} · ${subtitle} · ${t("Last {days} days", { days })}`} actions={periods} />
         {alerts}
+        <MoneySummary days={days} />
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <Stat accent label={t("Net to settle")} value={egp(sum("net_to_settle"))} hint={t("Not yet in a settlement")} />
-          <Stat label={t("Open settlements")} value={egp(sum("pending_settlements"))} />
-          <Stat label={t("Paid to merchants")} value={egp(sum("paid_out"))} />
-          <Stat label={t("Received from merchants")} value={egp(sum("received_from_merchant"))} hint={t("Commission collected")} />
+          <Link href="/admin/finance"><Stat label={t("Net to settle")} value={<Amount v={sum("net_to_settle")} />} hint={t("Not yet in a settlement")} /></Link>
+          <Link href="/admin/finance#settlements"><Stat label={t("Open settlements")} value={<Amount v={sum("pending_settlements")} />} /></Link>
+          <Link href="/admin/finance#settlements"><Stat label={t("Paid to merchants")} value={<Amount v={sum("paid_out")} />} /></Link>
+          <Link href="/admin/finance#settlements"><Stat label={t("Received from merchants")} value={<Amount v={sum("received_from_merchant")} />} hint={t("Commission collected")} /></Link>
         </div>
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
           <Card title={t("Transactions per day")} className="lg:col-span-2"><BarChart data={series} empty={t("No data yet")} /></Card>
@@ -92,12 +94,12 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
           <Stat accent label={t("Redemptions")} value={o.redemptions ?? 0} hint={t("{n} active students", { n: o.active_students ?? 0 })} />
           <Stat label={t("My merchants")} value={`${o.live_merchants ?? 0} / ${o.merchants ?? 0}`} hint={t("live / assigned")} />
           <Stat label={t("My customers")} value={o.students ?? 0} hint={t("Students who used my merchants")} />
-          <Stat label={t("Sales after discount")} value={egp(o.sales)} hint={t("Discounts given {amount}", { amount: egp(o.discount_given) })} />
+          <Stat label={t("Sales after discount")} value={<Amount v={o.sales} />} hint={t("Discounts given {amount}", { amount: egp(o.discount_given) })} />
         </div>
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
           <Card title={t("Redemptions per day")} className="lg:col-span-2"><BarChart data={series} empty={t("No data yet")} /></Card>
           <Card title={t("My merchants")} actions={<Link href="/admin/merchants" className="text-sm font-semibold text-perk-purple">{t("See all")}</Link>}>
-            <HBarList data={(o.top_merchants ?? []).map((m) => ({ label: m.name, value: m.count }))} empty={t("No redemptions yet")} />
+            <HBarList data={(o.top_merchants ?? []).map((m) => ({ label: m.name, value: m.count, href: `/admin/redemptions?merchant=${m.id}` }))} empty={t("No redemptions yet")} />
           </Card>
           <Card title={t("My customers by campus")} className="lg:col-span-3"><HBarList data={(o.by_campus ?? []).map((c) => ({ label: c.campus, value: c.students }))} empty={t("No data yet")} /></Card>
         </div>
@@ -111,15 +113,16 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
       <PageHeader title={t("Hi {name} 👋", { name: first })} subtitle={`${t(ROLE_LABEL[role])} · ${subtitle} · ${t("Last {days} days", { days })}`} actions={periods} />
       {error && <p className="mb-4 text-sm text-red-600">{error.message}</p>}
       {alerts}
+      {role === "admin" && <MoneySummary days={days} />}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat accent label={t("Redemptions")} value={o.redemptions ?? 0} hint={t("{n} active students", { n: o.active_students ?? 0 })} />
         <Stat label={t("Students")} value={o.students ?? 0} hint={t("+{n} new", { n: o.new_students ?? 0 })} />
         <Stat label={t("Live merchants")} value={o.live_merchants ?? 0} />
-        <Stat label={t("Est. commission")} value={egp(o.est_commission)} hint={t("Discounts given {amount}", { amount: egp(o.discount_given) })} />
+        <Stat label={t("Est. commission")} value={<Amount v={o.est_commission} />} hint={t("Discounts given {amount}", { amount: egp(o.discount_given) })} />
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Card title={t("Redemptions per day")} className="lg:col-span-2"><BarChart data={series} empty={t("No data yet")} /></Card>
-        <Card title={t("Top merchants")}><HBarList data={(o.top_merchants ?? []).map((m) => ({ label: m.name, value: m.count }))} empty={t("No data yet")} /></Card>
+        <Card title={t("Top merchants")}><HBarList data={(o.top_merchants ?? []).map((m) => ({ label: m.name, value: m.count, href: `/admin/redemptions?merchant=${m.id}` }))} empty={t("No data yet")} /></Card>
         <Card title={t("Students by campus")} className="lg:col-span-3"><HBarList data={(o.by_campus ?? []).map((c) => ({ label: c.campus, value: c.students }))} empty={t("No data yet")} /></Card>
       </div>
     </>

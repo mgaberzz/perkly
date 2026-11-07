@@ -5,6 +5,7 @@ import { ROLE_LABEL } from "@/lib/labels";
 
 const NAV: (NavItem & { perm: Perm })[] = [
   { href: "/admin", label: "Overview", icon: "📈", exact: true, perm: "overview" },
+  { href: "/admin/insights", label: "Insights", icon: "📊", perm: "insights" },
   { href: "/admin/notifications", label: "Notifications", icon: "🔔", perm: "notifications" },
   { href: "/admin/merchants", label: "Merchants", icon: "🏪", perm: "merchants_view" },
   { href: "/admin/perks", label: "Campaigns & perks", icon: "🎁", perm: "perks" },

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
+import { egp, egpShort } from "@/lib/format";
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
@@ -143,17 +144,31 @@ export function BarChart({ data, empty = "No data yet" }: { data: { label: strin
   );
 }
 
-export function HBarList({ data, format = (n: number) => String(n), empty = "No data yet" }: { data: { label: string; value: number }[]; format?: (n: number) => string; empty?: string }) {
-  const max = Math.max(1, ...data.map((d) => d.value));
+export function HBarList({ data, format = (n: number) => String(n), empty = "No data yet" }: { data: { label: string; value: number; href?: string }[]; format?: (n: number) => string; empty?: string }) {
+  const max = Math.max(1, ...data.map((d) => Math.abs(d.value)));
   if (data.length === 0) return <div className="py-6 text-center text-sm text-zinc-500">{empty}</div>;
   return (
     <ul className="space-y-2">
       {data.map((d, i) => (
         <li key={i}>
-          <div className="mb-1 flex justify-between text-sm"><span className="truncate">{d.label}</span><span className="font-semibold">{format(d.value)}</span></div>
-          <div className="h-2 rounded-full bg-zinc-100"><div className="h-2 rounded-full perk-gradient" style={{ width: `${(d.value / max) * 100}%` }} /></div>
+          {d.href ? (
+            <Link href={d.href} className="group block rounded-lg hover:bg-zinc-50">
+              <div className="mb-1 flex justify-between text-sm"><span className="truncate group-hover:text-perk-purple group-hover:underline">{d.label}</span><span className="font-semibold">{format(d.value)}</span></div>
+              <div className="h-2 rounded-full bg-zinc-100"><div className="h-2 rounded-full perk-gradient" style={{ width: `${(Math.abs(d.value) / max) * 100}%` }} /></div>
+            </Link>
+          ) : (
+            <>
+              <div className="mb-1 flex justify-between text-sm"><span className="truncate">{d.label}</span><span className="font-semibold">{format(d.value)}</span></div>
+              <div className="h-2 rounded-full bg-zinc-100"><div className="h-2 rounded-full perk-gradient" style={{ width: `${(Math.abs(d.value) / max) * 100}%` }} /></div>
+            </>
+          )}
         </li>
       ))}
     </ul>
   );
+}
+
+/** Money that stays readable when huge: short form (e.g. 1.2M EGP), exact amount on hover */
+export function Amount({ v, className = "" }: { v: number | null | undefined; className?: string }) {
+  return <span title={egp(v)} className={className}>{egpShort(v)}</span>;
 }

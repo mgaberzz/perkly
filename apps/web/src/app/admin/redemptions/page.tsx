@@ -5,6 +5,8 @@ import { ExportButtons } from "@/components/export-buttons";
 import { dateTime, egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { setRedemptionStatus } from "../actions";
+import { AGE_LABEL, applyTxFilters, readTxFilters, txSelect } from "@/lib/tx-filters";
+import { Amount } from "@/components/ui";
 import { settlementLabel } from "@/lib/types";
 
 export const metadata = { title: "Transactions" };
@@ -21,22 +23,25 @@ type Row = {
 export default async function AdminRedemptionsPage({ searchParams }: PageProps<"/admin/redemptions">) {
   const sp = await searchParams;
   const g = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : "");
-  const f = { status: g("status"), channel: g("channel"), payment: g("payment"), from: g("from"), to: g("to"), merchant: g("merchant") };
+  const f = readTxFilters(g);
   const { supabase, can, merchantScope } = await requireStaff("redemptions_view");
   const t = await getT();
-  let query = inScope(supabase.from("redemptions")
-    .select("id, created_at, verification_code, original_amount, discount_amount, final_amount, status, flag_reason, xp_awarded, channel, payment_method, first_time_at_merchant, merchant:merchants(id, name, merchant_code), perk:perks(title), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), student:profiles(full_name, student_code, user_code), settle_amount, settlement:settlements(status)")
-    .order("created_at", { ascending: false }).limit(200), merchantScope);
-  if (f.status) query = query.eq("status", f.status);
-  if (f.channel) query = query.eq("channel", f.channel);
-  if (f.payment) query = query.eq("payment_method", f.payment);
-  if (f.merchant) query = query.eq("merchant_id", f.merchant);
-  if (f.from) query = query.gte("created_at", `${f.from}T00:00:00+02:00`);
-  if (f.to) query = query.lte("created_at", `${f.to}T23:59:59+02:00`);
-  const [{ data }, { data: merchants }] = await Promise.all([
+  const select = txSelect("id, created_at, verification_code, original_amount, discount_amount, final_amount, status, flag_reason, xp_awarded, channel, payment_method, first_time_at_merchant, merchant:merchants(id, name, merchant_code), perk:perks(title), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), student:profiles(full_name, student_code, user_code), settle_amount, settlement:settlements(status)", f);
+  const query = applyTxFilters(inScope(supabase.from("redemptions").select(select)
+    .order("created_at", { ascending: false }).limit(200), merchantScope), f);
+  const [{ data }, { data: merchants }, { data: campus }] = await Promise.all([
     query.returns<Row[]>(),
     inScope(supabase.from("merchants").select("id, name").order("name").limit(1000), merchantScope, "id"),
+    f.campus && f.campus !== "none" ? supabase.from("campuses").select("name").eq("id", f.campus).maybeSingle() : Promise.resolve({ data: null }),
   ]);
+  // Drill-down chips (from Insights) with a way to clear each one
+  const without = (k: string) => { const p = new URLSearchParams(f as Record<string, string>); p.delete(k); return `/admin/redemptions?${p}`; };
+  const chips = [
+    f.category && { k: "category", label: `${t("Sector")}: ${t(f.category)}` },
+    f.city && { k: "city", label: `${t("Location")}: ${f.city === "online" ? t("Online") : f.city === "unknown" ? t("Unknown") : f.city}` },
+    f.campus && { k: "campus", label: `${t("Campus")}: ${f.campus === "none" ? t("No campus") : (campus as { name: string } | null)?.name ?? ""}` },
+    f.age && { k: "age", label: `${t("Age range")}: ${t(AGE_LABEL[f.age] ?? f.age)}` },
+  ].filter(Boolean) as { k: string; label: string }[];
   const review = can("redemptions_review");
   return (
     <>
@@ -51,7 +56,13 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
         <label className="text-xs text-zinc-500">{t("To")}<Input type="date" name="to" defaultValue={f.to} className="w-40" /></label>
         <Button variant="secondary">{t("Filter")}</Button>
       </form>
-      <Table head={[t("Time"), t("Student"), t("Merchant"), t("Branch / cashier"), t("Perk"), t("Bill"), t("Discount"), t("Payment"), t("To settle"), t("Status"), ""]} empty={t("No transactions.")}>
+      {chips.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-zinc-500">{t("From Insights")}:</span>
+          {chips.map((c) => <Link key={c.k} href={without(c.k)} className="rounded-full bg-perk-purple/10 px-3 py-1 font-semibold text-perk-purple hover:bg-perk-purple/20">{c.label} ✕</Link>)}
+        </div>
+      )}
+      <Table head={[t("Time"), t("Student"), t("Merchant"), t("Branch / cashier"), t("Perk"), t("Total GMV"), t("Discount"), t("Payment"), t("To settle"), t("Status"), ""]} empty={t("No transactions.")}>
         {(data ?? []).map((r) => (
           <tr key={r.id}>
             <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
@@ -59,8 +70,8 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
             <Td><Link href={`/admin/merchants/${r.merchant.id}`} className="hover:underline">{r.merchant.name}</Link><div className="font-mono text-xs text-zinc-500">{r.merchant.merchant_code}</div></Td>
             <Td>{r.branch?.name ?? `🌐 ${t("Online")}`}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>
             <Td>{r.perk.title}</Td>
-            <Td>{egp(r.original_amount)}</Td>
-            <Td>{egp(r.discount_amount)}</Td>
+            <Td><Amount v={r.original_amount} /></Td>
+            <Td><Amount v={r.discount_amount} /></Td>
             <Td><Badge tone={r.payment_method === "in_app" ? "active" : "paused"}>{r.payment_method === "in_app" ? t("In app") : t("Cashier")}</Badge></Td>
             <Td className="whitespace-nowrap">{r.status === "reversed" ? "—" : <>{egp(r.settle_amount)}<div className="mt-1"><Badge tone={r.settlement?.status === "paid" ? "paid" : r.settlement?.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(r.settlement?.status))}</Badge></div></>}</Td>
             <Td><Badge tone={r.status}>{t(r.status)}</Badge>{r.flag_reason && <div className="mt-1 text-xs text-zinc-500">{r.flag_reason}</div>}</Td>

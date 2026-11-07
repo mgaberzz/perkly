@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { getSession, isStaffRole, can, requireMerchant } from "@/lib/auth";
 import { cairo, fileResponse, type Column } from "@/lib/export";
+import { applyTxFilters, readTxFilters, txSelect } from "@/lib/tx-filters";
 import { getLang, getT } from "@/lib/i18n/server";
 import { settlementLabel, type Balance, type Settlement } from "@/lib/types";
 
@@ -26,7 +27,6 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
   const scope = sp.get("scope") === "merchant" ? "merchant" : "staff";
   const t = await getT();
   const rtl = (await getLang()) === "ar";
-  const from = sp.get("from"), to = sp.get("to");
 
   // ── Who is asking, and which data they may export ──
   let supabase, merchantId: string | null = sp.get("merchant") || null, branchScope: string | null = null, staff = false;
@@ -48,17 +48,13 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
   if (kind === "transactions") {
     const rows: Tx[] = [];
     for (let page = 0; page < 50; page++) {
-      let q = supabase.from("redemptions").select(staff ? `${TX_SELECT}, student:profiles(student_code, user_code)` : TX_SELECT)
-        .order("created_at", { ascending: false }).range(page * 1000, page * 1000 + 999);
-      if (merchantId) q = q.eq("merchant_id", merchantId);
+      const f = readTxFilters((k) => sp.get(k));
       const branch = branchScope ?? sp.get("branch");
+      let q = applyTxFilters(supabase.from("redemptions").select(txSelect(staff ? `${TX_SELECT}, student:profiles(student_code, user_code)` : TX_SELECT, f))
+        .order("created_at", { ascending: false }).range(page * 1000, page * 1000 + 999), f);
+      if (merchantId) q = q.eq("merchant_id", merchantId);
       if (branch) q = q.eq("branch_id", branch);
       if (sp.get("qr")) q = q.eq("qr_code_id", sp.get("qr")!);
-      if (sp.get("status")) q = q.eq("status", sp.get("status")!);
-      if (sp.get("channel")) q = q.eq("channel", sp.get("channel")!);
-      if (sp.get("payment")) q = q.eq("payment_method", sp.get("payment")!);
-      if (from) q = q.gte("created_at", `${from}T00:00:00+02:00`);
-      if (to) q = q.lte("created_at", `${to}T23:59:59+02:00`);
       const { data, error } = await q.returns<Tx[]>();
       if (error) return new Response(error.message, { status: 400 });
       rows.push(...(data ?? []));
@@ -78,7 +74,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
       { header: t("Channel"), value: (r) => t(r.channel === "online" ? "Online" : "In-store") },
       { header: t("Payment"), value: (r) => t(r.payment_method === "in_app" ? "Paid in app" : "Paid at cashier"), width: 16 },
       { header: t("Payment ref"), value: (r) => r.payment_ref, width: 20 },
-      { header: t("Bill (EGP)"), value: (r) => r.original_amount, money: true },
+      { header: t("Total GMV (EGP)"), value: (r) => r.original_amount, money: true },
       { header: t("Discount (EGP)"), value: (r) => r.discount_amount, money: true },
       { header: t("Paid (EGP)"), value: (r) => r.final_amount, money: true },
       { header: t("Perkly commission (EGP)"), value: (r) => r.commission_amount, money: true },

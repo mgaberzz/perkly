@@ -23,6 +23,7 @@ export const isStaffRole = (r: string | undefined): r is StaffRole => STAFF_ROLE
  */
 export const PERMS = {
   overview: ["admin", "operations", "account_manager", "finance"],
+  insights: ["admin", "operations", "account_manager", "finance"],
   notifications: ["admin", "operations", "account_manager", "finance"],
   merchants_view: ["admin", "operations", "account_manager", "finance"],
   merchants_create: ["admin", "operations"],

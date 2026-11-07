@@ -325,3 +325,23 @@ do $$ begin
   assert not exists (select 1 from redemptions where payment_method = 'merchant'
                        and settle_amount <> -(commission_amount + vat_amount)), 'cashier: merchant owes commission + VAT';
 end $$;
+
+-- ── Insights & finance summary (migration 13) ──
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e3', false);
+do $$ declare d text; s jsonb; begin
+  foreach d in array array['sector','location','campus','age','merchant'] loop
+    assert (select sum(transactions) from insights(d, 365)) = (select count(*) from redemptions where status <> 'reversed'),
+      'insights ' || d || ' covers every transaction';
+    assert (select sum(commission) from insights(d, 365)) = (select sum(commission_amount) from redemptions where status <> 'reversed'), 'commission adds up ' || d;
+  end loop;
+  s := finance_summary(365);
+  assert (s->>'gmv')::numeric = (select sum(original_amount) from redemptions where status <> 'reversed'), 'gmv';
+  assert (s->>'net_revenue')::numeric > 0, 'net revenue';
+  assert (s->>'paid_to_merchants')::numeric >= 0 and (s->>'to_be_paid_to_merchants')::numeric >= 0, 'dues';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e2', false);
+do $$ begin
+  assert (select count(*) from insights('merchant', 365)) <= 1, 'account manager sees only own merchants in insights';
+end $$;
+reset role;

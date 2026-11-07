@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireMerchantArea } from "@/lib/auth";
-import { BarChart, Button, Card, HBarList, LinkButton, PageHeader, Select, Stat } from "@/components/ui";
+import { Amount, BarChart, Button, Card, HBarList, LinkButton, PageHeader, Select, Stat } from "@/components/ui";
 import { ExportButtons } from "@/components/export-buttons";
 import { egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
@@ -76,7 +76,7 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
         <Stat accent label={t("Redemptions")} value={s.redemptions ?? 0} hint={t("{n} flagged for review", { n: s.flagged ?? 0 })} />
         <Stat label={t("Unique students")} value={s.unique_students ?? 0} hint={t("{a} new · {b} recurring", { a: s.new_students ?? 0, b: s.recurring_students ?? 0 })} />
         <Stat label={t("New vs recurring customers")} value={`${s.new_customer_pct ?? 0}% / ${s.recurring_customer_pct ?? 0}%`} hint={t("Share of unique students in this period")} />
-        <Stat label={t("Revenue after discount")} value={egp(s.revenue_after_discount)} hint={t("Discount given {amount}", { amount: egp(s.discount_given) })} />
+        <Stat label={t("Revenue after discount")} value={<Amount v={s.revenue_after_discount} />} hint={t("Discount given {amount}", { amount: egp(s.discount_given) })} />
       </div>
 
       {balance && (

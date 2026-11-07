@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
-import { Badge, Card, Input, LinkButton, PageHeader, Stat, Table, Td } from "@/components/ui";
+import { Amount, Badge, Card, Input, LinkButton, PageHeader, Stat, Table, Td } from "@/components/ui";
+import { MoneySummary } from "@/components/money-summary";
 import { ActionForm, SubmitButton } from "@/components/action-form";
 import { ExportButtons } from "@/components/export-buttons";
 import { date, egp } from "@/lib/format";
@@ -35,11 +36,13 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
       <PageHeader title={t("Finance & settlements")} subtitle={t("What Perkly owes merchants from in-app payments, and the commission merchants owe on cashier sales.")}
         actions={<ExportButtons kind="balances" params={{ all: view === "all" ? "1" : undefined }} />} />
 
+      <MoneySummary days={Number(sp.days) || 30} />
+      <h2 className="mb-3 mt-2 font-bold">{t("Settlement position")}</h2>
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat accent label={t("Net to settle")} value={egp(net)} hint={t("In-app sales owed to merchants minus commission on cashier sales — not yet in a settlement")} />
-        <Stat label={t("Open settlements")} value={egp(sum("pending_settlements"))} hint={t("{n} settlement(s) not fully paid", { n: pending.length })} />
-        <Stat label={t("Paid to merchants")} value={egp(sum("paid_out"))} />
-        <Stat label={t("Received from merchants")} value={egp(sum("received_from_merchant"))} hint={t("Commission collected")} />
+        <Stat label={t("Net to settle")} value={<Amount v={net} />} hint={t("In-app sales owed to merchants minus commission on cashier sales — not yet in a settlement")} />
+        <Stat label={t("Open settlements")} value={<Amount v={sum("pending_settlements")} />} hint={t("{n} settlement(s) not fully paid", { n: pending.length })} />
+        <Stat label={t("Paid to merchants")} value={<Amount v={sum("paid_out")} />} />
+        <Stat label={t("Received from merchants")} value={<Amount v={sum("received_from_merchant")} />} hint={t("Commission collected")} />
       </div>
 
       <div className="mb-6 grid gap-6 lg:grid-cols-3">
@@ -87,7 +90,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
       </Table>
 
       <div className="mb-3 mt-8 flex items-center justify-between">
-        <h2 className="font-bold">{t("Settlements")}</h2>
+        <h2 id="settlements" className="font-bold">{t("Settlements")}</h2>
         <ExportButtons kind="settlements" />
       </div>
       <Table head={[t("Created"), t("Merchant"), t("Period"), t("Transactions"), t("Net amount"), t("Paid"), t("Status"), ""]} empty={t("No settlements yet.")}>

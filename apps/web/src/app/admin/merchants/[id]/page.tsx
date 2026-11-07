@@ -2,11 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { Badge, Button, Card, Field, Input, Notice, PageHeader, Select, Stat, Table, Td } from "@/components/ui";
+import { Amount, Badge, Button, Card, Field, Input, Notice, PageHeader, Select, Stat, Table, Td } from "@/components/ui";
 import { ActionForm, ConfirmButton, SubmitButton } from "@/components/action-form";
 import { MerchantAdminForm } from "@/components/merchant-admin-form";
 import { QrImage } from "@/components/qr-image";
-import { discountLabel, egp } from "@/lib/format";
+import { discountLabel } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { BRAND_TYPE_LABEL, CHANNEL_LABEL, MEMBER_ROLE_LABEL } from "@/lib/labels";
 import type { Balance, Merchant, Perk, QrCode } from "@/lib/types";
@@ -54,8 +54,8 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
         <Stat accent label={t("Redemptions (30d)")} value={s.redemptions ?? 0} />
         <Stat label={t("Unique students")} value={s.unique_students ?? 0} />
         <Stat label={t("New vs recurring")} value={`${s.new_customer_pct ?? 0}% / ${s.recurring_customer_pct ?? 0}%`} />
-        <Stat label={t("Revenue after discount")} value={egp(s.revenue_after_discount)} />
-        <Stat label={t("Net to settle")} value={egp(balance?.net_to_settle ?? 0)} hint={Number(balance?.net_to_settle ?? 0) >= 0 ? t("Perkly pays merchant") : t("Merchant pays Perkly commission")} />
+        <Stat label={t("Revenue after discount")} value={<Amount v={s.revenue_after_discount} />} />
+        <Stat label={t("Net to settle")} value={<Amount v={balance?.net_to_settle ?? 0} />} hint={Number(balance?.net_to_settle ?? 0) >= 0 ? t("Perkly pays merchant") : t("Merchant pays Perkly commission")} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

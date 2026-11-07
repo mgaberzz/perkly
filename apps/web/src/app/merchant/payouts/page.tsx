@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireMerchantArea } from "@/lib/auth";
-import { Badge, Card, Field, Input, PageHeader, Select, Stat, Table, Td } from "@/components/ui";
+import { Amount, Badge, Card, Field, Input, PageHeader, Select, Stat, Table, Td } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/action-form";
 import { ExportButtons } from "@/components/export-buttons";
 import { date, egp } from "@/lib/format";
@@ -25,10 +25,10 @@ export default async function PayoutsPage() {
       <PageHeader title={t("Payouts")} subtitle={t("Merchant level — all branches together. When students pay in the Perkly app, Perkly collects the money and transfers it to your bank account minus commission.")}
         actions={<ExportButtons kind="settlements" params={{ scope: "merchant" }} />} />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat accent label={toSettle >= 0 ? t("Total to be settled to you") : t("Commission you owe Perkly")} value={egp(Math.abs(toSettle))} hint={t("In-app payments minus commission on cashier sales, incl. open settlements")} />
-        <Stat label={t("In-app sales (unsettled)")} value={egp(b?.in_app_gross)} hint={t("Perkly commission {amount}", { amount: egp(b?.in_app_commission) })} />
-        <Stat label={t("Paid to you so far")} value={egp(b?.paid_out)} hint={b?.last_paid_at ? t("Last transfer {date}", { date: date(b.last_paid_at) }) : undefined} />
-        <Stat label={t("Commission on cashier sales")} value={egp(b?.commission_owed)} hint={t("Deducted in your next settlement")} />
+        <Stat accent label={toSettle >= 0 ? t("Total to be settled to you") : t("Commission you owe Perkly")} value={<Amount v={Math.abs(toSettle)} />} hint={t("In-app payments minus commission on cashier sales, incl. open settlements")} />
+        <Stat label={t("In-app sales (unsettled)")} value={<Amount v={b?.in_app_gross} />} hint={t("Perkly commission {amount}", { amount: egp(b?.in_app_commission) })} />
+        <Stat label={t("Paid to you so far")} value={<Amount v={b?.paid_out} />} hint={b?.last_paid_at ? t("Last transfer {date}", { date: date(b.last_paid_at) }) : undefined} />
+        <Stat label={t("Commission on cashier sales")} value={<Amount v={b?.commission_owed} />} hint={t("Deducted in your next settlement")} />
       </div>
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
