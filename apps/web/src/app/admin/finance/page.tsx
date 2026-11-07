@@ -40,10 +40,10 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
       <MoneySummary days={Number(sp.days) || 30} />
       <h2 className="mb-3 mt-2 font-bold">{t("Settlement position")}</h2>
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat label={t("Net to settle")} value={<Amount v={net} />} hint={t("In-app sales owed to merchants minus commission on cashier sales — not yet in a settlement")} />
-        <Stat label={t("Open settlements")} value={<Amount v={sum("pending_settlements")} />} hint={t("{n} settlement(s) not fully paid", { n: pending.length })} />
-        <Stat label={t("Paid to merchants")} value={<Amount v={sum("paid_out")} />} />
-        <Stat label={t("Received from merchants")} value={<Amount v={sum("received_from_merchant")} />} hint={t("Commission collected")} />
+        <Link href={`/admin/explain?metric=net_to_settle`} className="block transition hover:-translate-y-0.5"><Stat label={t("Net to settle")} value={<Amount v={net} />} hint={t("In-app sales owed to merchants minus commission on cashier sales — not yet in a settlement")} /></Link>
+        <Link href={`/admin/explain?metric=open_settlements`} className="block transition hover:-translate-y-0.5"><Stat label={t("Open settlements")} value={<Amount v={sum("pending_settlements")} />} hint={t("{n} settlement(s) not fully paid", { n: pending.length })} /></Link>
+        <Link href={`/admin/explain?metric=paid_to_merchants`} className="block transition hover:-translate-y-0.5"><Stat label={t("Paid to merchants")} value={<Amount v={sum("paid_out")} />} /></Link>
+        <Link href={`/admin/explain?metric=received_from_merchants`} className="block transition hover:-translate-y-0.5"><Stat label={t("Received from merchants")} value={<Amount v={sum("received_from_merchant")} />} hint={t("Commission collected")} /></Link>
       </div>
 
       <div className="mb-6 grid gap-6 lg:grid-cols-4">
@@ -89,12 +89,12 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
           <tr key={b.merchant_id}>
             <Td><Link href={`/admin/merchants/${b.merchant_id}`} className="font-semibold hover:text-perk-purple">{b.merchant_name}</Link><div className="font-mono text-xs text-zinc-500">{b.merchant_code}</div></Td>
             <Td>{t(BRAND_TYPE_LABEL[b.brand_type] ?? b.brand_type)}</Td>
-            <Td>{egp(b.in_app_gross)}</Td>
-            <Td>{egp(b.due_to_merchant)}</Td>
-            <Td>{egp(b.commission_owed)}</Td>
-            <Td>{egp(b.vat)}</Td>
-            <Td className="font-bold text-perk-purple">{egp(b.net_to_settle)}<div className="text-xs font-normal text-zinc-500">{Number(b.net_to_settle) > 0 ? t("Perkly pays merchant") : Number(b.net_to_settle) < 0 ? t("Merchant pays Perkly commission") : ""}</div></Td>
-            <Td>{egp(b.pending_settlements)}</Td>
+            <Td><Link href={`/admin/explain?metric=net_to_settle&kind=in_app&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.in_app_gross} /></Link></Td>
+            <Td><Link href={`/admin/explain?metric=net_to_settle&kind=in_app&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.due_to_merchant} /></Link></Td>
+            <Td><Link href={`/admin/explain?metric=net_to_settle&kind=cashier&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.commission_owed} /></Link></Td>
+            <Td><Link href={`/admin/explain?metric=net_to_settle&kind=cashier&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.vat} /></Link></Td>
+            <Td className="font-bold text-perk-purple"><Link href={`/admin/explain?metric=net_to_settle&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.net_to_settle} /></Link><div className="text-xs font-normal text-zinc-500">{Number(b.net_to_settle) > 0 ? t("Perkly pays merchant") : Number(b.net_to_settle) < 0 ? t("Merchant pays Perkly commission") : ""}</div></Td>
+            <Td><Link href={`/admin/explain?metric=open_settlements&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.pending_settlements} /></Link></Td>
             <Td className="text-xs">{b.bank_name ? <>{b.bank_name}<div className="font-mono text-zinc-500">{b.iban}</div></> : <span className="text-amber-600">{t("Missing")}</span>}</Td>
           </tr>
         ))}
@@ -110,8 +110,8 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
             <Td>{date(s.created_at)}</Td>
             <Td>{s.merchant.name}<div className="font-mono text-xs text-zinc-500">{s.merchant.merchant_code}</div></Td>
             <Td className="text-xs">{s.period_start} → {s.period_end}</Td>
-            <Td>{s.lines}</Td>
-            <Td className="font-bold">{egp(Math.abs(s.amount))}<div className="text-xs font-normal text-zinc-500">{s.amount >= 0 ? t("Perkly pays merchant") : t("Merchant pays Perkly commission")}</div><div className="text-xs font-normal text-zinc-500">{t("commission {c} + VAT {v}", { c: egp(s.commission), v: egp(s.vat) })}</div></Td>
+            <Td><Link href={`/admin/explain?metric=settlement&id=${s.id}`} className="font-semibold text-perk-purple hover:underline">{s.lines}</Link></Td>
+            <Td className="font-bold"><Link href={`/admin/explain?metric=settlement&id=${s.id}`} className="hover:underline">{egp(Math.abs(s.amount))}</Link><div className="text-xs font-normal text-zinc-500">{s.amount >= 0 ? t("Perkly pays merchant") : t("Merchant pays Perkly commission")}</div><div className="text-xs font-normal text-zinc-500">{t("commission {c} + VAT {v}", { c: egp(s.commission), v: egp(s.vat) })}</div></Td>
             <Td>{egp(s.paid_amount)}<div className="text-xs text-zinc-500">{t("{amount} remaining", { amount: egp(Math.abs(s.amount) - Number(s.paid_amount)) })}</div></Td>
             <Td><Badge tone={s.status === "paid" ? "paid" : s.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(s.status))}</Badge>{s.reference && <div className="font-mono text-xs text-zinc-500">{s.reference}</div>}</Td>
             <Td>

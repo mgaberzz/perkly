@@ -5,8 +5,9 @@
 export type TxFilters = {
   status?: string; channel?: string; payment?: string; from?: string; to?: string;
   merchant?: string; category?: string; city?: string; campus?: string; age?: string;
+  /** "1" = not yet in a settlement (and not reversed) */ unsettled?: string; settlement?: string;
 };
-export const TX_FILTER_KEYS = ["status", "channel", "payment", "from", "to", "merchant", "category", "city", "campus", "age"] as const;
+export const TX_FILTER_KEYS = ["status", "channel", "payment", "from", "to", "merchant", "category", "city", "campus", "age", "unsettled", "settlement"] as const;
 
 export function readTxFilters(get: (k: string) => string | null | undefined): TxFilters {
   const f: TxFilters = {};
@@ -42,6 +43,8 @@ export function applyTxFilters<Q extends Record<string, any>>(q: Q, f: TxFilters
   if (f.channel) x = x.eq("channel", f.channel);
   if (f.payment) x = x.eq("payment_method", f.payment);
   if (f.merchant) x = x.eq("merchant_id", f.merchant);
+  if (f.unsettled === "1") x = x.is("settlement_id", null).neq("status", "reversed").or("payment_method.eq.merchant,payment_status.eq.paid");
+  if (f.settlement) x = x.eq("settlement_id", f.settlement);
   if (f.from) x = x.gte("created_at", `${f.from}T00:00:00+02:00`);
   if (f.to) x = x.lte("created_at", `${f.to}T23:59:59+02:00`);
   if (f.category) x = x.eq("merchant.category", f.category);

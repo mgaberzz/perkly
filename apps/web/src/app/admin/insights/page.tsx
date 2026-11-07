@@ -47,11 +47,11 @@ export default async function InsightsPage({ searchParams }: PageProps<"/admin/i
       {error && <p className="mb-4 text-sm text-red-600">{error.message}</p>}
 
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <Link href={`/admin/redemptions?from=${from}`}><Stat accent label={t("Total GMV")} value={<Amount v={s.gmv} />} hint={t("{n} transactions", { n: short(s.transactions) })} /></Link>
-        <Link href={`/admin/redemptions?from=${from}`}><Stat label={t("Net revenue")} value={<Amount v={s.net_revenue} />} hint={t("Perkly commission, excl. VAT")} /></Link>
-        <Stat label={t("VAT on commission")} value={<Amount v={s.vat} />} />
-        <Link href="/admin/finance"><Stat label={t("Paid to merchants")} value={<Amount v={s.paid_to_merchants} />} hint={t("All time")} /></Link>
-        <Link href="/admin/finance"><Stat label={t("To be paid to merchants")} value={<Amount v={s.to_be_paid_to_merchants} />} hint={t("Open dues now")} /></Link>
+        <Link href={`/admin/explain?metric=gmv&days=${days}`}><Stat accent label={t("Total GMV")} value={<Amount v={s.gmv} />} hint={t("{n} transactions", { n: short(s.transactions) })} /></Link>
+        <Link href={`/admin/explain?metric=net_revenue&days=${days}`}><Stat label={t("Net revenue")} value={<Amount v={s.net_revenue} />} hint={t("Perkly commission, excl. VAT")} /></Link>
+        <Link href={`/admin/explain?metric=vat&days=${days}`}><Stat label={t("VAT on commission")} value={<Amount v={s.vat} />} /></Link>
+        <Link href="/admin/explain?metric=paid_to_merchants"><Stat label={t("Paid to merchants")} value={<Amount v={s.paid_to_merchants} />} hint={t("All time")} /></Link>
+        <Link href="/admin/explain?metric=to_be_paid"><Stat label={t("To be paid to merchants")} value={<Amount v={s.to_be_paid_to_merchants} />} hint={t("Open dues now")} /></Link>
       </div>
 
       <div className="mb-4 flex flex-wrap gap-2">

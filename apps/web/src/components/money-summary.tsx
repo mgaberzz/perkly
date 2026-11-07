@@ -16,16 +16,16 @@ export async function MoneySummary({ days = 30 }: { days?: number }) {
   const card = "block transition hover:-translate-y-0.5";
   return (
     <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-      <Link className={card} href={`/admin/insights?days=${days}`}>
+      <Link className={card} href={`/admin/explain?metric=gmv&days=${days}`}>
         <Stat accent label={t("Total volume (GMV)")} value={<Amount v={s.gmv} />} hint={t("{n} transactions · last {days} days", { n: short(s.transactions), days })} />
       </Link>
-      <Link className={card} href={`/admin/insights?days=${days}`}>
+      <Link className={card} href={`/admin/explain?metric=net_revenue&days=${days}`}>
         <Stat label={t("Net revenue")} value={<Amount v={s.net_revenue} />} hint={t("Perkly commission, excl. VAT {vat}", { vat: short(s.vat) })} />
       </Link>
-      <Link className={card} href={`/admin/finance#settlements`}>
+      <Link className={card} href={`/admin/explain?metric=paid_to_merchants`}>
         <Stat label={t("Total paid to merchants")} value={<Amount v={s.paid_to_merchants} />} hint={t("All time")} />
       </Link>
-      <Link className={card} href={`/admin/merchants?due=1`}>
+      <Link className={card} href={Number(s.to_be_paid_to_merchants) > 0 || !(Number(s.owed_by_merchants) > 0) ? `/admin/explain?metric=to_be_paid` : `/admin/explain?metric=owed_by`}>
         <Stat label={t("To be paid to merchants")} value={<Amount v={s.to_be_paid_to_merchants} />}
           hint={Number(s.owed_by_merchants) > 0 ? t("Merchants owe Perkly {amount}", { amount: `${short(s.owed_by_merchants)} EGP` }) : t("Open dues now")} />
       </Link>

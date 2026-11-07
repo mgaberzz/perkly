@@ -3,7 +3,7 @@ import { requireStaff } from "@/lib/auth";
 import { Amount, BarChart, Card, HBarList, LinkButton, Notice, PageHeader, Stat } from "@/components/ui";
 import { MoneySummary } from "@/components/money-summary";
 import { ExportButtons } from "@/components/export-buttons";
-import { egp } from "@/lib/format";
+import { egp, periodStart } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { ROLE_LABEL } from "@/lib/labels";
 import type { Balance } from "@/lib/types";
@@ -58,10 +58,10 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
         {alerts}
         <MoneySummary days={days} />
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <Link href="/admin/finance"><Stat label={t("Net to settle")} value={<Amount v={sum("net_to_settle")} />} hint={t("Not yet in a settlement")} /></Link>
-          <Link href="/admin/finance#settlements"><Stat label={t("Open settlements")} value={<Amount v={sum("pending_settlements")} />} /></Link>
-          <Link href="/admin/finance#settlements"><Stat label={t("Paid to merchants")} value={<Amount v={sum("paid_out")} />} /></Link>
-          <Link href="/admin/finance#settlements"><Stat label={t("Received from merchants")} value={<Amount v={sum("received_from_merchant")} />} hint={t("Commission collected")} /></Link>
+          <Link href="/admin/explain?metric=net_to_settle"><Stat label={t("Net to settle")} value={<Amount v={sum("net_to_settle")} />} hint={t("Not yet in a settlement")} /></Link>
+          <Link href="/admin/explain?metric=open_settlements"><Stat label={t("Open settlements")} value={<Amount v={sum("pending_settlements")} />} /></Link>
+          <Link href="/admin/explain?metric=paid_to_merchants"><Stat label={t("Paid to merchants")} value={<Amount v={sum("paid_out")} />} /></Link>
+          <Link href="/admin/explain?metric=received_from_merchants"><Stat label={t("Received from merchants")} value={<Amount v={sum("received_from_merchant")} />} hint={t("Commission collected")} /></Link>
         </div>
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
           <Card title={t("Transactions per day")} className="lg:col-span-2"><BarChart data={series} empty={t("No data yet")} /></Card>
@@ -91,10 +91,10 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
         {alerts}
         {o.merchants === 0 && <div className="mb-6"><Notice>{t("No merchants are assigned to you yet. Ask an admin to assign them under Team & assignments.")}</Notice></div>}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <Stat accent label={t("Redemptions")} value={o.redemptions ?? 0} hint={t("{n} active students", { n: o.active_students ?? 0 })} />
-          <Stat label={t("My merchants")} value={`${o.live_merchants ?? 0} / ${o.merchants ?? 0}`} hint={t("live / assigned")} />
-          <Stat label={t("My customers")} value={o.students ?? 0} hint={t("Students who used my merchants")} />
-          <Stat label={t("Sales after discount")} value={<Amount v={o.sales} />} hint={t("Discounts given {amount}", { amount: egp(o.discount_given) })} />
+          <Link href={`/admin/redemptions?from=${periodStart(days)}`} className="block transition hover:-translate-y-0.5"><Stat accent label={t("Redemptions")} value={o.redemptions ?? 0} hint={t("{n} active students", { n: o.active_students ?? 0 })} /></Link>
+          <Link href={`/admin/merchants`} className="block transition hover:-translate-y-0.5"><Stat label={t("My merchants")} value={`${o.live_merchants ?? 0} / ${o.merchants ?? 0}`} hint={t("live / assigned")} /></Link>
+          <Link href={`/admin/redemptions`} className="block transition hover:-translate-y-0.5"><Stat label={t("My customers")} value={o.students ?? 0} hint={t("Students who used my merchants")} /></Link>
+          <Link href={`/admin/explain?metric=gmv&days=${days}`} className="block transition hover:-translate-y-0.5"><Stat label={t("Sales after discount")} value={<Amount v={o.sales} />} hint={t("Discounts given {amount}", { amount: egp(o.discount_given) })} /></Link>
         </div>
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
           <Card title={t("Redemptions per day")} className="lg:col-span-2"><BarChart data={series} empty={t("No data yet")} /></Card>
@@ -115,10 +115,10 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
       {alerts}
       {role === "admin" && <MoneySummary days={days} />}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat accent label={t("Redemptions")} value={o.redemptions ?? 0} hint={t("{n} active students", { n: o.active_students ?? 0 })} />
-        <Stat label={t("Students")} value={o.students ?? 0} hint={t("+{n} new", { n: o.new_students ?? 0 })} />
-        <Stat label={t("Live merchants")} value={o.live_merchants ?? 0} />
-        <Stat label={t("Est. commission")} value={<Amount v={o.est_commission} />} hint={t("Discounts given {amount}", { amount: egp(o.discount_given) })} />
+        <Link href={`/admin/redemptions?from=${periodStart(days)}`} className="block transition hover:-translate-y-0.5"><Stat accent label={t("Redemptions")} value={o.redemptions ?? 0} hint={t("{n} active students", { n: o.active_students ?? 0 })} /></Link>
+        <Link href={`/admin/users?role=student`} className="block transition hover:-translate-y-0.5"><Stat label={t("Students")} value={o.students ?? 0} hint={t("+{n} new", { n: o.new_students ?? 0 })} /></Link>
+        <Link href={`/admin/merchants?status=live`} className="block transition hover:-translate-y-0.5"><Stat label={t("Live merchants")} value={o.live_merchants ?? 0} /></Link>
+        <Link href={`/admin/explain?metric=net_revenue&days=${days}`} className="block transition hover:-translate-y-0.5"><Stat label={t("Est. commission")} value={<Amount v={o.est_commission} />} hint={t("Discounts given {amount}", { amount: egp(o.discount_given) })} /></Link>
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Card title={t("Redemptions per day")} className="lg:col-span-2"><BarChart data={series} empty={t("No data yet")} /></Card>

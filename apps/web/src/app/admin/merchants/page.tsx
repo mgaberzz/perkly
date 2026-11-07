@@ -56,7 +56,7 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
         </label>
         <Button variant="secondary">{t("Filter")}</Button>
       </form>
-      {due && <p className="mb-4 text-sm text-zinc-600">{t("To be paid to these merchants")}: <b><Amount v={totalOwedTo} /></b></p>}
+      {due && <p className="mb-4 text-sm text-zinc-600">{t("To be paid to these merchants")}: <Link href="/admin/explain?metric=to_be_paid" className="font-bold hover:underline"><Amount v={totalOwedTo} /></Link></p>}
       <Table head={[t("Merchant"), t("ID"), t("Brand type"), t("Channel"), t("Branches"), t("Perks"), t("Commission"), t("To be paid to merchant"), t("Owed to Perkly"), t("Paid to merchant"), t("Status")]} empty={t("No merchants.")}>
         {(data ?? []).map((m) => (
           <tr key={m.id}>
@@ -67,9 +67,9 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
             <Td>{m.branches[0]?.count ?? 0}</Td>
             <Td>{m.perks[0]?.count ?? 0}</Td>
             <Td>{m.commission_pct}%</Td>
-            <Td className={owedTo(m.id) > 0 ? "font-bold text-perk-purple" : "text-zinc-400"}>{owedTo(m.id) > 0 ? <Link href={`/admin/finance?view=all`} className="hover:underline"><Amount v={owedTo(m.id)} /></Link> : "—"}</Td>
-            <Td className={owedBy(m.id) > 0 ? "font-semibold text-amber-700" : "text-zinc-400"}>{owedBy(m.id) > 0 ? <Amount v={owedBy(m.id)} /> : "—"}</Td>
-            <Td>{Number(balances.get(m.id)?.paid_out ?? 0) > 0 ? <Amount v={balances.get(m.id)?.paid_out} /> : <span className="text-zinc-400">—</span>}</Td>
+            <Td className={owedTo(m.id) > 0 ? "font-bold text-perk-purple" : "text-zinc-400"}>{owedTo(m.id) > 0 ? <Link href={`/admin/explain?metric=net_to_settle&merchant=${m.id}`} className="hover:underline"><Amount v={owedTo(m.id)} /></Link> : "—"}</Td>
+            <Td className={owedBy(m.id) > 0 ? "font-semibold text-amber-700" : "text-zinc-400"}>{owedBy(m.id) > 0 ? <Link href={`/admin/explain?metric=net_to_settle&merchant=${m.id}`} className="hover:underline"><Amount v={owedBy(m.id)} /></Link> : "—"}</Td>
+            <Td>{Number(balances.get(m.id)?.paid_out ?? 0) > 0 ? <Link href={`/admin/explain?metric=paid_to_merchants&merchant=${m.id}`} className="hover:underline"><Amount v={balances.get(m.id)?.paid_out} /></Link> : <span className="text-zinc-400">—</span>}</Td>
             <Td><Badge tone={m.status}>{t(m.status)}</Badge></Td>
           </tr>
         ))}
