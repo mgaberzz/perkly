@@ -15,3 +15,11 @@ create table auth.users (
 create function auth.uid() returns uuid language sql stable as
 $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 grant execute on function auth.uid() to anon, authenticated, service_role;
+
+-- Auth tables touched by delete_my_account()
+alter table auth.users add column banned_until timestamptz;
+create table auth.identities (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users(id) on delete cascade);
+create table auth.sessions (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users(id) on delete cascade);
+create table auth.webauthn_credentials (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users(id) on delete cascade);
+create table auth.mfa_factors (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users(id) on delete cascade);
+create table auth.one_time_tokens (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users(id) on delete cascade);

@@ -70,7 +70,7 @@ const EN: Docs = {
       {
         h: "6. Your rights",
         p: [
-          "You can see and edit your profile in the app at any time. You can also ask us to: give you a copy of your data, correct it, delete your account, or stop using your data for marketing. Email us at " + email + " from the phone number or email on your account and we will reply within 30 days.",
+          "You can see and edit your profile in the app at any time. You can delete your account yourself in Me → Settings → Delete account: your personal data is erased straight away and your past transactions are kept only without your name or contact details. You can also ask us to give you a copy of your data, correct it, or stop using it for marketing. Email us at " + email + " from the phone number or email on your account and we will reply within 30 days.",
           "If you are not satisfied with our answer, you can complain to Egypt's Personal Data Protection Center.",
         ],
       },
@@ -132,7 +132,7 @@ const EN: Docs = {
         h: "5. Your account",
         list: [
           "Keep your phone, sign-in codes and device lock secure. You are responsible for activity on your account.",
-          "You can delete your account at any time by contacting us at " + email + ".",
+          "You can delete your account at any time in the app: Me → Settings → Delete account.",
           "We may suspend or close an account that breaks these terms, abuses perks or harms merchants or other users.",
         ],
       },
@@ -227,7 +227,7 @@ const AR: Docs = {
       {
         h: "٦. حقوقك",
         p: [
-          "يمكنك عرض ملفك الشخصي وتعديله في التطبيق في أي وقت. ويمكنك أيضًا أن تطلب منا: نسخة من بياناتك، أو تصحيحها، أو حذف حسابك، أو التوقف عن استخدام بياناتك للتسويق. راسلنا على " + email + " من رقم الهاتف أو البريد المسجل في حسابك، وسنرد خلال 30 يومًا.",
+          "يمكنك عرض ملفك الشخصي وتعديله في التطبيق في أي وقت. ويمكنك حذف حسابك بنفسك من حسابي ← الإعدادات ← حذف الحساب: تُحذف بياناتك الشخصية فورًا، وتبقى معاملاتك السابقة دون اسمك أو بيانات التواصل معك. ويمكنك أيضًا أن تطلب منا نسخة من بياناتك، أو تصحيحها، أو التوقف عن استخدامها للتسويق. راسلنا على " + email + " من رقم الهاتف أو البريد المسجل في حسابك، وسنرد خلال 30 يومًا.",
           "إذا لم يرضك ردنا، يمكنك تقديم شكوى إلى مركز حماية البيانات الشخصية في مصر.",
         ],
       },
@@ -289,7 +289,7 @@ const AR: Docs = {
         h: "٥. حسابك",
         list: [
           "حافظ على أمان هاتفك ورموز تسجيل الدخول وقفل جهازك. أنت مسؤول عن النشاط الذي يتم من خلال حسابك.",
-          "يمكنك حذف حسابك في أي وقت بالتواصل معنا على " + email + ".",
+          "يمكنك حذف حسابك في أي وقت من التطبيق: حسابي ← الإعدادات ← حذف الحساب.",
           "قد نوقف أو نغلق أي حساب يخالف هذه الشروط أو يسيء استخدام العروض أو يضر بالتجار أو المستخدمين الآخرين.",
         ],
       },

@@ -1,5 +1,11 @@
 // Arabic translations for the student app. Keys are the English text used in the code (see lib/i18n.ts).
 export const AR: Record<string, string> = {
+  "Delete your account?": "حذف حسابك؟",
+  "This permanently erases your name, phone, email, birth date, photo, avatar and favourites, and signs you out on every device. Past transactions stay anonymously in merchants' records, as the law requires. This can't be undone.": "سيتم حذف اسمك ورقم هاتفك وبريدك الإلكتروني وتاريخ ميلادك وصورتك والأفاتار والمفضلة نهائيًا، وسيتم تسجيل خروجك من كل الأجهزة. تبقى المعاملات السابقة بدون أي بيانات تعرّف بك في سجلات التجار، كما يتطلب القانون. لا يمكن التراجع عن ذلك.",
+  "Delete account": "حذف الحساب",
+  "Something went wrong": "حدث خطأ ما",
+  "Deleting…": "جارٍ الحذف…",
+  "Your account could not be deleted. Please try again or contact support.": "تعذّر حذف حسابك. حاول مرة أخرى أو تواصل مع الدعم.",
   "Available": "متاح",
   "Bonus from Perkly": "هدية من Perkly",
   "Code": "الكود",

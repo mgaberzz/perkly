@@ -548,3 +548,25 @@ do $$ declare ok boolean := false; begin
   assert ok, 'merchants cannot read platform stats';
 end $$;
 reset role;
+
+-- ── Delete my account: personal data erased, login locked, transactions kept ──
+select set_config('test.del_uid', (select r.user_id::text from redemptions r join profiles p on p.id = r.user_id where p.role = 'student' group by 1 order by count(*) desc limit 1), false);
+insert into auth.identities (user_id) values (current_setting('test.del_uid')::uuid);
+insert into auth.sessions (user_id) values (current_setting('test.del_uid')::uuid);
+select set_config('test.del_tx', (select count(*)::text from redemptions where user_id = current_setting('test.del_uid')::uuid), false);
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ declare ok boolean := false; begin
+  begin perform delete_my_account(); exception when others then ok := true; end;
+  assert ok, 'staff cannot self-delete from the app';
+end $$;
+select set_config('request.jwt.claim.sub', current_setting('test.del_uid'), false);
+select delete_my_account();
+reset role;
+do $$ declare u uuid := current_setting('test.del_uid')::uuid; begin
+  assert (select full_name is null and phone is null and email is null and birth_date is null and status = 'banned' and deleted_at is not null from profiles where id = u), 'profile anonymised';
+  assert (select email is null and phone is null and banned_until > now() + interval '50 years' from auth.users where id = u), 'login locked';
+  assert not exists (select 1 from auth.identities where user_id = u) and not exists (select 1 from auth.sessions where user_id = u), 'sign-in methods removed';
+  assert (select count(*) from redemptions where user_id = u) = current_setting('test.del_tx')::int, 'transactions kept for settlements';
+  assert (select user_code is not null from profiles where id = u), 'IDs kept';
+end $$;

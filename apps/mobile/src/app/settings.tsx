@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Linking, Platform, Pressable, Switch, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Platform, Pressable, Switch, View } from 'react-native';
 import { Card, Screen, T } from '@/components/ui';
 import { Avatar } from '@/components/avatar';
+import { deleteMyAccount } from '@/lib/account';
 import { biometricAvailable, biometricEnabled, faceIdLimitedHere, setBiometricEnabled } from '@/lib/biometric';
 import { fwdChevron, lang, setLanguage, t } from '@/lib/i18n';
 import { legalUrl } from '@/lib/links';
@@ -14,6 +15,7 @@ export default function Settings() {
   const { c } = useTheme();
   const { session, profile, refreshProfile, signOut } = useSession();
   const [drops, setDrops] = useState(profile?.marketing_opt_in ?? false);
+  const [deleting, setDeleting] = useState(false);
   const [bio, setBio] = useState<{ ok: boolean; label: string; on: boolean }>({ ok: false, label: '', on: false });
 
   useEffect(() => {
@@ -48,6 +50,28 @@ export default function Settings() {
       return;
     }
     Alert.alert(t('Log out?'), t('You can log back in any time.'), [{ text: t('Cancel'), style: 'cancel' }, { text: t('Log out'), style: 'destructive', onPress: () => signOut({ keepQuickLogin: false }) }]);
+  }
+
+  async function doDelete() {
+    if (!session) return;
+    setDeleting(true);
+    const r = await deleteMyAccount(session.user.id);
+    setDeleting(false);
+    if (!r.ok) {
+      const msg = t('Your account could not be deleted. Please try again or contact support.');
+      if (Platform.OS === 'web') window.alert(msg); else Alert.alert(t('Something went wrong'), msg);
+      return;
+    }
+    await signOut({ keepQuickLogin: false });
+  }
+  function confirmDelete() {
+    const title = t('Delete your account?');
+    const body = t('This permanently erases your name, phone, email, birth date, photo, avatar and favourites, and signs you out on every device. Past transactions stay anonymously in merchants\' records, as the law requires. This can\'t be undone.');
+    if (Platform.OS === 'web') { if (window.confirm(`${title}\n\n${body}`)) doDelete(); return; }
+    Alert.alert(title, body, [
+      { text: t('Cancel'), style: 'cancel' },
+      { text: t('Delete account'), style: 'destructive', onPress: doDelete },
+    ]);
   }
 
   const Row = ({ label, onPress, right }: { label: string; onPress?: () => void; right?: React.ReactNode }) => (
@@ -94,6 +118,10 @@ export default function Settings() {
         <Row label={`🔒 ${t('Privacy Policy')}`} onPress={() => Linking.openURL(legalUrl('privacy'))} />
       </Card>
       <Pressable onPress={logout} style={{ padding: 16 }}><T color={brand.danger} style={{ textAlign: 'center', fontWeight: '900' }}>{t('Log out')}</T></Pressable>
+      <Pressable onPress={confirmDelete} disabled={deleting} style={{ padding: 8, flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
+        {deleting ? <ActivityIndicator color={brand.danger} size="small" /> : null}
+        <T v="small" color={brand.danger} style={{ textAlign: 'center' }}>{deleting ? t('Deleting…') : t('Delete account')}</T>
+      </Pressable>
       <View style={{ alignItems: 'center' }}><T v="small">Perkly · {t('Unlock Perks. Live Smart.')}</T></View>
     </Screen>
   );

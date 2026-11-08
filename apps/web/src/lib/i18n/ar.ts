@@ -1,6 +1,8 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
   "Terms of Use": "شروط الاستخدام",
+  "Deleted account": "حساب محذوف",
+  "Deleted": "محذوف",
   "Privacy Policy": "سياسة الخصوصية",
   "Other": "أخرى",
   "Week of {date}": "أسبوع {date}",
