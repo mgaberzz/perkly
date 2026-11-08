@@ -393,3 +393,15 @@ do $$ declare v_id uuid; v_code text; begin
   update redemptions set tx_code = 'TRX-1' where id = v_id;
   assert (select tx_code from redemptions where id = v_id) = v_code, 'tx_code cannot be changed';
 end $$;
+
+-- Profile photos: only a path inside the user's own folder is accepted
+do $$ declare v uuid; ok boolean := false; begin
+  select id into v from profiles where role = 'student' limit 1;
+  update profiles set avatar_path = v::text || '/avatar-1.jpg' where id = v;
+  assert (select avatar_path from profiles where id = v) = v::text || '/avatar-1.jpg', 'own avatar path saved';
+  begin update profiles set avatar_path = gen_random_uuid()::text || '/x.jpg' where id = v; exception when check_violation then ok := true; end;
+  assert ok, 'someone else''s folder refused'; ok := false;
+  begin update profiles set avatar_path = 'https://evil.example/x.jpg' where id = v; exception when check_violation then ok := true; end;
+  assert ok, 'free URLs refused';
+  update profiles set avatar_path = null where id = v;
+end $$;

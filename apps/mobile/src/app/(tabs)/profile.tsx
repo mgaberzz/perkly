@@ -2,7 +2,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, Share, View } from 'react-native';
 import { Text } from '@/components/text';
-import { Mascot } from '@/components/mascot';
+import { EditableAvatar } from '@/components/avatar';
 import { MerchantRow } from '@/components/merchant-card';
 import { Card, GradientCard, Screen, SectionHeader, T } from '@/components/ui';
 import { egp, levelProgress, shortDate } from '@/lib/format';
@@ -34,7 +34,7 @@ export default function Me() {
         <Pressable onPress={() => router.push('/settings')} hitSlop={12} style={{ position: 'absolute', end: 0, top: 0 }}>
           <Text style={{ fontSize: 26 }}>⚙️</Text>
         </Pressable>
-        <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: '#FF3EA51A', alignItems: 'center', justifyContent: 'center' }}><Mascot size={80} /></View>
+        <EditableAvatar size={96} />
         <T v="h2" style={{ textAlign: 'center' }}>{profile?.full_name ?? t('Student')}</T>
         <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'xp' } })}><T v="muted" style={{ textAlign: 'center' }}>🎓 {campus?.short_name ?? campus?.name ?? t('No campus')} · {t('Lv {n} · {name}', { n: cur.level, name: cur.name })}</T></Pressable>
         <Pressable onPress={() => router.push('/edit-profile')}><T color={brand.pink} style={{ fontWeight: '900', fontSize: 16 }}>{t('Edit profile')}</T></Pressable>

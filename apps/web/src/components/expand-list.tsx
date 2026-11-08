@@ -37,6 +37,6 @@ export function DetailRow({ label, children }: { label: ReactNode; children: Rea
 /** Round initial badge (merchant / student) */
 export function Avatar({ name, src }: { name: string; src?: string | null }) {
   // eslint-disable-next-line @next/next/no-img-element
-  if (src) return <img src={src} alt="" className="h-11 w-11 shrink-0 rounded-xl border border-zinc-100 object-cover" />;
+  if (src) return <img src={src} alt="" className="h-11 w-11 shrink-0 rounded-full border border-zinc-100 object-cover" />;
   return <span className="perk-gradient flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-base font-extrabold text-white">{(name.trim()[0] ?? "?").toUpperCase()}</span>;
 }

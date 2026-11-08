@@ -59,6 +59,13 @@
         {
           "faceIDPermission": "Perkly uses Face ID so only you can open your account."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Perkly lets you choose a profile photo from your photos.",
+          "cameraPermission": "Perkly uses your camera to scan the merchant's QR code and to take your profile photo."
+        }
       ]
     ],
     "experiments": {
