@@ -124,6 +124,29 @@ export async function resolveRequest(fd: FormData) {
   revalidatePath("/admin", "layout");
 }
 
+// ───────── Student verification ─────────
+export async function reviewVerification(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireStaff("verifications");
+  const approve = str(fd, "decision") === "approve";
+  const reason = str(fd, "reason") === "other" ? str(fd, "other") : str(fd, "reason");
+  if (!approve && !reason) return { error: "Choose or write a reason so the student knows what to fix." };
+  const { data, error } = await supabase.rpc("review_student_verification", { p_id: str(fd, "id"), p_approve: approve, p_reason: reason || null });
+  const res = data as { ok: boolean; error?: string } | null;
+  if (error || !res?.ok) return { error: error?.message ?? (res?.error === "not_pending" ? "Someone already reviewed this one." : "Could not save.") };
+  revalidatePath("/admin", "layout");
+  return { ok: approve ? "Approved: the student is verified for 12 months." : "Rejected: the student can send a new photo." };
+}
+
+export async function setVerificationRules(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireStaff("settings");
+  const free = Math.floor(Number(str(fd, "free_redemptions") || 0));
+  if (!(free >= 0 && free <= 20)) return { error: "Enter a number between 0 and 20." };
+  const { data, error } = await supabase.rpc("set_verification_rules", { p_required: fd.get("required") === "on", p_free: free });
+  if (error || !(data as { ok: boolean } | null)?.ok) return { error: error?.message ?? "Could not save." };
+  revalidatePath("/admin/settings");
+  return { ok: "Saved." };
+}
+
 // ───────── Perks ─────────
 export async function reviewPerk(fd: FormData) {
   const { supabase } = await requireStaff("perks");

@@ -11,6 +11,8 @@ import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { brand, useTheme } from '@/lib/theme';
 
+const VERIFY_LABEL: Record<string, string> = { unverified: 'Not verified', pending: 'Checking…', verified: 'Verified ✓', rejected: 'Try again' };
+
 export default function Settings() {
   const { c } = useTheme();
   const { session, profile, refreshProfile, signOut } = useSession();
@@ -95,6 +97,8 @@ export default function Settings() {
         <Row label={`👤 ${t('Edit profile & campus')}`} onPress={() => router.push('/edit-profile')} />
         <Row label={`🧾 ${t('Savings history')}`} onPress={() => router.push('/history')} />
         {profile?.student_code ? <Row label={`🎓 ${t('Student ID')}`} right={<T v="small" style={{ writingDirection: 'ltr', fontWeight: '800' }}>{profile.student_code}</T>} /> : null}
+        <Row label={`🎓 ${t('Student verification')}`} onPress={() => router.push('/student-verification')}
+          right={<T v="small" color={profile?.verification_status === 'verified' ? brand.success : profile?.verification_status === 'rejected' ? brand.danger : brand.purple}>{t(VERIFY_LABEL[profile?.verification_status ?? 'unverified'])} {fwdChevron()}</T>} />
         <Row label={`🆔 ${t('User ID')}`} right={<T v="small" style={{ writingDirection: 'ltr', fontWeight: '800' }}>{profile?.user_code}</T>} />
         <Row label={`📱 ${t('Signed in as')}`} right={<T v="small" numberOfLines={1} style={{ maxWidth: 180 }}>{profile?.phone ?? profile?.email ?? session?.user.email}</T>} />
       </Card>

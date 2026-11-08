@@ -3,7 +3,7 @@ import { Badge, Card, Input, PageHeader } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/action-form";
 import { AccountSettings } from "@/components/account-settings";
 import { getT } from "@/lib/i18n/server";
-import { setPaymentsMode, setRedemptionRules, setVatRate } from "../actions";
+import { setPaymentsMode, setRedemptionRules, setVatRate, setVerificationRules } from "../actions";
 
 export const metadata = { title: "Settings" };
 
@@ -12,12 +12,14 @@ export default async function SettingsPage() {
   const t = await getT();
   const platform = can("settings");
   const { data: rows } = platform
-    ? await supabase.from("app_settings").select("key, value").in("key", ["tax", "payments", "redemption_rules"])
+    ? await supabase.from("app_settings").select("key, value").in("key", ["tax", "payments", "redemption_rules", "student_verification"])
     : { data: [] };
   const get = (k: string) => ((rows ?? []).find((r) => r.key === k)?.value ?? {}) as Record<string, unknown>;
   const vat = Number(get("tax").vat_pct ?? 14);
   const mode = String(get("payments").mode ?? "off");
   const limit = Number(get("redemption_rules").max_per_merchant_per_day ?? 4);
+  const verifyRequired = get("student_verification").required === true;
+  const freeRedemptions = Number(get("student_verification").free_redemptions ?? 0);
 
   return (
     <>
@@ -47,6 +49,20 @@ export default async function SettingsPage() {
               <ActionForm action={setRedemptionRules} className="flex items-center gap-2">
                 <Input name="max_per_day" type="number" min="1" max="50" defaultValue={limit} className="w-28" /><span className="text-sm text-zinc-500">{t("per merchant per day")}</span>
                 <SubmitButton variant="secondary">{t("Save")}</SubmitButton>
+              </ActionForm>
+            </Card>
+            <Card title={t("Student verification")}>
+              <p className="mb-3 text-xs text-zinc-500">{t("When required, students must have their student ID approved before they can redeem. Turn it on when you launch; keep it off while testing.")}</p>
+              <ActionForm action={setVerificationRules} className="space-y-3">
+                <label className="flex items-center gap-2 text-sm font-medium">
+                  <input type="checkbox" name="required" defaultChecked={verifyRequired} className="h-4 w-4 accent-perk-purple" />
+                  {t("Require verification to redeem")}
+                </label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input name="free_redemptions" type="number" min="0" max="20" defaultValue={freeRedemptions} className="w-28" />
+                  <span className="text-sm text-zinc-500">{t("free redemptions before verifying")}</span>
+                  <SubmitButton variant="secondary">{t("Save")}</SubmitButton>
+                </div>
               </ActionForm>
             </Card>
           </div>

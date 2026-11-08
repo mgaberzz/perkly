@@ -570,3 +570,74 @@ do $$ declare u uuid := current_setting('test.del_uid')::uuid; begin
   assert (select count(*) from redemptions where user_id = u) = current_setting('test.del_tx')::int, 'transactions kept for settlements';
   assert (select user_code is not null from profiles where id = u), 'IDs kept';
 end $$;
+
+-- ── Student verification ──
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-0000000000c1', 'verify@perkly.test', '{"full_name":"Vera Verify"}'),
+  ('00000000-0000-0000-0000-0000000000c2', 'boss@perkly.test',   '{"full_name":"Adam Admin"}');
+update profiles set role = 'admin' where id = '00000000-0000-0000-0000-0000000000c2';
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c1', false);
+do $$ begin
+  assert (my_verification()->>'status') = 'unverified' and (my_verification()->>'can_redeem')::boolean, 'off by default: can redeem';
+  update profiles set verification_status = 'verified' where id = auth.uid();
+  assert (select verification_status from profiles where id = auth.uid()) = 'unverified', 'cannot self-verify';
+  assert submit_student_verification('00000000-0000-0000-0000-0000000000c2/x.jpg')->>'error' = 'bad_photo', 'only own folder';
+  assert (submit_student_verification('00000000-0000-0000-0000-0000000000c1/id-1.jpg', ' 2021-555 ')->>'ok')::boolean, 'submitted';
+  assert submit_student_verification('00000000-0000-0000-0000-0000000000c1/id-2.jpg')->>'error' = 'already_pending', 'one at a time';
+  assert (my_verification()->>'status') = 'pending', 'pending';
+  assert (select student_number from student_verifications where user_id = auth.uid()) = '2021-555', 'number trimmed';
+  assert review_student_verification((select id from student_verifications where user_id = auth.uid()), true)->>'error' = 'not_allowed', 'student cannot approve';
+  assert set_verification_rules(true, 0)->>'error' = 'not_allowed', 'student cannot change rules';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e2', false);
+do $$ begin
+  assert (select count(*) from student_verifications) = 0, 'AM cannot see ID cards';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ declare v uuid := (select id from student_verifications where user_id = '00000000-0000-0000-0000-0000000000c1'); begin
+  assert (select count(*) from student_verifications) >= 1, 'ops sees ID cards';
+  assert review_student_verification(v, false, '  ')->>'error' = 'reason_required', 'reject needs reason';
+  assert (review_student_verification(v, false, 'Photo is blurry')->>'ok')::boolean, 'rejected';
+  assert (select verification_status from profiles where id = '00000000-0000-0000-0000-0000000000c1') = 'rejected', 'profile rejected';
+  assert review_student_verification(v, true)->>'error' = 'not_pending', 'decided once';
+  assert set_verification_rules(true, 0)->>'error' = 'not_allowed', 'ops cannot change rules';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c2', false);
+do $$ begin
+  assert (set_verification_rules(true, 1)->>'ok')::boolean, 'admin sets rules';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c1', false);
+do $$ begin
+  assert my_verification()->>'reject_reason' = 'Photo is blurry', 'reason shown to student';
+  assert (my_verification()->>'can_redeem')::boolean, '1 free redemption left';
+  assert (submit_student_verification('00000000-0000-0000-0000-0000000000c1/id-3.jpg')->>'ok')::boolean, 'resubmitted';
+end $$;
+reset role;
+-- after using the free redemption, an unverified student is blocked (in-store and online)
+insert into redemptions (user_id, perk_id, merchant_id, verification_code, status)
+select '00000000-0000-0000-0000-0000000000c1', p.id, p.merchant_id, 'ZZZZ', 'success' from perks p limit 1;
+do $$ declare p perks; r jsonb; begin
+  assert not student_can_redeem('00000000-0000-0000-0000-0000000000c1'), 'blocked after free redemptions';
+  select * into p from perks where status = 'active' limit 1;
+  r := perform_redemption('00000000-0000-0000-0000-0000000000c1', p.id, p.merchant_id, null, null, 100, null, null, 'in_store', 'merchant');
+  assert r->>'error' = 'verification_required', 'redeem blocked: ' || r::text;
+  assert student_can_redeem('00000000-0000-0000-0000-0000000000e1'), 'staff are never blocked';
+end $$;
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c1', false);
+do $$ begin
+  assert get_online_code((select id from perks limit 1))->>'error' in ('verification_required'), 'online code blocked';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ begin
+  assert (review_student_verification((select id from student_verifications where user_id = '00000000-0000-0000-0000-0000000000c1' and status = 'pending'), true)->>'ok')::boolean, 'approved';
+end $$;
+reset role;
+do $$ begin
+  assert (select verification_status = 'verified' and verified_until > cairo_today() + 360 from profiles where id = '00000000-0000-0000-0000-0000000000c1'), 'verified for a year';
+  assert student_can_redeem('00000000-0000-0000-0000-0000000000c1'), 'verified can redeem';
+  update profiles set verified_until = cairo_today() - 1 where id = '00000000-0000-0000-0000-0000000000c1';
+  assert not student_can_redeem('00000000-0000-0000-0000-0000000000c1'), 'expired blocks again';
+end $$;
+update app_settings set value = '{"required": false, "free_redemptions": 0}' where key = 'student_verification';

@@ -23,6 +23,7 @@ const EN: Docs = {
         h: "1. What we collect",
         list: [
           "Account details: your phone number or email, name, birth date, university or campus, and the student and user IDs we assign to you.",
+          "Student ID: a photo of your student ID card and, if you add it, your student number, to confirm you are a student. Only Perkly's operations team can see it.",
           "Profile picture: a photo you upload, or the cartoon avatar you build. Both are optional and you can remove them at any time.",
           "Redemptions: each discount you use, the merchant and branch, the bill amount, the discount, the time, the transaction ID and how you paid.",
           "Location: when you allow it, your phone's location is used to show nearby perks, and at the moment you redeem to confirm you are at the shop. We store the redemption's distance check, not a history of where you go.",
@@ -65,6 +66,7 @@ const EN: Docs = {
           "Your account data is kept while your account is open.",
           "Redemption and payment records are kept for as long as tax and accounting law requires (usually up to 5 years), even after you close your account, but they are no longer linked to your profile in the app.",
           "Photos and avatars are deleted as soon as you remove them or close your account.",
+          "Student ID photos are kept while your account is open, so we can show that your verification was checked, and are deleted when you delete your account.",
         ],
       },
       {
@@ -180,6 +182,7 @@ const AR: Docs = {
         h: "١. ما نجمعه",
         list: [
           "بيانات الحساب: رقم هاتفك أو بريدك الإلكتروني، واسمك، وتاريخ ميلادك، وجامعتك أو الحرم الجامعي، ورقم الطالب ورقم المستخدم اللذين نخصصهما لك.",
+          "كارنيه الطالب: صورة كارنيه الطالب، والرقم الجامعي إذا أضفته، للتأكد من أنك طالب. لا يراها إلا فريق العمليات في Perkly.",
           "صورة الملف الشخصي: صورة ترفعها أو الأفاتار الكرتوني الذي تصممه. كلاهما اختياري ويمكنك حذفه في أي وقت.",
           "عمليات الاستخدام: كل خصم تستخدمه، والتاجر والفرع، ومبلغ الفاتورة، والخصم، والوقت، ورقم المعاملة، وطريقة الدفع.",
           "الموقع: عند سماحك بذلك، نستخدم موقع هاتفك لعرض العروض القريبة، ولحظة استخدام الخصم للتأكد من وجودك في المتجر. نحتفظ بنتيجة التحقق من المسافة فقط، وليس بسجل لأماكن تنقلك.",
@@ -222,6 +225,7 @@ const AR: Docs = {
           "نحتفظ ببيانات حسابك طالما حسابك مفتوح.",
           "نحتفظ بسجلات الاستخدام والمدفوعات للمدة التي تتطلبها قوانين الضرائب والمحاسبة (عادةً حتى 5 سنوات)، حتى بعد إغلاق حسابك، لكنها لا تعود مرتبطة بملفك في التطبيق.",
           "تُحذف الصور والأفاتار فور إزالتها أو إغلاق حسابك.",
+          "نحتفظ بصورة كارنيه الطالب طالما حسابك مفتوح لإثبات أنه تمت مراجعة التوثيق، وتُحذف عند حذف حسابك.",
         ],
       },
       {

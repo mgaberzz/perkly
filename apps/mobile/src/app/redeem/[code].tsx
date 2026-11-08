@@ -30,6 +30,7 @@ export default function Redeem() {
   const [pay, setPay] = useState<PayMethod>('merchant');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsVerify, setNeedsVerify] = useState(false);
 
   // Look the code up once per scanned code (guards against re-renders/remounts re-firing it)
   const lookedUp = useRef<string | null>(null);
@@ -87,6 +88,7 @@ export default function Redeem() {
     if (err || !res) return setError(friendlyError('network'));
     if (!res.ok) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      setNeedsVerify(res.error === 'verification_required');
       return setError(friendlyError(res.error));
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -189,6 +191,7 @@ export default function Redeem() {
           )}
 
           {error && <View style={{ backgroundColor: '#F044381A', borderRadius: 14, padding: 12 }}><T color={brand.danger}>{error}</T></View>}
+          {needsVerify && <Button title={t('Verify my student ID')} icon="🎓" variant="secondary" onPress={() => { router.back(); router.push('/student-verification'); }} />}
           <Button title={cta} icon={inApp ? '💳' : '✨'} onPress={redeem} loading={submitting} disabled={!perk} />
           <T v="small" style={{ textAlign: 'center' }}>
             {inApp ? t('You pay now in the app — then show the green screen so the cashier knows it is paid.') : t('Tap when you’re paying — then show the green screen to the cashier.')}

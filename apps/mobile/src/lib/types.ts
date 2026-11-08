@@ -20,6 +20,7 @@ export interface Profile {
   id: string; full_name: string | null; phone: string | null; email: string | null; campus_id: string | null; referral_code: string;
   status: string; role: string; birth_date: string | null; marketing_opt_in: boolean; terms_accepted_at: string | null; referred_by: string | null;
   user_code: string; student_code: string | null;
+  verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected'; verified_until?: string | null;
 }
 export interface Stats {
   total_xp: number; level: number; current_streak: number; longest_streak: number; last_redemption_date: string | null;

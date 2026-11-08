@@ -14,6 +14,7 @@ const MESSAGES: Record<string, string> = {
   perk_limit_reached: "You've already used this perk the max number of times.",
   perk_sold_out_today: 'This perk is sold out for today 😭 Try another one.',
   too_far: "Looks like you're not at this branch. Scan the code in-store 📍",
+  verification_required: 'Verify your student ID to use perks. It only takes a minute 🎓',
   account_restricted: 'Your account is restricted. Contact Perkly support.',
   not_authenticated: 'Please log in again.',
   network: 'Wi-Fi acting up? No worries 💜 Try again soon.',

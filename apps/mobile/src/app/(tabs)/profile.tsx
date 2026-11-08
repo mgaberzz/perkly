@@ -53,6 +53,16 @@ export default function Me() {
           </View>
         ) : null}
       </GradientCard>
+      {profile?.role === 'student' && profile.verification_status !== 'verified' && (
+        <Card onPress={() => router.push('/student-verification')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderColor: profile.verification_status === 'rejected' ? brand.danger : brand.purple }}>
+          <Text style={{ fontSize: 26 }}>{profile.verification_status === 'pending' ? '⏳' : profile.verification_status === 'rejected' ? '❌' : '🎓'}</Text>
+          <View style={{ flex: 1 }}>
+            <T style={{ fontWeight: '800' }}>{profile.verification_status === 'pending' ? t('We’re checking your student ID') : profile.verification_status === 'rejected' ? t('Your ID wasn’t approved') : t('Verify you’re a student')}</T>
+            <T v="small">{profile.verification_status === 'pending' ? t('Usually less than a day') : profile.verification_status === 'rejected' ? t('Tap to see why and send a new photo') : t('Snap your student ID. Takes a minute.')}</T>
+          </View>
+          <T v="muted">{fwdChevron()}</T>
+        </Card>
+      )}
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         <Card style={{ flex: 1, minWidth: 100 }} onPress={() => router.push({ pathname: '/explain', params: { metric: 'saved' } })}><T v="label">{t('Saved')}</T><T v="h2" color={brand.success}>{egp(stats?.total_saved ?? 0)}</T></Card>

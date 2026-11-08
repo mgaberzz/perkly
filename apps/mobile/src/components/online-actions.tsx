@@ -1,6 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
+import { router } from 'expo-router';
 import { Share, View } from 'react-native';
 import { Text } from './text';
 import { Button, Card, T } from './ui';
@@ -29,7 +30,10 @@ export function OnlineActions({ merchant, perk }: { merchant: Merchant; perk?: P
     setBusy(null);
     const r = data as CodeRes | null;
     if (err || !r) return setError(friendlyError('network'));
-    if (!r.ok) return setError(friendlyError(r.error));
+    if (!r.ok) {
+      if (r.error === 'verification_required') router.push('/student-verification');
+      return setError(friendlyError(r.error));
+    }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     setCode({ code: r.code, expires_at: r.expires_at });
   }

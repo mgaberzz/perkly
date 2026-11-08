@@ -39,6 +39,7 @@ export const PERMS = {
   campuses_view: ["admin", "operations", "account_manager"],
   campuses_edit: ["admin", "operations"],
   quests: ["admin", "operations"],
+  verifications: ["admin", "operations"],         // review student ID cards
   users: ["admin"],
   settings: ["admin"],
 } as const satisfies Record<string, readonly StaffRole[]>;

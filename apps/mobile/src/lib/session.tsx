@@ -88,7 +88,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const refreshProfile = useCallback(async () => {
     if (!userId) return;
     const [{ data: p }, { data: s }, { data: f }] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, phone, email, campus_id, referral_code, status, role, birth_date, marketing_opt_in, terms_accepted_at, referred_by, user_code, student_code, avatar_path, avatar_config, avatar_kind').eq('id', userId).single<Profile>(),
+      supabase.from('profiles').select('id, full_name, phone, email, campus_id, referral_code, status, role, birth_date, marketing_opt_in, terms_accepted_at, referred_by, user_code, student_code, avatar_path, avatar_config, avatar_kind, verification_status, verified_until').eq('id', userId).single<Profile>(),
       supabase.from('user_stats').select('*').eq('user_id', userId).single<Stats>(),
       supabase.from('favorites').select('merchant_id').eq('user_id', userId),
     ]);
