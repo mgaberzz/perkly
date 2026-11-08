@@ -20,7 +20,8 @@ export default async function MerchantLayout({ children }: LayoutProps<"/merchan
     { area: "profile", href: "/merchant/profile", label: t("Business profile"), icon: "🏪" },
   ];
   // Each staff role sees only its own areas
-  const nav: NavItem[] = items.filter((i) => merchantCan(memberRole, i.area)).map((i) => ({ href: i.href, label: i.label, icon: i.icon, exact: i.exact }));
+  const nav: NavItem[] = [...items.filter((i) => merchantCan(memberRole, i.area)).map((i) => ({ href: i.href, label: i.label, exact: i.exact })),
+    { href: "/merchant/settings", label: t("Settings") }];
   const top = (
     <div className="mb-2 rounded-2xl bg-zinc-50 p-3">
       {memberships.length > 1 ? (

@@ -127,9 +127,27 @@ export const requireMerchant = cache(async () => {
   };
 });
 
+export type PartnerInfo = { id: string; partner_code: string; name: string; cut_type: "percentage" | "fixed"; cut_value: number; status: string };
+
+/** Signed-in user who belongs to a partner (the partner portal). */
+export const requirePartner = cache(async () => {
+  const s = await getSession();
+  if (!s.user) redirect("/login?next=/partner");
+  const { data } = await s.supabase.from("partner_members")
+    .select("partner:partners(id, partner_code, name, cut_type, cut_value, status)").eq("user_id", s.user.id)
+    .returns<{ partner: PartnerInfo | null }[]>();
+  const partner = (data ?? []).map((d) => d.partner).find(Boolean);
+  if (!partner) redirect("/login?error=no_partner");
+  return { ...s, user: s.user, partner };
+});
+
 export async function homeFor(profileRole: string | undefined, userId: string) {
   if (isStaffRole(profileRole)) return "/admin";
   const { supabase } = await getSession();
+  if (profileRole === "partner") {
+    const { count: p } = await supabase.from("partner_members").select("*", { count: "exact", head: true }).eq("user_id", userId);
+    if (p) return "/partner";
+  }
   const { count } = await supabase.from("merchant_members").select("*", { count: "exact", head: true }).eq("user_id", userId);
   return count ? "/merchant" : "/login?error=no_access";
 }

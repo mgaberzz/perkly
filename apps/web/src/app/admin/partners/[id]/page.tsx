@@ -7,7 +7,8 @@ import { PartnerForm, dealLabel } from "@/components/partner-form";
 import { getT } from "@/lib/i18n/server";
 import { date, dateTime, short } from "@/lib/format";
 import type { Partner, PartnerBalance } from "@/lib/types";
-import { recordPartnerPayout, setMerchantPartner, updatePartner } from "../../actions";
+import { adminAddPartnerUser, adminRemovePartnerUser, recordPartnerPayout, setMerchantPartner, updatePartner } from "../../actions";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata = { title: "Partner" };
 
@@ -28,6 +29,11 @@ export default async function PartnerPage({ params }: PageProps<"/admin/partners
     supabase.from("partner_payouts").select("id, amount, reference, note, paid_at").eq("partner_id", id).order("paid_at", { ascending: false }),
   ]);
   if (!partner) notFound();
+  const { data: memberRows } = await supabase.from("partner_members").select("user_id").eq("partner_id", id);
+  const memberIds = (memberRows ?? []).map((m) => m.user_id);
+  const { data: people } = memberIds.length && process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? await createAdminClient().from("profiles").select("id, full_name, email").in("id", memberIds)
+    : { data: [] as { id: string; full_name: string | null; email: string | null }[] };
   const b = ((bal ?? []) as PartnerBalance[])[0];
   const manage = can("partners_manage");
   const live = (earnings ?? []).filter((e) => e.redemption?.status !== "reversed");
@@ -87,6 +93,25 @@ export default async function PartnerPage({ params }: PageProps<"/admin/partners
               </ActionForm>
             </Card>
           )}
+          <Card title={t("Partner portal access")}>
+            <p className="mb-3 text-xs text-zinc-500">{t("People here can sign in to the partner portal and see this partner's merchants, transactions, earnings and payments — never student details.")}</p>
+            <ul className="mb-3 space-y-2 text-sm">
+              {(people ?? []).map((u) => (
+                <li key={u.id} className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate">{u.full_name ?? u.email}<span className="block truncate text-xs text-zinc-500">{u.email}</span></span>
+                  {manage && <form action={adminRemovePartnerUser}><input type="hidden" name="partner_id" value={id} /><input type="hidden" name="user_id" value={u.id} />
+                    <ConfirmButton message={t("Remove this person's access to the partner portal?")} className="text-xs font-semibold text-red-600 hover:underline">{t("Remove")}</ConfirmButton></form>}
+                </li>
+              ))}
+              {(people ?? []).length === 0 && <li className="text-xs text-amber-600">{t("Nobody has access yet.")}</li>}
+            </ul>
+            {manage && (
+              <ActionForm action={adminAddPartnerUser.bind(null, id)} className="flex gap-2" resetOnSuccess>
+                <Input name="email" type="email" required placeholder="partner@company.com" className="min-w-0 flex-1" />
+                <SubmitButton variant="secondary">{t("Invite")}</SubmitButton>
+              </ActionForm>
+            )}
+          </Card>
           <Card title={manage ? t("Deal & contact") : t("Contact")}>
             {manage ? <PartnerForm action={updatePartner.bind(null, id)} partner={partner} t={t} submit={t("Save")} /> : (
               <dl className="space-y-2 text-sm">

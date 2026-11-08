@@ -2,9 +2,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin, requireStaff } from "@/lib/auth";
-import { addMember } from "@/lib/members";
+import { addMember, addPartnerMember } from "@/lib/members";
 import { parsePerkForm } from "@/lib/perk-form";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { SITE_URL } from "@/lib/env";
 import { BRAND_TYPES, STAFF_ROLES, type ActionState, type MemberRole } from "@/lib/types";
 
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
@@ -235,11 +236,23 @@ export async function setVatRate(_: ActionState, fd: FormData): Promise<ActionSt
   return { ok: pct === 0 ? "VAT switched off. Unsettled transactions recalculated." : `VAT set to ${pct}%. Unsettled transactions recalculated.` };
 }
 
+export async function setRedemptionRules(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireStaff("settings");
+  const n = Math.floor(Number(str(fd, "max_per_day")));
+  if (!(n >= 1 && n <= 50)) return { error: "Enter a number between 1 and 50." };
+  const { data: cur } = await supabase.from("app_settings").select("value").eq("key", "redemption_rules").maybeSingle<{ value: Record<string, unknown> }>();
+  const { error } = await supabase.from("app_settings").update({ value: { ...(cur?.value ?? {}), max_per_merchant_per_day: n }, updated_at: new Date().toISOString() }).eq("key", "redemption_rules");
+  if (error) return { error: error.message };
+  revalidatePath("/admin/settings");
+  return { ok: `Saved: ${n} per merchant per day.` };
+}
+
 export async function setPaymentsMode(fd: FormData) {
   const { supabase } = await requireStaff("settings");
   const mode = str(fd, "mode");
   if (!["off", "test", "live"].includes(mode)) return;
   await supabase.from("app_settings").update({ value: { mode, provider: str(fd, "provider") || null }, updated_at: new Date().toISOString() }).eq("key", "payments");
+  revalidatePath("/admin/settings");
   revalidatePath("/admin/finance");
 }
 
@@ -348,4 +361,41 @@ export async function recordPartnerPayout(partnerId: string, _: ActionState, fd:
   if (!r.ok) return { error: r.error === "more_than_due" ? "That's more than the partner is owed." : r.error === "reference_required" ? "Add the bank reference." : r.error === "invalid_amount" ? "Nothing is owed to this partner." : "Not allowed." };
   revalidatePath("/admin/partners", "layout");
   return { ok: "Payment recorded." };
+}
+
+export async function adminAddPartnerUser(partnerId: string, _: ActionState, fd: FormData): Promise<ActionState> {
+  await requireStaff("partners_manage");
+  const email = str(fd, "email").toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Enter a valid email." };
+  return addPartnerMember(partnerId, email);
+}
+
+export async function adminRemovePartnerUser(fd: FormData) {
+  await requireStaff("partners_manage");
+  const partnerId = str(fd, "partner_id");
+  await createAdminClient().from("partner_members").delete().eq("partner_id", partnerId).eq("user_id", str(fd, "user_id"));
+  revalidatePath(`/admin/partners/${partnerId}`);
+}
+
+/** Invite a Perkly team member (admin only). */
+export async function inviteTeamMember(_: ActionState, fd: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const email = str(fd, "email").toLowerCase(), full_name = str(fd, "full_name"), role = str(fd, "role");
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Enter a valid email." };
+  if (!(STAFF_ROLES as readonly string[]).includes(role)) return { error: "Pick a role." };
+  const admin = createAdminClient();
+  const { data: existing } = await admin.from("profiles").select("id, role").ilike("email", email).maybeSingle();
+  if (existing) {
+    if (existing.role !== "student" && !(STAFF_ROLES as readonly string[]).includes(existing.role)) return { error: "This email already belongs to a merchant or partner account." };
+    await admin.from("profiles").update({ role, ...(full_name ? { full_name } : {}) }).eq("id", existing.id);
+    revalidatePath("/admin/users"); revalidatePath("/admin/team");
+    return { ok: `${email} is now ${role.replace("_", " ")}.` };
+  }
+  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+    data: { full_name }, redirectTo: `${SITE_URL}/auth/callback?next=/account/password`,
+  });
+  if (error || !data.user) return { error: error?.message ?? "Couldn't send invite." };
+  await admin.from("profiles").update({ role, full_name: full_name || null }).eq("id", data.user.id);
+  revalidatePath("/admin/users"); revalidatePath("/admin/team");
+  return { ok: `Invite sent to ${email}.` };
 }

@@ -1,3 +1,4 @@
+import { PageTabs } from "@/components/page-tabs";
 import { redirect } from "next/navigation";
 import { requireMerchantArea } from "@/lib/auth";
 import { Card, PageHeader } from "@/components/ui";
@@ -14,7 +15,8 @@ export default async function NewBranchPage() {
   const { data: campuses } = await supabase.from("campuses").select("id,name").order("name");
   return (
     <>
-      <PageHeader title={t("New branch")} subtitle={t("A first cashier QR code is created automatically and goes live once Perkly approves it.")} />
+      <PageHeader title={t("Branches & QR codes")} subtitle={t("A first cashier QR code is created automatically and goes live once Perkly approves it.")} />
+      <PageTabs tabs={[{ href: "/merchant/branches", label: t("All branches") }, { href: "/merchant/branches/new", label: t("New branch") }]} />
       <Card><BranchForm action={createBranch} campuses={campuses ?? []} submitLabel={t("Create branch")} /></Card>
     </>
   );

@@ -8,7 +8,7 @@ import { date, egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { BRAND_TYPE_LABEL } from "@/lib/labels";
 import { settlementLabel, type Balance, type PartnerBalance, type Settlement } from "@/lib/types";
-import { createSettlements, markSettlementPaid, setPaymentsMode, setVatRate } from "../actions";
+import { createSettlements, markSettlementPaid } from "../actions";
 
 export const metadata = { title: "Finance" };
 
@@ -65,26 +65,12 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
             <SubmitButton>{t("Create settlements")}</SubmitButton>
           </ActionForm>
         </Card>
-        <Card title={t("VAT on commission")}>
-          <div className="mb-3 flex items-center gap-2 text-sm">{t("Rate")}: <Badge tone={Number(tax?.value.vat_pct ?? 14) > 0 ? "live" : "paused"}>{Number(tax?.value.vat_pct ?? 14) > 0 ? `${tax?.value.vat_pct ?? 14}%` : t("off")}</Badge></div>
-          <p className="mb-3 text-xs text-zinc-500">{t("Applied to Perkly's commission. 0% turns VAT off for everyone; single merchants can be exempted on their merchant page.")}</p>
-          {can("settings") && (
-            <ActionForm action={setVatRate} className="flex gap-2">
-              <Input name="vat_pct" type="number" step="0.01" min="0" max="100" defaultValue={tax?.value.vat_pct ?? 14} className="w-24" />
-              <SubmitButton variant="secondary">{t("Save")}</SubmitButton>
-            </ActionForm>
-          )}
-        </Card>
-        <Card title={t("In-app payments")}>
-          <div className="mb-3 flex items-center gap-2 text-sm">{t("Mode")}: <Badge tone={mode === "live" ? "live" : mode === "test" ? "pending" : "paused"}>{t(mode)}</Badge></div>
-          <p className="mb-3 text-xs text-zinc-500">{t("Test mode records payments without charging cards. Switch to live once a payment gateway (e.g. Paymob) is connected.")}</p>
-          {can("settings") && (
-            <form action={setPaymentsMode} className="flex gap-2">
-              {["off", "test", "live"].map((m) => (
-                <button key={m} name="mode" value={m} disabled={m === "live"} className={`rounded-lg px-3 py-1.5 text-xs font-semibold ring-1 ring-zinc-200 disabled:opacity-40 ${m === mode ? "bg-perk-ink text-white" : "bg-white"}`}>{t(m)}</button>
-              ))}
-            </form>
-          )}
+        <Card title={t("Rates & payments")} className="lg:col-span-2">
+          <div className="flex flex-wrap gap-6 text-sm">
+            <div>{t("VAT on commission")}: <Badge tone={Number(tax?.value.vat_pct ?? 14) > 0 ? "live" : "paused"}>{Number(tax?.value.vat_pct ?? 14) > 0 ? `${tax?.value.vat_pct ?? 14}%` : t("off")}</Badge></div>
+            <div>{t("In-app payments")}: <Badge tone={mode === "live" ? "live" : mode === "test" ? "pending" : "paused"}>{t(mode)}</Badge></div>
+          </div>
+          <p className="mt-3 text-xs text-zinc-500">{can("settings") ? <>{t("Change these in")} <Link href="/admin/settings" className="font-semibold text-perk-purple hover:underline">{t("Settings")}</Link>.</> : t("Only an admin can change these.")}</p>
         </Card>
       </div>
 

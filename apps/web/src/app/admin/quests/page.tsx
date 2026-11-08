@@ -1,9 +1,9 @@
+import { PageTabs } from "@/components/page-tabs";
 import { requireStaff } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
-import { Badge, Card, Field, Input, PageHeader, Select, Table, Td } from "@/components/ui";
-import { ActionForm, SubmitButton } from "@/components/action-form";
+import { Badge, PageHeader, Table, Td } from "@/components/ui";
 import type { Quest } from "@/lib/types";
-import { createQuest, toggleQuest } from "../actions";
+import { toggleQuest } from "../actions";
 
 export const metadata = { title: "Quests" };
 const METRIC: Record<string, string> = { redemptions: "Redemptions", unique_merchants: "Different merchants", new_merchants: "New merchants" };
@@ -15,8 +15,9 @@ export default async function QuestsPage() {
   return (
     <>
       <PageHeader title={t("Quests")} subtitle={t("Progress updates automatically on every redemption. XP is awarded on completion.")} />
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      {<PageTabs tabs={[{ href: "/admin/quests", label: t("All quests") }, { href: "/admin/quests/new", label: t("New quest") }]} />}
+      <div>
+        <div>
           <Table head={[t("Quest"), t("Type"), t("Goal"), "XP", t("Status"), ""]}>
             {(data ?? []).map((q) => (
               <tr key={q.id}>
@@ -31,22 +32,6 @@ export default async function QuestsPage() {
             ))}
           </Table>
         </div>
-        <Card title={t("New quest")}>
-          <ActionForm action={createQuest} className="space-y-3" resetOnSuccess>
-            <div className="grid grid-cols-4 gap-2">
-              <Field label={t("Emoji")}><Input name="emoji" defaultValue="🎯" /></Field>
-              <Field label={t("Title")} className="col-span-3"><Input name="title" required /></Field>
-            </div>
-            <Field label={t("Description")}><Input name="description" /></Field>
-            <Field label={t("Resets")}><Select name="quest_type"><option value="daily">{t("daily")}</option><option value="weekly">{t("weekly")}</option><option value="monthly">{t("monthly")}</option></Select></Field>
-            <Field label={t("Counts")}><Select name="metric">{Object.entries(METRIC).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}</Select></Field>
-            <div className="grid grid-cols-2 gap-2">
-              <Field label={t("Target")}><Input name="target" type="number" min="1" defaultValue={1} /></Field>
-              <Field label={t("XP reward")}><Input name="xp_reward" type="number" min="1" defaultValue={25} /></Field>
-            </div>
-            <SubmitButton className="w-full">{t("Create quest")}</SubmitButton>
-          </ActionForm>
-        </Card>
       </div>
     </>
   );

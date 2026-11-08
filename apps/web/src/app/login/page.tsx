@@ -12,6 +12,7 @@ const ERRORS: Record<string, string> = {
   not_admin: "That page is for the Perkly team only.",
   no_merchant: "Your account isn't linked to a merchant yet.",
   no_access: "Your account doesn't have portal access.",
+  no_partner: "Your account isn't linked to a partner yet.",
   auth: "That sign-in link is invalid or expired.",
 };
 

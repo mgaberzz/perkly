@@ -1,6 +1,7 @@
+import { PageTabs } from "@/components/page-tabs";
 import Link from "next/link";
 import { requireMerchantArea } from "@/lib/auth";
-import { Badge, LinkButton, PageHeader, Table, Td } from "@/components/ui";
+import { Badge, PageHeader, Table, Td } from "@/components/ui";
 import { date, discountLabel, tierFor } from "@/lib/format";
 import type { Perk } from "@/lib/types";
 import { setPerkStatus } from "../actions";
@@ -16,8 +17,8 @@ export default async function PerksPage() {
     .returns<(Perk & { branch: { name: string } | null })[]>();
   return (
     <>
-      <PageHeader title={t("Perks")} subtitle={t("What students get when they scan your QR.")}
-        actions={canManage && <LinkButton href="/merchant/perks/new">+ {t("New perk")}</LinkButton>} />
+      <PageHeader title={t("Perks")} subtitle={t("What students get when they scan your QR.")} />
+      {canManage && <PageTabs tabs={[{ href: "/merchant/perks", label: t("All perks") }, { href: "/merchant/perks/new", label: t("New perk") }]} />}
       <Table head={[t("Perk"), t("Discount"), t("Tier"), t("Branch"), t("Ends"), t("Status"), ""]} empty={t("No perks yet — create your first one.")}>
         {(perks ?? []).map((p) => {
           const tier = tierFor(p);

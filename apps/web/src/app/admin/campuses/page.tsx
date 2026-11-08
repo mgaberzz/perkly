@@ -1,9 +1,9 @@
+import { PageTabs } from "@/components/page-tabs";
 import { requireStaff } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
-import { Badge, Card, Field, Input, PageHeader, Select, Table, Td } from "@/components/ui";
-import { ActionForm, SubmitButton } from "@/components/action-form";
+import { Badge, PageHeader, Table, Td } from "@/components/ui";
 import type { Campus } from "@/lib/types";
-import { createCampus, toggleCampus } from "../actions";
+import { toggleCampus } from "../actions";
 
 export const metadata = { title: "Campuses" };
 
@@ -22,8 +22,9 @@ export default async function CampusesPage() {
   return (
     <>
       <PageHeader title={role === "account_manager" ? t("My campuses") : t("Campuses")} subtitle={t("Students pick their campus during onboarding.")} />
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className={editable ? "lg:col-span-2" : "lg:col-span-3"}>
+      {editable && <PageTabs tabs={[{ href: "/admin/campuses", label: t("All campuses") }, { href: "/admin/campuses/new", label: t("New campus") }]} />}
+      <div>
+        <div>
           <Table head={[t("Campus"), t("City"), t("Type"), t("Location"), t("Status"), ""]}>
             {(data ?? []).map((c) => (
               <tr key={c.id}>
@@ -37,19 +38,6 @@ export default async function CampusesPage() {
             ))}
           </Table>
         </div>
-        {editable && <Card title={t("Add campus")}>
-          <ActionForm action={createCampus} className="space-y-3" resetOnSuccess>
-            <Field label={t("Name")}><Input name="name" required /></Field>
-            <Field label={t("Short name")}><Input name="short_name" placeholder="AUC" /></Field>
-            <Field label={t("City")}><Input name="city" required /></Field>
-            <Field label={t("Type")}><Select name="type"><option value="university">{t("university")}</option><option value="school">{t("school")}</option><option value="hub">{t("hub")}</option></Select></Field>
-            <div className="grid grid-cols-2 gap-2">
-              <Field label={t("Latitude")}><Input name="lat" type="number" step="any" /></Field>
-              <Field label={t("Longitude")}><Input name="lng" type="number" step="any" /></Field>
-            </div>
-            <SubmitButton className="w-full">{t("Add campus")}</SubmitButton>
-          </ActionForm>
-        </Card>}
       </div>
     </>
   );

@@ -498,3 +498,28 @@ do $$ begin
   assert (select partner_id from merchants where id = current_setting('test.costa_id')::uuid) is not null, 'merchant cannot unlink partner';
 end $$;
 reset role;
+
+-- ── Partner portal: a partner user sees only their own partner data, never students ──
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-0000000000fa', 'partner@perkly.test', '{"full_name":"Pat Partner"}');
+update profiles set role = 'partner' where id = '00000000-0000-0000-0000-0000000000fa';
+insert into partner_members (partner_id, user_id) values (current_setting('test.partner')::uuid, '00000000-0000-0000-0000-0000000000fa');
+insert into partners (name, cut_type, cut_value) values ('Other Partner', 'percentage', 10);
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000fa', false);
+do $$ declare v_p uuid := current_setting('test.partner')::uuid; begin
+  assert (select count(*) from partners) = 1, 'partner sees only own partner record';
+  assert (select count(*) from partner_balances()) = 1 and (select earned from partner_balances()) = 7.50, 'own balance only';
+  assert (select count(*) from partner_merchants(v_p)) = 1, 'own merchants';
+  assert (select count(*) from partner_transactions(v_p, 365)) >= 3, 'own transactions';
+  assert (select count(*) from partner_transactions(v_p, 365) where status = 'reversed' and cut <> 0) = 0, 'reversed earn 0';
+  assert (select count(*) from partner_payouts) = 1, 'own payouts';
+  assert (select count(*) from partner_merchants((select id from partners where name = 'Other Partner'))) = 0, 'no other partner merchants';
+  assert (select count(*) from redemptions) = 0, 'no direct transaction access';
+  assert (select count(*) from profiles where role = 'student') = 0, 'no students';
+  assert (select count(*) from partner_members) = 1, 'own membership only';
+  assert record_partner_payout(v_p, 1, 'X')->>'error' = 'not_allowed', 'partner cannot pay themselves';
+  update partners set cut_value = 50 where id = v_p;
+  assert (select cut_value from partners where id = v_p) = 3, 'partner cannot change the deal';
+end $$;
+reset role;

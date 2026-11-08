@@ -1,13 +1,12 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getT } from "@/lib/i18n/server";
-import { LangSwitch } from "./lang-switch";
 import { Logo } from "./logo";
 import { NavLink } from "./nav-link";
 import { MobileMenu } from "./mobile-menu";
 import { TableToggle } from "./table-toggle";
 
-export type NavItem = { href: string; label: string; icon: string; exact?: boolean; count?: number };
+export type NavItem = { href: string; label: string; icon?: string; exact?: boolean; count?: number };
 
 export async function Shell({ nav, children, top, user, badge }: { nav: NavItem[]; children: ReactNode; top?: ReactNode; user: string; badge: string }) {
   const t = await getT();
@@ -25,8 +24,6 @@ export async function Shell({ nav, children, top, user, badge }: { nav: NavItem[
         </nav>
         <div className="border-t border-zinc-200 pt-4">
           <div className="truncate px-2 text-sm font-semibold">{user}</div>
-          <Link href="/account/security" className="mt-1 block rounded-xl px-3 py-2 text-sm font-semibold text-zinc-600 hover:bg-zinc-100">{t("Face ID / fingerprint")}</Link>
-          <LangSwitch />
           {signOut("w-full rounded-xl px-3 py-2 text-start text-sm text-zinc-500 hover:bg-zinc-100")}
         </div>
       </aside>
@@ -38,8 +35,6 @@ export async function Shell({ nav, children, top, user, badge }: { nav: NavItem[
             <nav className="flex flex-col gap-1">{nav.map((n) => <NavLink key={n.href} {...n} />)}</nav>
             <div className="mt-3 border-t border-zinc-100 pt-3">
               <div className="truncate px-3 pb-1 text-sm font-semibold">{user}</div>
-              <Link href="/account/security" className="block rounded-xl px-3 py-2 text-sm font-semibold text-zinc-600 hover:bg-zinc-100">{t("Face ID / fingerprint")}</Link>
-              <LangSwitch />
               {signOut("w-full rounded-xl px-3 py-2 text-start text-sm text-zinc-500 hover:bg-zinc-100")}
             </div>
           </MobileMenu>

@@ -1,11 +1,12 @@
+import { PageTabs } from "@/components/page-tabs";
 import { redirect } from "next/navigation";
 import { requireMerchantArea } from "@/lib/auth";
-import { Badge, Card, Field, Input, PageHeader, Select, Table, Td } from "@/components/ui";
-import { ActionForm, ConfirmButton, SubmitButton } from "@/components/action-form";
+import { Badge, PageHeader, Table, Td } from "@/components/ui";
+import { ConfirmButton } from "@/components/action-form";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getT } from "@/lib/i18n/server";
 import { MEMBER_ROLE_LABEL } from "@/lib/labels";
-import { inviteStaff, removeStaff } from "../actions";
+import { removeStaff } from "../actions";
 
 export const metadata = { title: "Team" };
 
@@ -28,13 +29,14 @@ export default async function TeamPage() {
   return (
     <>
       <PageHeader title={t("Team")} subtitle={t("Owners manage everything · Managers edit perks & branches · Branch managers run one branch and request cashier QR codes · Cashiers view transactions.")} />
+      {memberRole === "owner" && <PageTabs tabs={[{ href: "/merchant/team", label: t("Team") }, { href: "/merchant/team/new", label: t("Add staff") }]} />}
       {!hasKey && (
         <div className="mb-4 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
           {t("Add SUPABASE_SERVICE_ROLE_KEY to apps/web/.env.local to see teammates' names and send invites.")}
         </div>
       )}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      <div>
+        <div>
           <Table head={[t("Name"), t("Email"), t("Role"), ""]}>
             {(members ?? []).map((m) => {
               const p = byId.get(m.user_id);
@@ -56,25 +58,6 @@ export default async function TeamPage() {
             })}
           </Table>
         </div>
-        <Card title={t("Add staff")}>
-          {memberRole === "owner" ? (
-            <ActionForm action={inviteStaff} className="space-y-4" resetOnSuccess>
-              <Field label={t("Email")}><Input name="email" type="email" required /></Field>
-              <Field label={t("Role")}>
-                <Select name="member_role" defaultValue="cashier">
-                  {["cashier", "branch_manager", "manager"].map((r) => <option key={r} value={r}>{t(MEMBER_ROLE_LABEL[r])}</option>)}
-                </Select>
-              </Field>
-              <Field label={t("Branch")} hint={t("Required for branch managers")}>
-                <Select name="branch_id" defaultValue="">
-                  <option value="">—</option>
-                  {(branches ?? []).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </Select>
-              </Field>
-              <SubmitButton className="w-full">{t("Send invite")}</SubmitButton>
-            </ActionForm>
-          ) : <p className="text-sm text-zinc-500">{t("Only the owner can add staff.")}</p>}
-        </Card>
       </div>
     </>
   );

@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { Badge, PageHeader, Table, Td } from "@/components/ui";
 import { FilterBar } from "@/components/filter-bar";
+import { PageTabs } from "@/components/page-tabs";
 import { Avatar } from "@/components/expand-list";
 import { cartoonSvg } from "@/lib/cartoon";
 import { date, egp } from "@/lib/format";
@@ -36,6 +37,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
   return (
     <>
       <PageHeader title={t("Users & roles")} subtitle={t("IDs are numbers only; the first digit tells you what it is: 1 = User ID (8 digits), 2 = Student ID (8 digits), 3 = Merchant ID (6 digits), 9 = Transaction ID (10 digits).")} />
+      <PageTabs tabs={[{ href: "/admin/users", label: t("All users") }, { href: "/admin/users/new", label: t("New user") }]} />
       <FilterBar path="/admin/users" search={{ name: "q", value: q, placeholder: t("Name, email, phone, User ID or Student ID") }} fields={[
         { name: "role", label: t("Role"), type: "select", value: role, all: t("All roles"), options: ROLES.map((r) => ({ value: r, label: t(ROLE_LABEL[r]) })) },
       ]} />

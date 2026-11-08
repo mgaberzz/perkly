@@ -16,6 +16,7 @@ const NAV: (NavItem & { perm: Perm })[] = [
   { href: "/admin/team", label: "Team & assignments", icon: "🧑‍💼", perm: "users" },
   { href: "/admin/campuses", label: "Campuses", icon: "🏫", perm: "campuses_view" },
   { href: "/admin/quests", label: "Quests", icon: "🎯", perm: "quests" },
+  { href: "/admin/settings", label: "Settings", icon: "", perm: "overview" },
 ];
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
