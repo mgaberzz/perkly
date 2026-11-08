@@ -5,6 +5,7 @@ import { Card, Screen, T } from '@/components/ui';
 import { Avatar } from '@/components/avatar';
 import { biometricAvailable, biometricEnabled, faceIdLimitedHere, setBiometricEnabled } from '@/lib/biometric';
 import { fwdChevron, lang, setLanguage, t } from '@/lib/i18n';
+import { legalUrl } from '@/lib/links';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { brand, useTheme } from '@/lib/theme';
@@ -89,8 +90,8 @@ export default function Settings() {
       <T v="label">{t('Help')}</T>
       <Card style={{ gap: 0, paddingVertical: 0 }}>
         <Row label={`💬 ${t('Support chat')}`} onPress={() => Linking.openURL('https://wa.me/')} />
-        <Row label={`📄 ${t('Terms of Use')}`} onPress={() => Linking.openURL('https://perkly.app/terms')} />
-        <Row label={`🔒 ${t('Privacy Policy')}`} onPress={() => Linking.openURL('https://perkly.app/privacy')} />
+        <Row label={`📄 ${t('Terms of Use')}`} onPress={() => Linking.openURL(legalUrl('terms'))} />
+        <Row label={`🔒 ${t('Privacy Policy')}`} onPress={() => Linking.openURL(legalUrl('privacy'))} />
       </Card>
       <Pressable onPress={logout} style={{ padding: 16 }}><T color={brand.danger} style={{ textAlign: 'center', fontWeight: '900' }}>{t('Log out')}</T></Pressable>
       <View style={{ alignItems: 'center' }}><T v="small">Perkly · {t('Unlock Perks. Live Smart.')}</T></View>

@@ -1,5 +1,7 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Terms of Use": "شروط الاستخدام",
+  "Privacy Policy": "سياسة الخصوصية",
   "Other": "أخرى",
   "Week of {date}": "أسبوع {date}",
   "Weekly trend: total GMV and net revenue": "الاتجاه الأسبوعي: إجمالي المبيعات وصافي الإيراد",

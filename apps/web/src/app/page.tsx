@@ -16,6 +16,10 @@ export default async function Home() {
       <Link href="/login" className="mt-8 rounded-2xl bg-white px-6 py-3 font-bold text-perk-purple shadow-lg hover:bg-white/90">
         {t("Sign in")}
       </Link>
+      <p className="mt-10 flex gap-4 text-xs text-white/70">
+        <Link href="/terms" className="hover:text-white">{t("Terms of Use")}</Link>
+        <Link href="/privacy" className="hover:text-white">{t("Privacy Policy")}</Link>
+      </p>
     </main>
   );
 }

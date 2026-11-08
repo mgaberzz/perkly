@@ -5,6 +5,7 @@ import { sendReset, signIn } from "./actions";
 import { getT } from "@/lib/i18n/server";
 import { LangSwitch } from "@/components/lang-switch";
 import { PasskeySignIn } from "@/components/passkey";
+import Link from "next/link";
 
 export const metadata = { title: "Sign in" };
 
@@ -51,6 +52,10 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
               <SubmitButton variant="secondary" className="w-full">{t("Send reset link")}</SubmitButton>
             </ActionForm>
           </details>
+          <p className="mt-10 flex gap-4 text-xs text-zinc-400">
+            <Link href="/terms" className="hover:text-perk-purple">{t("Terms of Use")}</Link>
+            <Link href="/privacy" className="hover:text-perk-purple">{t("Privacy Policy")}</Link>
+          </p>
         </div>
       </div>
     </main>

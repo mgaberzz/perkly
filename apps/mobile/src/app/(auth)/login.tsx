@@ -12,6 +12,7 @@ import { useSession } from '@/lib/session';
 import { supabase, supabaseConfigured } from '@/lib/supabase';
 import { brand, gradient, useTheme } from '@/lib/theme';
 import { t } from '@/lib/i18n';
+import { legalUrl } from '@/lib/links';
 
 /** Normalize Egyptian mobile numbers to E.164 (+20…) */
 function toE164(raw: string) {
@@ -178,8 +179,8 @@ export default function Login() {
 
           <T v="small" style={{ textAlign: 'center', marginTop: 8, lineHeight: 18 }}>
             {t('By continuing you agree to Perkly’s')}{' '}
-            <Text style={{ color: brand.purple, fontWeight: '800' }} onPress={() => Linking.openURL('https://perkly.app/terms')}>{t('Terms')}</Text> {t('and')}{' '}
-            <Text style={{ color: brand.purple, fontWeight: '800' }} onPress={() => Linking.openURL('https://perkly.app/privacy')}>{t('Privacy Policy')}</Text>.
+            <Text style={{ color: brand.purple, fontWeight: '800' }} onPress={() => Linking.openURL(legalUrl('terms'))}>{t('Terms')}</Text> {t('and')}{' '}
+            <Text style={{ color: brand.purple, fontWeight: '800' }} onPress={() => Linking.openURL(legalUrl('privacy'))}>{t('Privacy Policy')}</Text>.
           </T>
         </View>
       </ScrollView>

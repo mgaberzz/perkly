@@ -8,6 +8,7 @@ import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { brand } from '@/lib/theme';
 import { t } from '@/lib/i18n';
+import { legalUrl } from '@/lib/links';
 
 export default function Consent() {
   const { session, refreshProfile } = useSession();
@@ -39,8 +40,8 @@ export default function Consent() {
       </Card>
       <T v="muted">
         {t('To use Perkly you need to agree to our')}{' '}
-        <Text style={{ color: brand.purple, fontWeight: '800' }} onPress={() => Linking.openURL('https://perkly.app/terms')}>{t('Terms of Use')}</Text> {t('and')}{' '}
-        <Text style={{ color: brand.purple, fontWeight: '800' }} onPress={() => Linking.openURL('https://perkly.app/privacy')}>{t('Privacy Policy')}</Text>.
+        <Text style={{ color: brand.purple, fontWeight: '800' }} onPress={() => Linking.openURL(legalUrl('terms'))}>{t('Terms of Use')}</Text> {t('and')}{' '}
+        <Text style={{ color: brand.purple, fontWeight: '800' }} onPress={() => Linking.openURL(legalUrl('privacy'))}>{t('Privacy Policy')}</Text>.
       </T>
       <Checkbox checked={drops} onChange={setDrops} label={t('Send me new perk drops 🔥')} sub={t('Push notifications & emails — unsubscribe anytime')} />
       <View style={{ gap: 6, marginTop: 8 }}>
