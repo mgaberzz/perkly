@@ -2,10 +2,6 @@
 -- merchants, what they earned and what Perkly paid them. No student details are ever shown to partners,
 -- and they get no direct access to the transactions table — only through the partner_* functions below.
 
-alter table public.profiles drop constraint profiles_role_check;
-alter table public.profiles add constraint profiles_role_check
-  check (role in ('student', 'merchant', 'partner', 'admin', 'operations', 'account_manager', 'finance'));
-
 create table public.partner_members (
   partner_id uuid not null references public.partners(id) on delete cascade,
   user_id    uuid not null references public.profiles(id) on delete cascade,
@@ -25,16 +21,10 @@ language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function public.is_partner_member(uuid) to authenticated;
 
--- partners can read their own partner record, earnings and payouts
-drop policy partners_read on public.partners;
-create policy partners_read on public.partners for select
-  using (public.is_staff(array['admin', 'operations', 'finance']) or public.is_partner_member(id));
-drop policy partner_earnings_read on public.partner_earnings;
-create policy partner_earnings_read on public.partner_earnings for select
-  using (public.is_staff(array['admin', 'operations', 'finance']) or public.is_partner_member(partner_id));
-drop policy partner_payouts_read on public.partner_payouts;
-create policy partner_payouts_read on public.partner_payouts for select
-  using (public.is_staff(array['admin', 'operations', 'finance']) or public.is_partner_member(partner_id));
+-- partners can read their own partner record, earnings and payouts (extra rules; staff rules stay as they are)
+create policy partners_read_member on public.partners for select using (public.is_partner_member(id));
+create policy partner_earnings_read_member on public.partner_earnings for select using (public.is_partner_member(partner_id));
+create policy partner_payouts_read_member on public.partner_payouts for select using (public.is_partner_member(partner_id));
 
 -- balances: staff see all, a partner sees only their own
 create or replace function public.partner_balances(p_partner_id uuid default null)
