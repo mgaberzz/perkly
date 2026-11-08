@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps, CSSProperties, ReactNode } from "react";
 import { egp, egpShort } from "@/lib/format";
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
@@ -9,16 +9,16 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
         <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>}
       </div>
-      {actions && <div className="flex gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
   );
 }
 
 export function Card({ children, className = "", title, actions }: { children: ReactNode; className?: string; title?: ReactNode; actions?: ReactNode }) {
   return (
-    <section className={`rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm ${className}`}>
+    <section className={`min-w-0 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 ${className}`}>
       {(title || actions) && (
-        <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           {title && <h2 className="font-bold">{title}</h2>}
           {actions}
         </div>
@@ -30,9 +30,9 @@ export function Card({ children, className = "", title, actions }: { children: R
 
 export function Stat({ label, value, hint, accent = false }: { label: string; value: ReactNode; hint?: ReactNode; accent?: boolean }) {
   return (
-    <div className={`rounded-2xl p-5 shadow-sm ${accent ? "perk-gradient text-white" : "border border-zinc-200 bg-white"}`}>
+    <div className={`min-w-0 rounded-2xl p-4 shadow-sm sm:p-5 ${accent ? "perk-gradient text-white" : "border border-zinc-200 bg-white"}`}>
       <div className={`text-xs font-semibold uppercase tracking-wide ${accent ? "text-white/80" : "text-zinc-500"}`}>{label}</div>
-      <div className="mt-2 text-3xl font-extrabold">{value}</div>
+      <div className="mt-2 break-words text-2xl font-extrabold leading-tight sm:text-3xl">{value}</div>
       {hint && <div className={`mt-1 text-xs ${accent ? "text-white/80" : "text-zinc-500"}`}>{hint}</div>}
     </div>
   );
@@ -101,25 +101,28 @@ export function Textarea(props: ComponentProps<"textarea">) {
   return <textarea rows={3} {...props} className={`${INPUT} ${props.className ?? ""}`} />;
 }
 
+/** Wide table on desktop; on phones every row becomes a card with "LABEL  value" lines (labels come from `head`). */
 export function Table({ head, children, empty }: { head: ReactNode[]; children: ReactNode; empty?: ReactNode }) {
   const hasRows = Array.isArray(children) ? children.length > 0 : Boolean(children);
+  const labels = Object.fromEntries(head.map((h, i) => [`--h${i + 1}`, JSON.stringify(typeof h === "string" || typeof h === "number" ? String(h) : "")]));
   return (
     <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white shadow-sm">
-      <table className="w-full text-start text-sm">
+      <table className="mtable w-full text-start text-sm" style={labels as CSSProperties}>
         <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
           <tr>{head.map((h, i) => <th key={i} className="whitespace-nowrap px-4 py-3 text-start font-semibold">{h}</th>)}</tr>
         </thead>
         <tbody className="divide-y divide-zinc-100">
           {hasRows ? children : (
-            <tr><td colSpan={head.length} className="px-4 py-10 text-center text-zinc-500">{empty ?? "Nothing here yet."}</td></tr>
+            <tr><td colSpan={head.length} className="mt-empty px-4 py-10 text-center text-zinc-500">{empty ?? "Nothing here yet."}</td></tr>
           )}
         </tbody>
       </table>
     </div>
   );
 }
-export const Td = ({ children, className = "" }: { children?: ReactNode; className?: string }) => (
-  <td className={`px-4 py-3 align-middle ${className}`}>{children}</td>
+/** `phone="hide"` drops a secondary column from the phone card view (it stays on desktop). */
+export const Td = ({ children, className = "", phone }: { children?: ReactNode; className?: string; phone?: "hide" }) => (
+  <td className={`px-4 py-3 align-middle ${phone === "hide" ? "mt-hide" : ""} ${className}`}><div className="mt-v">{children}</div></td>
 );
 
 export function Notice({ tone = "info", children }: { tone?: "info" | "error" | "success"; children: ReactNode }) {
@@ -131,17 +134,18 @@ export function Notice({ tone = "info", children }: { tone?: "info" | "error" | 
 export function BarChart({ data, empty = "No data yet" }: { data: { label: string; value: number; href?: string }[]; empty?: string }) {
   const max = Math.max(1, ...data.map((d) => d.value));
   if (data.length === 0) return <div className="py-10 text-center text-sm text-zinc-500">{empty}</div>;
+  const every = Math.ceil(data.length / 8);
   return (
-    <div className="flex h-44 items-end gap-1">
+    <div className="flex h-44 items-end gap-0.5 sm:gap-1">
       {data.map((d, i) => {
         const inner = (
           <>
             <span className="text-[10px] font-semibold text-zinc-500 opacity-0 group-hover:opacity-100">{d.value}</span>
             <div className="w-full rounded-t-md perk-gradient group-hover:opacity-80" style={{ height: `${(d.value / max) * 100}%`, minHeight: d.value ? 4 : 1 }} />
-            <span className="max-w-full truncate text-[10px] text-zinc-500">{d.label}</span>
+            <span className={`max-w-full overflow-visible whitespace-nowrap text-[10px] text-zinc-500 ${i % every && i !== data.length - 1 ? "invisible sm:visible" : ""}`}>{d.label}</span>
           </>
         );
-        const cls = "group flex h-full flex-1 flex-col items-center justify-end gap-1";
+        const cls = "group flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1";
         return d.href && d.value
           ? <Link key={i} href={d.href} className={cls} title={`${d.label}: ${d.value}`}>{inner}</Link>
           : <div key={i} className={cls} title={`${d.label}: ${d.value}`}>{inner}</div>;

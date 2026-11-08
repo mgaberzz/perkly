@@ -20,21 +20,34 @@ export function ComboChart({ days, barLabel, lineLabel, empty }: {
   barLabel: string; lineLabel: string; empty: string;
 }) {
   if (!days.length || days.every((d) => !d.bar && !d.line)) return <div className="py-10 text-center text-sm text-zinc-500">{empty}</div>;
-  const W = 720, H = 220, L = 46, R = 46, T = 12, B = 26;
+  return (
+    <div>
+      {/* phones get their own narrower drawing so text stays readable */}
+      <div className="sm:hidden">{comboSvg(days, barLabel, lineLabel, true)}</div>
+      <div className="hidden sm:block">{comboSvg(days, barLabel, lineLabel, false)}</div>
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-600">
+        <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-perk-purple/30" />{barLabel}</span>
+        <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-perk-pink" />{lineLabel}</span>
+      </div>
+    </div>
+  );
+}
+
+function comboSvg(days: { label: string; bar: number; line: number; href?: string; title?: string }[], barLabel: string, lineLabel: string, phone: boolean) {
+  const W = phone ? 340 : 720, H = phone ? 230 : 220, L = phone ? 34 : 46, R = phone ? 30 : 46, T = 12, B = 26, F = phone ? 11 : 10;
   const w = (W - L - R) / days.length;
   const bMax = niceMax(Math.max(...days.map((d) => d.bar)));
   const lMax = niceMax(Math.max(...days.map((d) => d.line)));
   const y = (v: number, max: number) => T + (H - T - B) * (1 - v / max);
   const path = days.map((d, i) => `${i ? "L" : "M"}${L + w * i + w / 2},${y(d.line, lMax)}`).join(" ");
-  const every = Math.ceil(days.length / 10);
+  const every = Math.ceil(days.length / (phone ? 5 : 10));
   return (
-    <div>
       <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img">
         {[0, 0.5, 1].map((f) => (
           <g key={f}>
             <line x1={L} x2={W - R} y1={y(bMax * f, bMax)} y2={y(bMax * f, bMax)} stroke="#E4E4E7" strokeDasharray="3 3" />
-            <text x={L - 6} y={y(bMax * f, bMax) + 4} textAnchor="end" fontSize="10" fill="#7B2FF7">{short(bMax * f)}</text>
-            <text x={W - R + 6} y={y(lMax * f, lMax) + 4} fontSize="10" fill="#FF3EA5">{short(lMax * f)}</text>
+            <text x={L - 6} y={y(bMax * f, bMax) + 4} textAnchor="end" fontSize={F} fill="#7B2FF7">{short(bMax * f)}</text>
+            <text x={W - R + 4} y={y(lMax * f, lMax) + 4} fontSize={F} fill="#FF3EA5">{short(lMax * f)}</text>
           </g>
         ))}
         {days.map((d, i) => {
@@ -48,18 +61,13 @@ export function ComboChart({ days, barLabel, lineLabel, empty }: {
           return (
             <g key={i}>
               {d.href && d.bar ? <a href={d.href} className="cursor-pointer [&:hover_rect:first-of-type]:opacity-60">{bar}</a> : bar}
-              {i % every === 0 && <text x={L + w * i + w / 2} y={H - 8} textAnchor="middle" fontSize="10" fill="#71717A">{d.label}</text>}
+              {i % every === 0 && <text x={L + w * i + w / 2} y={H - 8} textAnchor="middle" fontSize={F} fill="#71717A">{d.label}</text>}
             </g>
           );
         })}
-        <path d={path} fill="none" stroke="#FF3EA5" strokeWidth={2.5} strokeLinejoin="round" />
+        <path d={path} fill="none" stroke="#FF3EA5" strokeWidth={phone ? 2 : 2.5} strokeLinejoin="round" />
         {days.map((d, i) => d.line > 0 && <circle key={i} cx={L + w * i + w / 2} cy={y(d.line, lMax)} r={3} fill="#FF3EA5"><title>{`${d.label} · ${lineLabel}: ${egp(d.line)}`}</title></circle>)}
       </svg>
-      <div className="mt-2 flex gap-4 text-xs text-zinc-600">
-        <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-perk-purple/30" />{barLabel}</span>
-        <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-perk-pink" />{lineLabel}</span>
-      </div>
-    </div>
   );
 }
 
@@ -116,20 +124,20 @@ export function LineChart({ labels, series, empty }: {
 }) {
   const max = niceMax(Math.max(0, ...series.flatMap((s) => s.values)));
   if (!series.length || max <= 1 && series.every((s) => s.values.every((v) => !v))) return <div className="py-10 text-center text-sm text-zinc-500">{empty}</div>;
-  const W = 720, H = 200, L = 46, R = 12, T = 10, B = 24;
+  const draw = (phone: boolean) => {
+  const W = phone ? 340 : 720, H = phone ? 220 : 200, L = phone ? 34 : 46, R = 12, T = 10, B = 24, F = phone ? 11 : 10;
   const x = (i: number) => L + ((W - L - R) * i) / Math.max(1, labels.length - 1);
   const y = (v: number) => T + (H - T - B) * (1 - v / max);
-  const every = Math.ceil(labels.length / 10);
+  const every = Math.ceil(labels.length / (phone ? 5 : 10));
   return (
-    <div>
       <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full">
         {[0, 0.5, 1].map((f) => (
           <g key={f}>
             <line x1={L} x2={W - R} y1={y(max * f)} y2={y(max * f)} stroke="#E4E4E7" strokeDasharray="3 3" />
-            <text x={L - 6} y={y(max * f) + 4} textAnchor="end" fontSize="10" fill="#71717A">{short(max * f)}</text>
+            <text x={L - 6} y={y(max * f) + 4} textAnchor="end" fontSize={F} fill="#71717A">{short(max * f)}</text>
           </g>
         ))}
-        {labels.map((l, i) => i % every === 0 && <text key={i} x={x(i)} y={H - 6} textAnchor="middle" fontSize="10" fill="#71717A">{l}</text>)}
+        {labels.map((l, i) => i % every === 0 && <text key={i} x={x(i)} y={H - 6} textAnchor="middle" fontSize={F} fill="#71717A">{l}</text>)}
         {series.map((s, si) => (
           <g key={si}>
             <path d={s.values.map((v, i) => `${i ? "L" : "M"}${x(i)},${y(v)}`).join(" ")} fill="none" stroke={SERIES_COLORS[si % SERIES_COLORS.length]} strokeWidth={2.2} strokeLinejoin="round" />
@@ -137,6 +145,12 @@ export function LineChart({ labels, series, empty }: {
           </g>
         ))}
       </svg>
+  );
+  };
+  return (
+    <div>
+      <div className="sm:hidden">{draw(true)}</div>
+      <div className="hidden sm:block">{draw(false)}</div>
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
         {series.map((s, si) => {
           const item = <span className="flex items-center gap-1.5 text-zinc-600 hover:text-perk-purple"><span className="h-0.5 w-4" style={{ background: SERIES_COLORS[si % SERIES_COLORS.length] }} />{s.label}</span>;

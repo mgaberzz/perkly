@@ -38,7 +38,7 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
       <PageHeader title={role === "account_manager" ? t("My merchants") : t("Merchants")} subtitle={t("{n} shown", { n: data?.length ?? 0 })}
         actions={can("merchants_create") && <LinkButton href="/admin/merchants/new">+ {t("New merchant")}</LinkButton>} />
       <form className="mb-4 flex flex-wrap gap-2">
-        <Input name="q" defaultValue={q} placeholder={t("Search name or MER-…")} className="max-w-xs" />
+        <Input name="q" defaultValue={q} placeholder={t("Search name or MER-…")} className="w-full sm:max-w-xs" />
         <Select name="status" defaultValue={status} className="w-36">
           <option value="">{t("All statuses")}</option>{["pending", "live", "paused", "churned"].map((x) => <option key={x} value={x}>{t(x)}</option>)}
         </Select>
@@ -61,15 +61,15 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
         {(data ?? []).map((m) => (
           <tr key={m.id}>
             <Td><Link href={`/admin/merchants/${m.id}`} className="font-semibold hover:text-perk-purple">{m.name}</Link><div className="text-xs text-zinc-500">{t(m.category)}{m.subcategory && ` · ${m.subcategory}`}</div></Td>
-            <Td className="font-mono text-xs">{m.merchant_code}</Td>
+            <Td phone="hide" className="font-mono text-xs">{m.merchant_code}</Td>
             <Td>{t(BRAND_TYPE_LABEL[m.brand_type] ?? m.brand_type)}</Td>
-            <Td>{t(CHANNEL_LABEL[m.channel])}</Td>
-            <Td>{m.branches[0]?.count ?? 0}</Td>
-            <Td>{m.perks[0]?.count ?? 0}</Td>
-            <Td>{m.commission_pct}%</Td>
+            <Td phone="hide">{t(CHANNEL_LABEL[m.channel])}</Td>
+            <Td phone="hide">{m.branches[0]?.count ?? 0}</Td>
+            <Td phone="hide">{m.perks[0]?.count ?? 0}</Td>
+            <Td phone="hide">{m.commission_pct}%</Td>
             <Td className={owedTo(m.id) > 0 ? "font-bold text-perk-purple" : "text-zinc-400"}>{owedTo(m.id) > 0 ? <Link href={`/admin/explain?metric=net_to_settle&merchant=${m.id}`} className="hover:underline"><Amount v={owedTo(m.id)} /></Link> : "—"}</Td>
             <Td className={owedBy(m.id) > 0 ? "font-semibold text-amber-700" : "text-zinc-400"}>{owedBy(m.id) > 0 ? <Link href={`/admin/explain?metric=net_to_settle&merchant=${m.id}`} className="hover:underline"><Amount v={owedBy(m.id)} /></Link> : "—"}</Td>
-            <Td>{Number(balances.get(m.id)?.paid_out ?? 0) > 0 ? <Link href={`/admin/explain?metric=paid_to_merchants&merchant=${m.id}`} className="hover:underline"><Amount v={balances.get(m.id)?.paid_out} /></Link> : <span className="text-zinc-400">—</span>}</Td>
+            <Td phone="hide">{Number(balances.get(m.id)?.paid_out ?? 0) > 0 ? <Link href={`/admin/explain?metric=paid_to_merchants&merchant=${m.id}`} className="hover:underline"><Amount v={balances.get(m.id)?.paid_out} /></Link> : <span className="text-zinc-400">—</span>}</Td>
             <Td><Badge tone={m.status}>{t(m.status)}</Badge></Td>
           </tr>
         ))}
