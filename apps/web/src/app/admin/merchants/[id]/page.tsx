@@ -4,14 +4,14 @@ import { requireStaff } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Amount, Badge, Button, Card, Field, Input, Notice, PageHeader, Select, Stat, Table, Td } from "@/components/ui";
 import { ActionForm, ConfirmButton, SubmitButton } from "@/components/action-form";
-import { MerchantAdminForm } from "@/components/merchant-admin-form";
+import { PageTabs } from "@/components/page-tabs";
 import { QrImage } from "@/components/qr-image";
 import { discountLabel } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { dealLabel } from "@/components/partner-form";
 import { BRAND_TYPE_LABEL, CHANNEL_LABEL, MEMBER_ROLE_LABEL } from "@/lib/labels";
 import type { Balance, Merchant, Perk, QrCode } from "@/lib/types";
-import { adminAddMember, adminCreateBranch, adminCreateQr, adminRemoveMember, adminToggleQr, resolveRequest, updateMerchant } from "../../actions";
+import { adminAddMember, adminCreateBranch, adminCreateQr, adminRemoveMember, adminToggleQr, resolveRequest } from "../../actions";
 
 export const metadata = { title: "Merchant" };
 
@@ -54,6 +54,7 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
     <>
       <PageHeader title={merchant.name}
         subtitle={<span className="flex flex-wrap items-center gap-2"><span className="font-mono">{merchant.merchant_code}</span> · {t(merchant.category)} · {t(BRAND_TYPE_LABEL[merchant.brand_type])} · {t(CHANNEL_LABEL[merchant.channel])} <Badge tone={merchant.status}>{t(merchant.status)}</Badge></span>} />
+      <PageTabs tabs={[{ href: `/admin/merchants/${id}`, label: t("Overview") }, ...(editable ? [{ href: `/admin/merchants/${id}/edit`, label: t("Edit") }] : [])]} />
       {typeof invite_error === "string" && <div className="mb-4"><Notice tone="error">{t("Merchant created, but the owner invite failed:")} {invite_error}</Notice></div>}
 
       {partnerList && (
@@ -75,8 +76,28 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card title={t("Details")} className="lg:col-span-2">
-          <MerchantAdminForm action={updateMerchant.bind(null, id)} merchant={merchant} commercial={can("commercial_terms")} readOnly={!editable} />
+        <Card title={t("Details")} className="lg:col-span-2"
+          actions={editable && <Link href={`/admin/merchants/${id}/edit`} className="rounded-xl border border-zinc-200 px-3 py-1.5 text-sm font-semibold hover:bg-zinc-50">{t("Edit")}</Link>}>
+          <dl className="grid gap-x-8 text-sm sm:grid-cols-2">
+            {([
+              [t("Category"), `${t(merchant.category)}${merchant.subcategory ? ` · ${merchant.subcategory}` : ""}`],
+              [t("Brand type"), t(BRAND_TYPE_LABEL[merchant.brand_type] ?? merchant.brand_type)],
+              [t("Channel"), t(CHANNEL_LABEL[merchant.channel])],
+              [t("Plan"), merchant.plan === "pro" ? "Pro" : "Free"],
+              [t("Commission"), `${merchant.commission_pct}%`],
+              [t("VAT on commission"), merchant.vat_enabled ? t("Yes") : t("Exempt")],
+              [t("Contact name"), merchant.contact_name],
+              [t("Contact phone"), merchant.contact_phone],
+              [t("Contact email"), merchant.contact_email],
+              [t("Website"), merchant.website_url],
+            ] as [string, string | null][]).map(([k, v]) => (
+              <div key={k} className="flex justify-between gap-4 border-b border-zinc-100 py-2.5">
+                <dt className="shrink-0 text-zinc-500">{k}</dt>
+                <dd className="min-w-0 truncate text-end font-medium">{v || <span className="text-zinc-400">—</span>}</dd>
+              </div>
+            ))}
+          </dl>
+          {merchant.description && <p className="mt-4 text-sm text-zinc-600">{merchant.description}</p>}
         </Card>
 
         <Card title={t("Portal access")}>

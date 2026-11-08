@@ -904,4 +904,9 @@ export const AR: Record<string, string> = {
   "{a}–{b} of {n}": "{a}–{b} من {n}",
   "Previous": "السابق",
   "Next": "التالي",
+  "Edit": "تعديل",
+  "Exempt": "معفى",
+  "Website": "الموقع",
+  "Save changes": "حفظ التغييرات",
+  "Plan, commission and VAT can only be changed by Operations or an Admin.": "الباقة والعمولة والضريبة يغيرها فقط فريق العمليات أو المدير.",
 };
