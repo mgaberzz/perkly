@@ -10,18 +10,18 @@ export default async function MerchantLayout({ children }: LayoutProps<"/merchan
   const t = await getT();
   const online = merchant.channel !== "in_store";
   const items: (NavItem & { area: MerchantArea })[] = [
-    { area: "dashboard", href: "/merchant", label: branchScope ? t("My branch dashboard") : t("Dashboard"), icon: "📊", exact: true },
-    { area: "transactions", href: "/merchant/redemptions", label: t("Transactions"), icon: "🧾" },
-    ...(online ? [{ area: "online" as const, href: "/merchant/online", label: t("Online orders"), icon: "🌐" }] : []),
-    { area: "perks", href: "/merchant/perks", label: t("Perks"), icon: "🎁" },
-    { area: "branches", href: "/merchant/branches", label: branchScope ? t("My branch & QR") : t("Branches & QR"), icon: "📍" },
-    { area: "payouts", href: "/merchant/payouts", label: t("Payouts"), icon: "💰" },
-    { area: "team", href: "/merchant/team", label: t("Team"), icon: "👥" },
-    { area: "profile", href: "/merchant/profile", label: t("Business profile"), icon: "🏪" },
+    { area: "dashboard", href: "/merchant", label: branchScope ? t("My branch dashboard") : t("Dashboard"), icon: "home", group: 0, exact: true },
+    { area: "transactions", href: "/merchant/redemptions", label: t("Transactions"), icon: "receipt", group: 0 },
+    ...(online ? [{ area: "online" as const, href: "/merchant/online", label: t("Online orders"), icon: "globe", group: 0 }] : []),
+    { area: "perks", href: "/merchant/perks", label: t("Perks"), icon: "gift", group: 1 },
+    { area: "branches", href: "/merchant/branches", label: branchScope ? t("My branch & QR") : t("Branches & QR"), icon: "qr", group: 1 },
+    { area: "payouts", href: "/merchant/payouts", label: t("Payouts"), icon: "wallet", group: 2 },
+    { area: "team", href: "/merchant/team", label: t("Team"), icon: "team", group: 2 },
+    { area: "profile", href: "/merchant/profile", label: t("Business profile"), icon: "building", group: 2 },
   ];
   // Each staff role sees only its own areas
-  const nav: NavItem[] = [...items.filter((i) => merchantCan(memberRole, i.area)).map((i) => ({ href: i.href, label: i.label, exact: i.exact })),
-    { href: "/merchant/settings", label: t("Settings") }];
+  const nav: NavItem[] = [...items.filter((i) => merchantCan(memberRole, i.area)).map((i) => ({ href: i.href, label: i.label, exact: i.exact, icon: i.icon, group: i.group })),
+    { href: "/merchant/settings", label: t("Settings"), icon: "settings", group: 3 }];
   const top = (
     <div className="mb-2 rounded-2xl bg-zinc-50 p-3">
       {memberships.length > 1 ? (

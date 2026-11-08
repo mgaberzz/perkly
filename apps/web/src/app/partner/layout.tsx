@@ -8,11 +8,11 @@ export default async function PartnerLayout({ children }: LayoutProps<"/partner"
   const { partner, profile, user } = await requirePartner();
   const t = await getT();
   const nav = [
-    { href: "/partner", label: t("Dashboard"), exact: true },
-    { href: "/partner/merchants", label: t("My merchants") },
-    { href: "/partner/transactions", label: t("Transactions") },
-    { href: "/partner/payments", label: t("Payments") },
-    { href: "/partner/settings", label: t("Settings") },
+    { href: "/partner", label: t("Dashboard"), exact: true, icon: "home", group: 0 },
+    { href: "/partner/merchants", label: t("My merchants"), icon: "store", group: 1 },
+    { href: "/partner/transactions", label: t("Transactions"), icon: "receipt", group: 1 },
+    { href: "/partner/payments", label: t("Payments"), icon: "wallet", group: 1 },
+    { href: "/partner/settings", label: t("Settings"), icon: "settings", group: 2 },
   ];
   const top = (
     <div className="mb-2 rounded-2xl bg-zinc-50 p-3">

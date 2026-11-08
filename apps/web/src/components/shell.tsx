@@ -5,13 +5,40 @@ import { Logo } from "./logo";
 import { NavLink } from "./nav-link";
 import { MobileMenu } from "./mobile-menu";
 import { TableToggle } from "./table-toggle";
+import { Icon } from "./icons";
 
-export type NavItem = { href: string; label: string; icon?: string; exact?: boolean; count?: number };
+export type NavItem = { href: string; label: string; icon?: string; exact?: boolean; count?: number; group?: number };
+
+/** Menu items with a thin divider between groups (like Supabase's menu) */
+function NavList({ nav }: { nav: NavItem[] }) {
+  return (
+    <>
+      {nav.map((n, i) => (
+        <div key={n.href}>
+          {i > 0 && (n.group ?? 0) !== (nav[i - 1].group ?? 0) && <div className="mx-3 my-2 border-t border-zinc-200" />}
+          <NavLink {...n} />
+        </div>
+      ))}
+    </>
+  );
+}
 
 export async function Shell({ nav, children, top, user, badge }: { nav: NavItem[]; children: ReactNode; top?: ReactNode; user: string; badge: string }) {
   const t = await getT();
   const signOut = (cls: string) => (
     <form action="/auth/signout" method="post"><button className={cls}>{t("Sign out")}</button></form>
+  );
+  // Floating round buttons above the phone menu: Home, Notifications (if any), Settings, Sign out
+  const settings = nav.find((n) => n.href.endsWith("/settings"));
+  const bell = nav.find((n) => n.href.endsWith("/notifications"));
+  const round = "flex h-11 w-11 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 active:scale-95";
+  const quick = (
+    <>
+      <Link href="/" aria-label={t("Home")} className={round}><Icon name="home" /></Link>
+      {bell && <Link href={bell.href} aria-label={bell.label} className={`${round} relative`}><Icon name="bell" />{!!bell.count && <span className="absolute -end-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-perk-pink" />}</Link>}
+      {settings && <Link href={settings.href} aria-label={settings.label} className={round}><Icon name="settings" /></Link>}
+      <form action="/auth/signout" method="post"><button aria-label={t("Sign out")} className={round}><Icon name="logout" /></button></form>
+    </>
   );
   return (
     <div className="flex min-h-screen">
@@ -19,9 +46,7 @@ export async function Shell({ nav, children, top, user, badge }: { nav: NavItem[
         <Link href="/" className="mb-1 px-2"><Logo className="text-lg" /></Link>
         <span className="mb-6 px-2 text-xs font-bold uppercase tracking-widest text-perk-pink">{badge}</span>
         {top}
-        <nav className="mt-2 flex flex-1 flex-col gap-1 overflow-y-auto">
-          {nav.map((n) => <NavLink key={n.href} {...n} />)}
-        </nav>
+        <nav className="mt-2 flex flex-1 flex-col gap-0.5 overflow-y-auto"><NavList nav={nav} /></nav>
         <div className="border-t border-zinc-200 pt-4">
           <div className="truncate px-2 text-sm font-semibold">{user}</div>
           {signOut("w-full rounded-xl px-3 py-2 text-start text-sm text-zinc-500 hover:bg-zinc-100")}
@@ -30,13 +55,11 @@ export async function Shell({ nav, children, top, user, badge }: { nav: NavItem[
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="no-print sticky top-0 z-30 flex items-center justify-between border-b border-zinc-200 bg-white/90 px-4 py-2.5 backdrop-blur md:hidden">
           <Link href="/" aria-label={t("Home")} className="rounded-xl active:opacity-70"><Logo /></Link>
-          <MobileMenu head={<Link href="/" aria-label={t("Home")} className="block"><Logo /><div className="text-[10px] font-bold uppercase tracking-widest text-perk-pink">{badge}</div></Link>}>
+          <MobileMenu quick={quick}>
             {top}
-            <nav className="flex flex-col gap-1">{nav.map((n) => <NavLink key={n.href} {...n} />)}</nav>
-            <div className="mt-3 border-t border-zinc-100 pt-3">
-              <div className="truncate px-3 pb-1 text-sm font-semibold">{user}</div>
-              {signOut("w-full rounded-xl px-3 py-2 text-start text-sm text-zinc-500 hover:bg-zinc-100")}
-            </div>
+            <nav className="flex flex-col gap-0.5"><NavList nav={nav} /></nav>
+            <div className="mx-3 my-2 border-t border-zinc-200" />
+            <div className="truncate px-3 py-1 text-xs text-zinc-500">{user}</div>
           </MobileMenu>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 p-4 md:p-8">{children}</main>

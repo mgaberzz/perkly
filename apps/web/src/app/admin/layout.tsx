@@ -4,19 +4,19 @@ import { getT } from "@/lib/i18n/server";
 import { ROLE_LABEL } from "@/lib/labels";
 
 const NAV: (NavItem & { perm: Perm })[] = [
-  { href: "/admin", label: "Overview", icon: "📈", exact: true, perm: "overview" },
-  { href: "/admin/insights", label: "Insights", icon: "📊", perm: "insights" },
-  { href: "/admin/notifications", label: "Notifications", icon: "🔔", perm: "notifications" },
-  { href: "/admin/merchants", label: "Merchants", icon: "🏪", perm: "merchants_view" },
-  { href: "/admin/partners", label: "Partners", icon: "🤝", perm: "partners_view" },
-  { href: "/admin/perks", label: "Campaigns & perks", icon: "🎁", perm: "perks" },
-  { href: "/admin/redemptions", label: "Transactions", icon: "🧾", perm: "redemptions_view" },
-  { href: "/admin/finance", label: "Finance & settlements", icon: "💰", perm: "finance" },
-  { href: "/admin/users", label: "Users & roles", icon: "🎓", perm: "users" },
-  { href: "/admin/team", label: "Team & assignments", icon: "🧑‍💼", perm: "users" },
-  { href: "/admin/campuses", label: "Campuses", icon: "🏫", perm: "campuses_view" },
-  { href: "/admin/quests", label: "Quests", icon: "🎯", perm: "quests" },
-  { href: "/admin/settings", label: "Settings", icon: "", perm: "overview" },
+  { href: "/admin", label: "Overview", icon: "home", group: 0, exact: true, perm: "overview" },
+  { href: "/admin/insights", label: "Insights", icon: "chart", group: 0, perm: "insights" },
+  { href: "/admin/notifications", label: "Notifications", icon: "bell", group: 0, perm: "notifications" },
+  { href: "/admin/merchants", label: "Merchants", icon: "store", group: 1, perm: "merchants_view" },
+  { href: "/admin/partners", label: "Partners", icon: "handshake", group: 1, perm: "partners_view" },
+  { href: "/admin/perks", label: "Campaigns & perks", icon: "gift", group: 1, perm: "perks" },
+  { href: "/admin/redemptions", label: "Transactions", icon: "receipt", group: 1, perm: "redemptions_view" },
+  { href: "/admin/finance", label: "Finance & settlements", icon: "wallet", group: 2, perm: "finance" },
+  { href: "/admin/users", label: "Users & roles", icon: "users", group: 3, perm: "users" },
+  { href: "/admin/team", label: "Team & assignments", icon: "team", group: 3, perm: "users" },
+  { href: "/admin/campuses", label: "Campuses", icon: "school", group: 3, perm: "campuses_view" },
+  { href: "/admin/quests", label: "Quests", icon: "target", group: 3, perm: "quests" },
+  { href: "/admin/settings", label: "Settings", icon: "settings", group: 4, perm: "overview" },
 ];
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
@@ -29,7 +29,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     ? { "/admin/merchants": "My merchants", "/admin/campuses": "My campuses", "/admin/perks": "My campaigns", "/admin/redemptions": "My transactions" }
     : role === "finance" ? { "/admin/merchants": "Merchants (view)" } : {};
   const nav = NAV.filter((n) => can(role, n.perm)).map((n) => ({
-    href: n.href, icon: n.icon, exact: n.exact, label: t(mine[n.href] ?? n.label), count: n.href === "/admin/notifications" ? count ?? 0 : undefined,
+    href: n.href, icon: n.icon, group: n.group, exact: n.exact, label: t(mine[n.href] ?? n.label), count: n.href === "/admin/notifications" ? count ?? 0 : undefined,
   }));
   return <Shell nav={nav} user={profile.full_name ?? user.email ?? ""} badge={`Perkly · ${t(ROLE_LABEL[role])}`}>{children}</Shell>;
 }
