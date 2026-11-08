@@ -811,4 +811,9 @@ export const AR: Record<string, string> = {
   "That's more than the partner is owed.": "المبلغ أكبر من المستحق للشريك.",
   "Add the bank reference.": "أضف المرجع البنكي.",
   "Nothing is owed to this partner.": "لا يوجد مستحق لهذا الشريك.",
+  "New partner": "شريك جديد",
+  "Create partner": "إنشاء الشريك",
+  "A Partner ID (6 digits, starts with 4) is created automatically. Link merchants on the partner's page after saving.": "يتم إنشاء رقم الشريك تلقائيًا (6 أرقام تبدأ بـ 4). اربط التجار من صفحة الشريك بعد الحفظ.",
+  "No partners yet. Add the first one under New partner.": "لا يوجد شركاء بعد. أضف أول شريك من تبويب شريك جديد.",
+  "More detail:": "تفاصيل أكثر:",
 };

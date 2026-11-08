@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { inScope, requireStaff } from "@/lib/auth";
-import { Amount, Badge, LinkButton, PageHeader, Table, Td } from "@/components/ui";
+import { Amount, Badge, PageHeader, Table, Td } from "@/components/ui";
 import { getT } from "@/lib/i18n/server";
 import { FilterBar } from "@/components/filter-bar";
+import { PageTabs } from "@/components/page-tabs";
 import { Avatar, DetailRow, ExpandItem, ExpandList } from "@/components/expand-list";
 import { BRAND_TYPE_LABEL, CHANNEL_LABEL } from "@/lib/labels";
 import { BRAND_TYPES, CATEGORIES, type Balance, type Merchant } from "@/lib/types";
@@ -37,8 +38,8 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
   const totalOwedTo = data.reduce((a, m) => a + owedTo(m.id), 0);
   return (
     <>
-      <PageHeader title={role === "account_manager" ? t("My merchants") : t("Merchants")} subtitle={t("{n} shown", { n: data?.length ?? 0 })}
-        actions={can("merchants_create") && <LinkButton href="/admin/merchants/new">+ {t("New merchant")}</LinkButton>} />
+      <PageHeader title={role === "account_manager" ? t("My merchants") : t("Merchants")} subtitle={t("{n} shown", { n: data?.length ?? 0 })} />
+      {can("merchants_create") && <PageTabs tabs={[{ href: "/admin/merchants", label: t("All merchants") }, { href: "/admin/merchants/new", label: t("New merchant") }]} />}
       <FilterBar path="/admin/merchants" search={{ name: "q", value: q, placeholder: t("Search name or Merchant ID") }} fields={[
         { name: "status", label: t("Status"), type: "select", value: status, all: t("All statuses"), options: ["pending", "live", "paused", "churned"].map((x) => ({ value: x, label: t(x) })) },
         { name: "brand", label: t("Brand type"), type: "select", value: brand, all: t("All brand types"), options: BRAND_TYPES.map((b) => ({ value: b, label: t(BRAND_TYPE_LABEL[b]) })) },

@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
-import { Amount, Badge, Card, PageHeader, Stat, Table, Td } from "@/components/ui";
-import { PartnerForm, dealLabel } from "@/components/partner-form";
+import { Amount, Badge, PageHeader, Stat, Table, Td } from "@/components/ui";
+import { dealLabel } from "@/components/partner-form";
+import { PageTabs } from "@/components/page-tabs";
 import { getT } from "@/lib/i18n/server";
 import { short } from "@/lib/format";
 import type { PartnerBalance } from "@/lib/types";
-import { createPartner } from "../actions";
 
 export const metadata = { title: "Partners" };
 
@@ -19,16 +19,17 @@ export default async function PartnersPage() {
   return (
     <>
       <PageHeader title={t("Partners")} subtitle={t("Partners onboard merchants for Perkly and earn a cut of Perkly's commission on every transaction at their merchants.")} />
+      {manage && <PageTabs tabs={[{ href: "/admin/partners", label: t("All partners") }, { href: "/admin/partners/new", label: t("New partner") }]} />}
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat accent label={t("Owed to partners")} value={<Amount v={sum("due")} />} hint={t("Earned minus paid")} />
         <Stat label={t("Partner cuts")} value={<Amount v={sum("earned")} />} hint={t("All time, from {n} transactions", { n: short(sum("transactions")) })} />
         <Stat label={t("Paid to partners")} value={<Amount v={sum("paid")} />} hint={t("All time")} />
         <Stat label={t("Merchants via partners")} value={short(sum("merchants"))} hint={t("{n} partners", { n: rows.length })} />
       </div>
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className={manage ? "lg:col-span-2" : "lg:col-span-3"}>
+      <div>
+        <div>
           <Table head={[t("Partner"), t("Deal"), t("Merchants"), t("Transactions"), t("Commission from their merchants"), t("Earned"), t("Paid"), t("Due"), t("Status")]}
-            empty={manage ? t("No partners yet. Add the first one.") : t("No partners yet.")}>
+            empty={manage ? t("No partners yet. Add the first one under New partner.") : t("No partners yet.")}>
             {rows.map((p) => (
               <tr key={p.partner_id}>
                 <Td><Link href={`/admin/partners/${p.partner_id}`} className="font-semibold hover:text-perk-purple">{p.name}</Link><div className="font-mono text-xs font-normal text-zinc-500">{p.partner_code}</div></Td>
@@ -44,7 +45,6 @@ export default async function PartnersPage() {
             ))}
           </Table>
         </div>
-        {manage && <Card title={t("Add partner")}><PartnerForm action={createPartner} t={t} submit={t("Add partner")} /></Card>}
       </div>
     </>
   );

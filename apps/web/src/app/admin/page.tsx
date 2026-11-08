@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { Amount, BarChart, Card, HBarList, LinkButton, Notice, PageHeader, Stat } from "@/components/ui";
-import { MoneySummary } from "@/components/money-summary";
-import { ExportButtons } from "@/components/export-buttons";
-import { egp, periodStart } from "@/lib/format";
+import { periodStart } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { ROLE_LABEL } from "@/lib/labels";
 import type { Balance } from "@/lib/types";
@@ -48,83 +46,46 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
     </div>
   );
 
-  // ── Finance: money first ──
-  if (role === "finance") {
-    const b = (bal ?? []) as Balance[];
-    const sum = (k: keyof Balance) => b.reduce((a, x) => a + Number(x[k] ?? 0), 0);
-    return (
-      <>
-        <PageHeader title={t("Hi {name} 👋", { name: first })} subtitle={`${t("Finance")} · ${subtitle} · ${t("Last {days} days", { days })}`} actions={periods} />
-        {alerts}
-        <MoneySummary days={days} />
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <Link href="/admin/explain?metric=net_to_settle"><Stat label={t("Net to settle")} value={<Amount v={sum("net_to_settle")} />} hint={t("Not yet in a settlement")} /></Link>
-          <Link href="/admin/explain?metric=open_settlements"><Stat label={t("Open settlements")} value={<Amount v={sum("pending_settlements")} />} /></Link>
-          <Link href="/admin/explain?metric=paid_to_merchants"><Stat label={t("Paid to merchants")} value={<Amount v={sum("paid_out")} />} /></Link>
-          <Link href="/admin/explain?metric=received_from_merchants"><Stat label={t("Received from merchants")} value={<Amount v={sum("received_from_merchant")} />} hint={t("Commission collected")} /></Link>
-        </div>
-        <div className="mt-6 grid gap-6 lg:grid-cols-3">
-          <Card title={t("Transactions per day")} className="lg:col-span-2"><BarChart data={series} empty={t("No data yet")} /></Card>
-          <Card title={t("This period")}>
-            <dl className="space-y-3 text-sm">
-              <div className="flex justify-between"><dt className="text-zinc-500">{t("Transactions")}</dt><dd className="font-semibold">{o.redemptions ?? 0}</dd></div>
-              <div className="flex justify-between"><dt className="text-zinc-500">{t("Sales after discount")}</dt><dd className="font-semibold">{egp(o.sales)}</dd></div>
-              <div className="flex justify-between"><dt className="text-zinc-500">{t("Discount given")}</dt><dd className="font-semibold">{egp(o.discount_given)}</dd></div>
-              <div className="flex justify-between"><dt className="text-zinc-500">{t("Est. commission")}</dt><dd className="font-semibold">{egp(o.est_commission)}</dd></div>
-            </dl>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <LinkButton href="/admin/finance">{t("Settlements")}</LinkButton>
-              <ExportButtons kind="transactions" />
-            </div>
-          </Card>
-        </div>
-      </>
-    );
-  }
+  // One simple layout for every role: 4 key numbers, the daily chart, and one short list.
+  const gmv = Number(o.sales ?? 0) + Number(o.discount_given ?? 0);
+  const b = (bal ?? []) as Balance[];
+  const sumB = (k: keyof Balance) => b.reduce((a, x) => a + Number(x[k] ?? 0), 0);
+  const card = "block transition hover:-translate-y-0.5";
+  const stats = role === "finance" ? [
+    <Link key="g" href={`/admin/explain?metric=gmv&days=${days}`} className={card}><Stat accent label={t("Total GMV")} value={<Amount v={gmv} />} hint={t("{n} transactions", { n: o.redemptions ?? 0 })} /></Link>,
+    <Link key="r" href={`/admin/explain?metric=net_revenue&days=${days}`} className={card}><Stat label={t("Net revenue")} value={<Amount v={o.est_commission} />} hint={t("Perkly commission")} /></Link>,
+    <Link key="n" href="/admin/explain?metric=net_to_settle" className={card}><Stat label={t("Net to settle")} value={<Amount v={sumB("net_to_settle")} />} hint={t("Not yet in a settlement")} /></Link>,
+    <Link key="o" href="/admin/explain?metric=open_settlements" className={card}><Stat label={t("Open settlements")} value={<Amount v={sumB("pending_settlements")} />} /></Link>,
+  ] : role === "account_manager" ? [
+    <Link key="t" href={`/admin/redemptions?from=${periodStart(days)}`} className={card}><Stat accent label={t("Transactions")} value={o.redemptions ?? 0} hint={t("{n} active students", { n: o.active_students ?? 0 })} /></Link>,
+    <Link key="g" href={`/admin/explain?metric=gmv&days=${days}`} className={card}><Stat label={t("Total GMV")} value={<Amount v={gmv} />} /></Link>,
+    <Link key="m" href="/admin/merchants" className={card}><Stat label={t("My merchants")} value={`${o.live_merchants ?? 0} / ${o.merchants ?? 0}`} hint={t("live / assigned")} /></Link>,
+    <Link key="c" href="/admin/redemptions" className={card}><Stat label={t("My customers")} value={o.students ?? 0} /></Link>,
+  ] : [
+    <Link key="g" href={`/admin/explain?metric=gmv&days=${days}`} className={card}><Stat accent label={t("Total GMV")} value={<Amount v={gmv} />} hint={t("{n} transactions", { n: o.redemptions ?? 0 })} /></Link>,
+    <Link key="r" href={`/admin/explain?metric=net_revenue&days=${days}`} className={card}><Stat label={t("Net revenue")} value={<Amount v={o.est_commission} />} hint={t("Perkly commission")} /></Link>,
+    <Link key="s" href="/admin/users?role=student" className={card}><Stat label={t("Students")} value={o.students ?? 0} hint={t("+{n} new", { n: o.new_students ?? 0 })} /></Link>,
+    <Link key="m" href="/admin/merchants?status=live" className={card}><Stat label={t("Live merchants")} value={o.live_merchants ?? 0} /></Link>,
+  ];
+  const roleName = role === "account_manager" ? t("Account manager") : t(ROLE_LABEL[role]);
 
-  // ── Account manager: my merchants only ──
-  if (role === "account_manager") {
-    return (
-      <>
-        <PageHeader title={t("Hi {name} 👋", { name: first })} subtitle={`${t("Account manager")} · ${subtitle} · ${t("Last {days} days", { days })}`} actions={periods} />
-        {error && <p className="mb-4 text-sm text-red-600">{error.message}</p>}
-        {alerts}
-        {o.merchants === 0 && <div className="mb-6"><Notice>{t("No merchants are assigned to you yet. Ask an admin to assign them under Team & assignments.")}</Notice></div>}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <Link href={`/admin/redemptions?from=${periodStart(days)}`} className="block transition hover:-translate-y-0.5"><Stat accent label={t("Redemptions")} value={o.redemptions ?? 0} hint={t("{n} active students", { n: o.active_students ?? 0 })} /></Link>
-          <Link href={`/admin/merchants`} className="block transition hover:-translate-y-0.5"><Stat label={t("My merchants")} value={`${o.live_merchants ?? 0} / ${o.merchants ?? 0}`} hint={t("live / assigned")} /></Link>
-          <Link href={`/admin/redemptions`} className="block transition hover:-translate-y-0.5"><Stat label={t("My customers")} value={o.students ?? 0} hint={t("Students who used my merchants")} /></Link>
-          <Link href={`/admin/explain?metric=gmv&days=${days}`} className="block transition hover:-translate-y-0.5"><Stat label={t("Sales after discount")} value={<Amount v={o.sales} />} hint={t("Discounts given {amount}", { amount: egp(o.discount_given) })} /></Link>
-        </div>
-        <div className="mt-6 grid gap-6 lg:grid-cols-3">
-          <Card title={t("Redemptions per day")} className="lg:col-span-2"><BarChart data={series} empty={t("No data yet")} /></Card>
-          <Card title={t("My merchants")} actions={<Link href="/admin/merchants" className="text-sm font-semibold text-perk-purple">{t("See all")}</Link>}>
-            <HBarList data={(o.top_merchants ?? []).map((m) => ({ label: m.name, value: m.count, href: `/admin/redemptions?merchant=${m.id}` }))} empty={t("No redemptions yet")} />
-          </Card>
-          <Card title={t("My customers by campus")} className="lg:col-span-3"><HBarList data={(o.by_campus ?? []).map((c) => ({ label: c.campus, value: c.students }))} empty={t("No data yet")} /></Card>
-        </div>
-      </>
-    );
-  }
-
-  // ── Admin & operations: all of Perkly ──
   return (
     <>
-      <PageHeader title={t("Hi {name} 👋", { name: first })} subtitle={`${t(ROLE_LABEL[role])} · ${subtitle} · ${t("Last {days} days", { days })}`} actions={periods} />
+      <PageHeader title={t("Hi {name} 👋", { name: first })} subtitle={`${roleName} · ${subtitle} · ${t("Last {days} days", { days })}`} actions={periods} />
       {error && <p className="mb-4 text-sm text-red-600">{error.message}</p>}
       {alerts}
-      {role === "admin" && <MoneySummary days={days} />}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Link href={`/admin/redemptions?from=${periodStart(days)}`} className="block transition hover:-translate-y-0.5"><Stat accent label={t("Redemptions")} value={o.redemptions ?? 0} hint={t("{n} active students", { n: o.active_students ?? 0 })} /></Link>
-        <Link href={`/admin/users?role=student`} className="block transition hover:-translate-y-0.5"><Stat label={t("Students")} value={o.students ?? 0} hint={t("+{n} new", { n: o.new_students ?? 0 })} /></Link>
-        <Link href={`/admin/merchants?status=live`} className="block transition hover:-translate-y-0.5"><Stat label={t("Live merchants")} value={o.live_merchants ?? 0} /></Link>
-        <Link href={`/admin/explain?metric=net_revenue&days=${days}`} className="block transition hover:-translate-y-0.5"><Stat label={t("Est. commission")} value={<Amount v={o.est_commission} />} hint={t("Discounts given {amount}", { amount: egp(o.discount_given) })} /></Link>
-      </div>
+      {role === "account_manager" && o.merchants === 0 && <div className="mb-6"><Notice>{t("No merchants are assigned to you yet. Ask an admin to assign them under Team & assignments.")}</Notice></div>}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{stats}</div>
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <Card title={t("Redemptions per day")} className="lg:col-span-2"><BarChart data={series} empty={t("No data yet")} /></Card>
-        <Card title={t("Top merchants")}><HBarList data={(o.top_merchants ?? []).map((m) => ({ label: m.name, value: m.count, href: `/admin/redemptions?merchant=${m.id}` }))} empty={t("No data yet")} /></Card>
-        <Card title={t("Students by campus")} className="lg:col-span-3"><HBarList data={(o.by_campus ?? []).map((c) => ({ label: c.campus, value: c.students }))} empty={t("No data yet")} /></Card>
+        <Card title={t("Transactions per day")} className="lg:col-span-2"><BarChart data={series} empty={t("No data yet")} /></Card>
+        <Card title={role === "account_manager" ? t("My merchants") : t("Top merchants")}>
+          <HBarList data={(o.top_merchants ?? []).slice(0, 5).map((m) => ({ label: m.name, value: m.count, href: `/admin/redemptions?merchant=${m.id}` }))} empty={t("No data yet")} />
+        </Card>
       </div>
+      <p className="mt-6 text-sm text-zinc-500">
+        {t("More detail:")} <Link href="/admin/insights" className="font-semibold text-perk-purple hover:underline">{t("Insights")}</Link>
+        {can("finance") && <> · <Link href="/admin/finance" className="font-semibold text-perk-purple hover:underline">{t("Finance & settlements")}</Link></>}
+      </p>
     </>
   );
 }

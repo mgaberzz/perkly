@@ -11,7 +11,7 @@ import { getT } from "@/lib/i18n/server";
 import { dealLabel } from "@/components/partner-form";
 import { BRAND_TYPE_LABEL, CHANNEL_LABEL, MEMBER_ROLE_LABEL } from "@/lib/labels";
 import type { Balance, Merchant, Perk, QrCode } from "@/lib/types";
-import { adminAddMember, adminCreateBranch, adminCreateQr, adminRemoveMember, adminToggleQr, resolveRequest, updateMerchant, setMerchantPartner } from "../../actions";
+import { adminAddMember, adminCreateBranch, adminCreateQr, adminRemoveMember, adminToggleQr, resolveRequest, updateMerchant } from "../../actions";
 
 export const metadata = { title: "Merchant" };
 
@@ -63,16 +63,6 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
             ? <Link href={`/admin/partners/${partner.id}`} className="font-semibold text-perk-purple hover:underline">{partner.name} <span className="font-mono text-xs text-zinc-500">{partner.partner_code}</span></Link>
             : <span className="text-zinc-500">{t("None (onboarded by Perkly)")}</span>}
           {partner && <Badge tone="active">{dealLabel(partner, t)}</Badge>}
-          {can("partners_manage") && (
-            <form action={setMerchantPartner} className="ms-auto flex gap-2">
-              <input type="hidden" name="merchant_id" value={id} />
-              <Select name="partner_id" defaultValue={partnerId ?? ""} className="w-48 py-1.5 text-xs">
-                <option value="">{t("No partner")}</option>
-                {partnerList.map((p) => <option key={p.id} value={p.id}>{p.name}{p.status === "paused" ? ` (${t("paused")})` : ""}</option>)}
-              </Select>
-              <button className="rounded-xl border border-zinc-300 px-3 text-xs font-semibold hover:bg-zinc-50">{t("Save")}</button>
-            </form>
-          )}
         </div>
       )}
 
