@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { FlatList, LayoutAnimation, Pressable, TextInput, View } from 'react-native';
 import { Text } from '@/components/text';
 import { Empty, MerchantLogo, T } from '@/components/ui';
+import { ShareReceiptButton } from '@/components/share-receipt';
 import { egp, shortDate } from '@/lib/format';
 import { fwdChevron, locale, t } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
@@ -172,10 +173,13 @@ export default function History() {
                     <T style={{ fontWeight: '800', flexShrink: 1, textAlign: 'right', color: i === 0 ? brand.purple : c.text }}>{v}</T>
                   </View>
                 ))}
-                <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'redemption', id: r.id } })}
-                  style={{ marginVertical: 10, borderRadius: 12, backgroundColor: brand.purple, paddingVertical: 11, alignItems: 'center' }}>
-                  <Text style={{ color: '#fff', fontWeight: '800' }}>{t('See full breakdown')} {fwdChevron()}</Text>
-                </Pressable>
+                <View style={{ flexDirection: 'row', gap: 8, marginVertical: 10 }}>
+                  <View style={{ flex: 1 }}><ShareReceiptButton data={r} variant="outline" label={t('Share')} /></View>
+                  <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'redemption', id: r.id } })}
+                    style={{ flex: 1.4, borderRadius: 14, backgroundColor: brand.purple, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ color: '#fff', fontWeight: '800' }}>{t('Full breakdown')} {fwdChevron()}</Text>
+                  </Pressable>
+                </View>
               </View>
             )}
           </View>

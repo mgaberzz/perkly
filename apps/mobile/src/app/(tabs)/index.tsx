@@ -106,7 +106,7 @@ export default function Home() {
 
       <Card onPress={() => router.push('/rewards')}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Pressable onPress={() => router.push('/profile')} hitSlop={8}><Avatar path={profile?.avatar_path} size={40} /></Pressable>
+          <Pressable onPress={() => router.push('/profile')} hitSlop={8}><Avatar profile={profile} size={40} /></Pressable>
           <T v="h3" style={{ flex: 1 }}>{t('Hey {name} 👋 keep levelling up', { name: firstName(profile?.full_name) })}</T>
         </View>
         <XPBar totalXp={stats?.total_xp ?? 0} />

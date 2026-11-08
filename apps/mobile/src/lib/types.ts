@@ -15,6 +15,8 @@ export interface Merchant {
 export interface Campus { id: string; name: string; short_name: string | null; city: string; lat: number | null; lng: number | null; }
 export interface Profile {
   avatar_path?: string | null;
+  avatar_config?: Record<string, unknown> | null;
+  avatar_kind?: 'photo' | 'cartoon' | null;
   id: string; full_name: string | null; phone: string | null; email: string | null; campus_id: string | null; referral_code: string;
   status: string; role: string; birth_date: string | null; marketing_opt_in: boolean; terms_accepted_at: string | null; referred_by: string | null;
   user_code: string; student_code: string | null;

@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/auth";
 import { Badge, PageHeader, Table, Td } from "@/components/ui";
 import { FilterBar } from "@/components/filter-bar";
 import { Avatar } from "@/components/expand-list";
+import { cartoonSvg } from "@/lib/cartoon";
 import { date, egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { ROLE_LABEL } from "@/lib/labels";
@@ -12,7 +13,7 @@ const ROLES = ["student", "merchant", "admin", "operations", "account_manager", 
 
 type Row = {
   id: string; full_name: string | null; email: string | null; phone: string | null; role: string; status: string; created_at: string;
-  user_code: string; student_code: string | null; avatar_path: string | null;
+  user_code: string; student_code: string | null; avatar_path: string | null; avatar_config: unknown; avatar_kind: string | null;
   campus: { short_name: string | null; name: string } | null;
   stats: { total_xp: number; level: number; current_streak: number; total_redemptions: number; total_saved: number } | null;
 };
@@ -24,7 +25,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
   const { supabase, user } = await requireAdmin();
   const t = await getT();
   let query = supabase.from("profiles")
-    .select("id, full_name, email, phone, role, status, created_at, user_code, student_code, avatar_path, campus:campuses(short_name, name), stats:user_stats(total_xp, level, current_streak, total_redemptions, total_saved)")
+    .select("id, full_name, email, phone, role, status, created_at, user_code, student_code, avatar_path, avatar_config, avatar_kind, campus:campuses(short_name, name), stats:user_stats(total_xp, level, current_streak, total_redemptions, total_saved)")
     .order("created_at", { ascending: false }).limit(200);
   if (q) {
     const c = q.replace(/[,()%]/g, "");
@@ -41,7 +42,9 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
       <Table head={[t("User"), t("IDs"), t("Campus"), t("Level / XP"), t("Redemptions"), t("Saved"), t("Joined"), t("Role"), t("Status"), ""]} empty={t("No users.")}>
         {(data ?? []).map((u) => (
           <tr key={u.id}>
-            <Td><div className="flex items-center gap-3"><Avatar name={u.full_name ?? u.email ?? "?"} src={u.avatar_path ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${u.avatar_path}` : null} /><div className="min-w-0"><div className="font-semibold">{u.full_name ?? "—"}</div><div className="text-xs font-normal text-zinc-500">{u.phone ?? u.email}</div></div></div></Td>
+            <Td><div className="flex items-center gap-3">{(u.avatar_kind === "cartoon" || !u.avatar_path) && u.avatar_config
+                ? <span className="h-11 w-11 shrink-0 overflow-hidden rounded-full" dangerouslySetInnerHTML={{ __html: cartoonSvg(u.avatar_config) }} />
+                : <Avatar name={u.full_name ?? u.email ?? "?"} src={u.avatar_path ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${u.avatar_path}` : null} />}<div className="min-w-0"><div className="font-semibold">{u.full_name ?? "—"}</div><div className="text-xs font-normal text-zinc-500">{u.phone ?? u.email}</div></div></div></Td>
             <Td phone="sum" className="font-mono text-xs">{u.user_code}{u.student_code && <div className="text-perk-purple">{u.student_code}</div>}</Td>
             <Td>{u.campus?.short_name ?? u.campus?.name ?? "—"}</Td>
             <Td>L{u.stats?.level ?? 1} · {u.stats?.total_xp ?? 0}</Td>

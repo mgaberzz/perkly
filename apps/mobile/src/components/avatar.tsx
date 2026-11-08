@@ -1,59 +1,90 @@
 import { Image } from 'expo-image';
-import { useState } from 'react';
+import { router } from 'expo-router';
+import { useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, View } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 import { Text } from '@/components/text';
 import { Mascot } from '@/components/mascot';
-import { avatarUrl, changeAvatar, removeAvatar } from '@/lib/avatar';
+import { avatarUrl, changeAvatar, removeAvatar, removeCartoon, showAvatarKind } from '@/lib/avatar';
+import { cartoonSvg } from '@/lib/cartoon';
 import { t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { brand } from '@/lib/theme';
+import type { Profile } from '@/lib/types';
 
-/** The student's photo (or the Perkly mascot if none). */
-export function Avatar({ path, size = 40 }: { path?: string | null; size?: number }) {
-  const uri = avatarUrl(path);
+type AvatarSource = Pick<Profile, 'avatar_path' | 'avatar_config' | 'avatar_kind'> | null | undefined;
+
+/** Which picture a profile shows: the chosen kind if it exists, else whatever exists, else the mascot */
+export function avatarKind(p: AvatarSource): 'photo' | 'cartoon' | null {
+  if (!p) return null;
+  if (p.avatar_kind === 'cartoon' && p.avatar_config) return 'cartoon';
+  if (p.avatar_kind === 'photo' && p.avatar_path) return 'photo';
+  return p.avatar_path ? 'photo' : p.avatar_config ? 'cartoon' : null;
+}
+
+export function CartoonAvatar({ config, size = 40 }: { config: unknown; size?: number }) {
+  const xml = useMemo(() => cartoonSvg(config), [config]);
+  return <SvgXml xml={xml} width={size} height={size} />;
+}
+
+/** The student's picture: photo, cartoon avatar, or the Perkly mascot. */
+export function Avatar({ profile, size = 40 }: { profile: AvatarSource; size?: number }) {
+  const kind = avatarKind(profile);
+  const uri = kind === 'photo' ? avatarUrl(profile?.avatar_path) : null;
   return (
     <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: '#FF3EA51A', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-      {uri ? <Image source={{ uri }} style={{ width: size, height: size }} contentFit="cover" transition={150} /> : <Mascot size={size * 0.82} />}
+      {kind === 'cartoon' ? <CartoonAvatar config={profile?.avatar_config} size={size} />
+        : uri ? <Image source={{ uri }} style={{ width: size, height: size }} contentFit="cover" transition={150} />
+        : <Mascot size={size * 0.82} />}
     </View>
   );
 }
 
-/** Tap to take a photo, pick one from the library, or remove it. */
+/** Tap: create/edit the cartoon avatar, take or choose a photo, switch between them, or remove. */
 export function EditableAvatar({ size = 96 }: { size?: number }) {
   const { session, profile, refreshProfile } = useSession();
   const [busy, setBusy] = useState(false);
-  const path = profile?.avatar_path ?? null;
   const uid = session?.user.id;
+  const path = profile?.avatar_path ?? null;
+  const hasCartoon = !!profile?.avatar_config;
+  const kind = avatarKind(profile);
 
-  async function run(job: () => ReturnType<typeof changeAvatar>) {
+  async function run(job: () => Promise<{ ok?: boolean; error?: unknown; cancelled?: boolean } | { error: unknown }>) {
     setBusy(true);
-    const r = await job();
+    const r = (await job()) as { ok?: boolean; error?: unknown; cancelled?: boolean };
     setBusy(false);
-    if (r.ok) { await refreshProfile(); return; }
-    if ('cancelled' in r) return;
-    Alert.alert(t('Photo not changed'),
-      r.error === 'permission' ? t('Allow Perkly to use your camera or photos in your phone settings.')
-        : r.error === 'too_big' ? t('That photo is too big. Try another one.') : t('Something went wrong. Try again.'));
+    if (r.cancelled) return;
+    if (r.ok === false || (r.ok === undefined && r.error)) {
+      Alert.alert(t('Photo not changed'),
+        r.error === 'permission' ? t('Allow Perkly to use your camera or photos in your phone settings.')
+          : r.error === 'too_big' ? t('That photo is too big. Try another one.') : t('Something went wrong. Try again.'));
+      return;
+    }
+    await refreshProfile();
   }
   function open() {
     if (!uid || busy) return;
-    Alert.alert(t('Profile photo'), undefined, [
-      { text: t('Take photo'), onPress: () => run(() => changeAvatar(uid, 'camera', path)) },
-      { text: t('Choose from photos'), onPress: () => run(() => changeAvatar(uid, 'library', path)) },
-      ...(path ? [{ text: t('Remove photo'), style: 'destructive' as const, onPress: () => run(() => removeAvatar(uid, path)) }] : []),
+    Alert.alert(t('Profile picture'), undefined, [
+      { text: hasCartoon ? `🧑‍🎨 ${t('Edit my avatar')}` : `🧑‍🎨 ${t('Create my avatar')}`, onPress: () => router.push('/avatar') },
+      { text: `📷 ${t('Take photo')}`, onPress: () => run(() => changeAvatar(uid, 'camera', path)) },
+      { text: `🖼️ ${t('Choose from photos')}`, onPress: () => run(() => changeAvatar(uid, 'library', path)) },
+      ...(kind === 'cartoon' && path ? [{ text: t('Show my photo instead'), onPress: () => run(() => showAvatarKind(uid, 'photo')) }] : []),
+      ...(kind === 'photo' && hasCartoon ? [{ text: t('Show my avatar instead'), onPress: () => run(() => showAvatarKind(uid, 'cartoon')) }] : []),
+      ...(kind === 'photo' ? [{ text: t('Remove photo'), style: 'destructive' as const, onPress: () => run(() => removeAvatar(uid, path, hasCartoon)) }] : []),
+      ...(kind === 'cartoon' ? [{ text: t('Remove avatar'), style: 'destructive' as const, onPress: () => run(() => removeCartoon(uid, !!path)) }] : []),
       { text: t('Cancel'), style: 'cancel' as const },
     ]);
   }
   return (
-    <Pressable onPress={open} accessibilityRole="button" accessibilityLabel={t('Change profile photo')} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
+    <Pressable onPress={open} accessibilityRole="button" accessibilityLabel={t('Change profile picture')} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
       <View style={{ borderRadius: size / 2, padding: 3, backgroundColor: brand.pink }}>
         <View style={{ borderRadius: size / 2, padding: 2, backgroundColor: '#fff' }}>
-          <Avatar path={path} size={size} />
+          <Avatar profile={profile} size={size} />
         </View>
       </View>
       {busy && <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: size, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0006' }}><ActivityIndicator color="#fff" /></View>}
       <View style={{ position: 'absolute', end: 0, bottom: 0, width: 32, height: 32, borderRadius: 16, backgroundColor: brand.ink, borderWidth: 2, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ fontSize: 15 }}>📷</Text>
+        <Text style={{ fontSize: 15 }}>✏️</Text>
       </View>
     </Pressable>
   );

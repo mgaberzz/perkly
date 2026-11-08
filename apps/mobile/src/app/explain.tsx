@@ -10,6 +10,7 @@ import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { brand, gradient, useTheme } from '@/lib/theme';
 import { LinearGradient } from 'expo-linear-gradient';
+import { ShareReceiptButton } from '@/components/share-receipt';
 
 type Red = {
   id: string; created_at: string; merchant_name: string; logo_url: string | null; branch_name: string; perk_title: string;
@@ -195,6 +196,7 @@ export default function Explain() {
             <T v="small">{r.branch_name === 'Online' ? t('Online') : r.branch_name} · {new Date(r.created_at).toLocaleString(locale(), { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</T>
             {r.tx_code ? <T v="small">{t('Transaction ID')}: <Text style={{ fontWeight: '900' }}>{r.tx_code}</Text></T> : null}
             <T v="small">{t('Code')}: <Text style={{ fontWeight: '900', letterSpacing: 2 }}>{r.verification_code}</Text>{r.status === 'reversed' ? ` · ${t('reversed')}` : ''}</T>
+            <View style={{ marginTop: 10 }}><ShareReceiptButton data={r} /></View>
           </Card>
         ),
         list: null,

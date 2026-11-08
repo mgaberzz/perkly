@@ -405,3 +405,17 @@ do $$ declare v uuid; ok boolean := false; begin
   assert ok, 'free URLs refused';
   update profiles set avatar_path = null where id = v;
 end $$;
+
+-- Cartoon avatar: small JSON object only, and a known kind
+do $$ declare v uuid; ok boolean := false; begin
+  select id into v from profiles where role = 'student' limit 1;
+  update profiles set avatar_config = '{"skin":2,"hair":"curly"}', avatar_kind = 'cartoon' where id = v;
+  assert (select avatar_kind from profiles where id = v) = 'cartoon', 'cartoon saved';
+  begin update profiles set avatar_config = '"text"' where id = v; exception when check_violation then ok := true; end;
+  assert ok, 'non-object config refused'; ok := false;
+  begin update profiles set avatar_config = jsonb_build_object('x', repeat('a', 5000)) where id = v; exception when check_violation then ok := true; end;
+  assert ok, 'huge config refused'; ok := false;
+  begin update profiles set avatar_kind = 'gif' where id = v; exception when check_violation then ok := true; end;
+  assert ok, 'unknown kind refused';
+  update profiles set avatar_config = null, avatar_kind = null where id = v;
+end $$;

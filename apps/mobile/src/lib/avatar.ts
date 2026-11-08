@@ -23,15 +23,29 @@ export async function changeAvatar(userId: string, source: 'camera' | 'library',
   if (body.byteLength > 3 * 1024 * 1024) return { ok: false, error: 'too_big' };
   const up = await supabase.storage.from('avatars').upload(path, body, { contentType: type, upsert: false });
   if (up.error) return { ok: false, error: up.error.message };
-  const { error } = await supabase.from('profiles').update({ avatar_path: path }).eq('id', userId);
+  const { error } = await supabase.from('profiles').update({ avatar_path: path, avatar_kind: 'photo' }).eq('id', userId);
   if (error) { await supabase.storage.from('avatars').remove([path]); return { ok: false, error: error.message }; }
   if (oldPath) supabase.storage.from('avatars').remove([oldPath]); // tidy up the previous photo
   return { ok: true, path };
 }
 
-export async function removeAvatar(userId: string, oldPath?: string | null): Promise<AvatarResult> {
-  const { error } = await supabase.from('profiles').update({ avatar_path: null }).eq('id', userId);
+export async function removeAvatar(userId: string, oldPath?: string | null, hasCartoon = false): Promise<AvatarResult> {
+  const { error } = await supabase.from('profiles').update({ avatar_path: null, avatar_kind: hasCartoon ? 'cartoon' : null }).eq('id', userId);
   if (error) return { ok: false, error: error.message };
   if (oldPath) await supabase.storage.from('avatars').remove([oldPath]);
   return { ok: true, path: null };
+}
+
+/** Save the cartoon avatar and show it on the profile */
+export async function saveCartoon(userId: string, config: object) {
+  return supabase.from('profiles').update({ avatar_config: config, avatar_kind: 'cartoon' }).eq('id', userId);
+}
+
+/** Switch which picture the profile shows (both are kept) */
+export async function showAvatarKind(userId: string, kind: 'photo' | 'cartoon') {
+  return supabase.from('profiles').update({ avatar_kind: kind }).eq('id', userId);
+}
+
+export async function removeCartoon(userId: string, hasPhoto: boolean) {
+  return supabase.from('profiles').update({ avatar_config: null, avatar_kind: hasPhoto ? 'photo' : null }).eq('id', userId);
 }

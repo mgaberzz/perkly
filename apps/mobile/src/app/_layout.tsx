@@ -58,6 +58,7 @@ function RootStack() {
       <Stack.Screen name="explain" />
       <Stack.Screen name="arcade" options={{ animation: 'fade_from_bottom' }} />
       <Stack.Screen name="settings" options={{ headerShown: true, title: t('Settings') }} />
+      <Stack.Screen name="avatar" options={{ headerShown: false, presentation: 'modal' }} />
       <Stack.Screen name="edit-profile" options={{ headerShown: true, title: t('Edit profile') }} />
     </Stack>
     </BiometricGate>

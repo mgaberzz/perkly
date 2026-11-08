@@ -5,6 +5,7 @@ import { Animated, Easing, Linking, Pressable, ScrollView, View } from 'react-na
 import { Text } from '@/components/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui';
+import { ShareReceiptButton } from '@/components/share-receipt';
 import { discountLabel, egp } from '@/lib/format';
 import { getLastRedemption } from '@/lib/redemption-store';
 import { supabase } from '@/lib/supabase';
@@ -152,7 +153,10 @@ export default function Success() {
             {r.badges_unlocked.map((b) => <Pill key={b.code} big={`${b.emoji} ${t(b.name)}`} small={t('New badge unlocked!')} />)}
           </Animated.View>
 
-          <Button variant="white" title={t('Done')} onPress={() => router.replace('/')} style={{ alignSelf: 'stretch', marginTop: 8 }} />
+          <View style={{ alignSelf: 'stretch', marginTop: 8, gap: 10 }}>
+            <ShareReceiptButton variant="light" data={{ ...r, tx_code: txCode }} />
+            <Button variant="white" title={t('Done')} onPress={() => router.replace('/')} />
+          </View>
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
