@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
-import { Amount, BarChart, Card, HBarList, LinkButton, Notice, PageHeader, Stat } from "@/components/ui";
-import { periodStart } from "@/lib/format";
+import { Amount, BarChart, Card, HBarList, Notice, PageHeader, Stat } from "@/components/ui";
+import { FilterBar } from "@/components/filter-bar";
+import { inScope } from "@/lib/auth";
+import { applyTxFilters, txSelect, type TxFilters } from "@/lib/tx-filters";
+import { daysBetween, PERIOD_LABEL, PERIODS, resolvePeriod } from "@/lib/periods";
+import { CATEGORIES } from "@/lib/types";
 import { getT } from "@/lib/i18n/server";
 import { ROLE_LABEL } from "@/lib/labels";
 import type { Balance } from "@/lib/types";
@@ -16,25 +20,55 @@ type Overview = {
 };
 
 export default async function AdminOverview({ searchParams }: PageProps<"/admin">) {
-  const { supabase, role, can, profile } = await requireStaff();
+  const { supabase, role, can, profile, merchantScope } = await requireStaff();
   const t = await getT();
   const sp = await searchParams;
-  const days = Number(sp.days) || 30;
-  const [{ data, error }, { data: bal }] = await Promise.all([
-    supabase.rpc("admin_overview", { p_days: days }),
+  const g = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : "");
+  const { period, from, to } = resolvePeriod(g("period") || (g("from") ? "custom" : ""), g("from"), g("to"));
+  // Filters (same rules as the Transactions page, so every number can be opened there)
+  const f: TxFilters = { from, to };
+  for (const k of ["merchant", "category", "city", "campus", "payment", "channel"] as const) if (g(k)) f[k] = g(k);
+
+  const select = txSelect("created_at, user_id, merchant_id, original_amount, discount_amount, final_amount, commission_amount, status, merchant:merchants(name), branch:merchant_branches(city)", f);
+  type Row = { created_at: string; user_id: string; merchant_id: string; original_amount: number | null; commission_amount: number | null; status: string; merchant: { name: string } | null };
+  const rows: Row[] = [];
+  for (let page = 0; page < 30; page++) {
+    const { data } = await applyTxFilters(inScope(supabase.from("redemptions").select(select).neq("status", "reversed"), merchantScope), f)
+      .order("created_at").range(page * 1000, page * 1000 + 999).returns<Row[]>();
+    rows.push(...(data ?? []));
+    if (!data || data.length < 1000) break;
+  }
+  const [{ data, error }, { data: bal }, { data: merchants }, { data: branches }, { data: campuses }] = await Promise.all([
+    supabase.rpc("admin_overview", { p_days: 30 }),
     role === "finance" ? supabase.rpc("merchant_balances") : Promise.resolve({ data: null }),
+    inScope(supabase.from("merchants").select("id, name").order("name").limit(1000), merchantScope, "id"),
+    supabase.from("merchant_branches").select("city").not("city", "is", null).limit(2000),
+    supabase.from("campuses").select("id, name, short_name").order("name"),
   ]);
   const o = (data ?? {}) as Overview;
-  const now = new Date().getTime();
-  const dayMap = new Map((o.by_day ?? []).map((d) => [d.day, d.count]));
-  const n = Math.min(days, 30);
-  const series = Array.from({ length: n }, (_, i) => {
-    const d = new Date(now - (n - 1 - i) * 86400000).toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
-    return { label: d.slice(8), value: dayMap.get(d) ?? 0 };
-  });
+
+  // Totals for the period
+  const gmv = rows.reduce((a, r) => a + Number(r.original_amount ?? 0), 0);
+  const commission = rows.reduce((a, r) => a + Number(r.commission_amount ?? 0), 0);
+  const buyers = new Set(rows.map((r) => r.user_id)).size;
+  const activeMerchants = new Set(rows.map((r) => r.merchant_id)).size;
+  const days = daysBetween(from, to);
+  const monthly = days.length > 92;
+  const bucket = (iso: string) => (monthly ? iso.slice(0, 7) : iso);
+  const counts = new Map<string, number>();
+  for (const r of rows) { const k = bucket(new Date(r.created_at).toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" })); counts.set(k, (counts.get(k) ?? 0) + 1); }
+  const keys = [...new Set(days.map(bucket))];
+  const series = keys.map((k) => ({ label: monthly ? k.slice(5) : k.slice(8), value: counts.get(k) ?? 0, href: `/admin/redemptions?${new URLSearchParams({ ...(f as Record<string, string>), from: monthly ? `${k}-01` : k, to: monthly ? days.filter((d) => d.startsWith(k)).at(-1)! : k })}` }));
+  const top = new Map<string, { name: string; n: number }>();
+  for (const r of rows) { const x = top.get(r.merchant_id) ?? { name: r.merchant?.name ?? "—", n: 0 }; x.n += 1; top.set(r.merchant_id, x); }
+  const topList = [...top.entries()].sort((a, b) => b[1].n - a[1].n).slice(0, 5);
+  const txLink = (extra: Record<string, string> = {}) => `/admin/redemptions?${new URLSearchParams({ ...(f as Record<string, string>), ...extra })}`;
+
   const first = profile.full_name?.split(" ")[0] ?? "";
   const subtitle = { admin: t("All of Perkly"), operations: t("All of Perkly"), account_manager: t("Your assigned merchants and campuses"), finance: t("Money & settlements") }[role];
-  const periods = [7, 30, 90].map((d) => <LinkButton key={d} href={`/admin?days=${d}`} variant={d === days ? "primary" : "secondary"}>{d}d</LinkButton>);
+  const fmt = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: from.slice(0, 4) === to.slice(0, 4) && d === from ? undefined : "numeric" });
+  const range = from === to ? fmt(to) : `${fmt(from)} – ${fmt(to)}`;
+  const cities = [...new Set((branches ?? []).map((b) => b.city as string))].sort();
 
   const alerts = (
     <div className="mb-6 flex flex-wrap gap-3">
@@ -46,40 +80,50 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
     </div>
   );
 
-  // One simple layout for every role: 4 key numbers, the daily chart, and one short list.
-  const gmv = Number(o.sales ?? 0) + Number(o.discount_given ?? 0);
+  // One simple layout for every role: 4 key numbers, the chart, and the top merchants — all for the chosen period and filters
   const b = (bal ?? []) as Balance[];
   const sumB = (k: keyof Balance) => b.reduce((a, x) => a + Number(x[k] ?? 0), 0);
   const card = "block transition hover:-translate-y-0.5";
   const stats = role === "finance" ? [
-    <Link key="g" href={`/admin/explain?metric=gmv&days=${days}`} className={card}><Stat accent label={t("Total GMV")} value={<Amount v={gmv} />} hint={t("{n} transactions", { n: o.redemptions ?? 0 })} /></Link>,
-    <Link key="r" href={`/admin/explain?metric=net_revenue&days=${days}`} className={card}><Stat label={t("Net revenue")} value={<Amount v={o.est_commission} />} hint={t("Perkly commission")} /></Link>,
-    <Link key="n" href="/admin/explain?metric=net_to_settle" className={card}><Stat label={t("Net to settle")} value={<Amount v={sumB("net_to_settle")} />} hint={t("Not yet in a settlement")} /></Link>,
-    <Link key="o" href="/admin/explain?metric=open_settlements" className={card}><Stat label={t("Open settlements")} value={<Amount v={sumB("pending_settlements")} />} /></Link>,
+    <Link key="g" href={txLink()} className={card}><Stat accent label={t("Total GMV")} value={<Amount v={gmv} />} hint={t("{n} transactions", { n: rows.length })} /></Link>,
+    <Link key="r" href={txLink()} className={card}><Stat label={t("Net revenue")} value={<Amount v={commission} />} hint={t("Perkly commission")} /></Link>,
+    <Link key="n" href="/admin/explain?metric=net_to_settle" className={card}><Stat label={t("Net to settle")} value={<Amount v={sumB("net_to_settle")} />} hint={t("Right now, all time")} /></Link>,
+    <Link key="o" href="/admin/explain?metric=open_settlements" className={card}><Stat label={t("Open settlements")} value={<Amount v={sumB("pending_settlements")} />} hint={t("Right now, all time")} /></Link>,
   ] : role === "account_manager" ? [
-    <Link key="t" href={`/admin/redemptions?from=${periodStart(days)}`} className={card}><Stat accent label={t("Transactions")} value={o.redemptions ?? 0} hint={t("{n} active students", { n: o.active_students ?? 0 })} /></Link>,
-    <Link key="g" href={`/admin/explain?metric=gmv&days=${days}`} className={card}><Stat label={t("Total GMV")} value={<Amount v={gmv} />} /></Link>,
-    <Link key="m" href="/admin/merchants" className={card}><Stat label={t("My merchants")} value={`${o.live_merchants ?? 0} / ${o.merchants ?? 0}`} hint={t("live / assigned")} /></Link>,
-    <Link key="c" href="/admin/redemptions" className={card}><Stat label={t("My customers")} value={o.students ?? 0} /></Link>,
+    <Link key="t" href={txLink()} className={card}><Stat accent label={t("Transactions")} value={rows.length} hint={t("{n} students", { n: buyers })} /></Link>,
+    <Link key="g" href={txLink()} className={card}><Stat label={t("Total GMV")} value={<Amount v={gmv} />} /></Link>,
+    <Link key="m" href="/admin/merchants" className={card}><Stat label={t("Active merchants")} value={`${activeMerchants} / ${o.merchants ?? 0}`} hint={t("with transactions / assigned")} /></Link>,
+    <Link key="c" href={txLink()} className={card}><Stat label={t("Net revenue")} value={<Amount v={commission} />} hint={t("Perkly commission")} /></Link>,
   ] : [
-    <Link key="g" href={`/admin/explain?metric=gmv&days=${days}`} className={card}><Stat accent label={t("Total GMV")} value={<Amount v={gmv} />} hint={t("{n} transactions", { n: o.redemptions ?? 0 })} /></Link>,
-    <Link key="r" href={`/admin/explain?metric=net_revenue&days=${days}`} className={card}><Stat label={t("Net revenue")} value={<Amount v={o.est_commission} />} hint={t("Perkly commission")} /></Link>,
-    <Link key="s" href="/admin/users?role=student" className={card}><Stat label={t("Students")} value={o.students ?? 0} hint={t("+{n} new", { n: o.new_students ?? 0 })} /></Link>,
-    <Link key="m" href="/admin/merchants?status=live" className={card}><Stat label={t("Live merchants")} value={o.live_merchants ?? 0} /></Link>,
+    <Link key="g" href={txLink()} className={card}><Stat accent label={t("Total GMV")} value={<Amount v={gmv} />} hint={t("{n} transactions", { n: rows.length })} /></Link>,
+    <Link key="r" href={txLink()} className={card}><Stat label={t("Net revenue")} value={<Amount v={commission} />} hint={t("Perkly commission")} /></Link>,
+    <Link key="s" href={txLink()} className={card}><Stat label={t("Students")} value={buyers} hint={t("Used Perkly in this period")} /></Link>,
+    <Link key="m" href="/admin/merchants?status=live" className={card}><Stat label={t("Active merchants")} value={activeMerchants} hint={t("{n} live in total", { n: o.live_merchants ?? 0 })} /></Link>,
   ];
   const roleName = role === "account_manager" ? t("Account manager") : t(ROLE_LABEL[role]);
 
   return (
     <>
-      <PageHeader title={t("Hi {name} 👋", { name: first })} subtitle={`${roleName} · ${subtitle} · ${t("Last {days} days", { days })}`} actions={periods} />
+      <PageHeader title={t("Hi {name} 👋", { name: first })} subtitle={`${roleName} · ${subtitle} · ${t(PERIOD_LABEL[period])}: ${range}`} />
+      <FilterBar path="/admin" fields={[
+        { name: "period", label: t("Period"), type: "select", value: period === "mtd" ? "" : period, all: t("This month (MTD)"),
+          options: PERIODS.filter((p) => p !== "mtd").map((p) => ({ value: p, label: t(PERIOD_LABEL[p]) })) },
+        { name: "from", label: t("From (custom)"), type: "date", value: period === "custom" ? from : undefined },
+        { name: "to", label: t("To (custom)"), type: "date", value: period === "custom" ? to : undefined },
+        { name: "merchant", label: t("Merchant"), type: "select", value: f.merchant, all: t("All merchants"), options: (merchants ?? []).map((m) => ({ value: m.id, label: m.name })) },
+        { name: "category", label: t("Sector"), type: "select", value: f.category, all: t("All sectors"), options: CATEGORIES.map((c) => ({ value: c, label: t(c) })) },
+        { name: "city", label: t("Location"), type: "select", value: f.city, all: t("All locations"), options: [...cities.map((c) => ({ value: c, label: c })), { value: "online", label: t("Online") }] },
+        { name: "campus", label: t("Campus"), type: "select", value: f.campus, all: t("All campuses"), options: (campuses ?? []).map((c) => ({ value: c.id, label: c.short_name ?? c.name })) },
+        { name: "payment", label: t("Payment"), type: "select", value: f.payment, all: t("All payments"), options: [{ value: "merchant", label: t("Paid at cashier") }, { value: "in_app", label: t("Paid in app") }] },
+      ]} />
       {error && <p className="mb-4 text-sm text-red-600">{error.message}</p>}
       {alerts}
       {role === "account_manager" && o.merchants === 0 && <div className="mb-6"><Notice>{t("No merchants are assigned to you yet. Ask an admin to assign them under Team & assignments.")}</Notice></div>}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{stats}</div>
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <Card title={t("Transactions per day")} className="lg:col-span-2"><BarChart data={series} empty={t("No data yet")} /></Card>
+        <Card title={monthly ? t("Transactions per month") : t("Transactions per day")} className="lg:col-span-2"><BarChart data={series} empty={t("No data yet")} /></Card>
         <Card title={role === "account_manager" ? t("My merchants") : t("Top merchants")}>
-          <HBarList data={(o.top_merchants ?? []).slice(0, 5).map((m) => ({ label: m.name, value: m.count, href: `/admin/redemptions?merchant=${m.id}` }))} empty={t("No data yet")} />
+          <HBarList data={topList.map(([id, m]) => ({ label: m.name, value: m.n, href: txLink({ merchant: id }) }))} empty={t("No data yet")} />
         </Card>
       </div>
       <p className="mt-6 text-sm text-zinc-500">
