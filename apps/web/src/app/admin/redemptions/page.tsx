@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { inScope, requireStaff } from "@/lib/auth";
-import { Badge, Button, Input, PageHeader, Select, Table, Td } from "@/components/ui";
+import { Badge, PageHeader, Table, Td } from "@/components/ui";
+import { FilterBar } from "@/components/filter-bar";
+import { Avatar, DetailRow, ExpandItem, ExpandList } from "@/components/expand-list";
 import { ExportButtons } from "@/components/export-buttons";
-import { dateTime, egp } from "@/lib/format";
+import { dateTime, egp, shortDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { setRedemptionStatus } from "../actions";
 import { AGE_LABEL, applyTxFilters, readTxFilters, txSelect } from "@/lib/tx-filters";
@@ -47,22 +49,70 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
     <>
       <PageHeader title={t("Transactions")} subtitle={t("Flagged = no location shared or scanned 300m+ from the branch. Review and reverse fraud.")}
         actions={<ExportButtons kind="transactions" params={f} />} />
-      <form className="mb-4 flex flex-wrap items-end gap-2">
-        <Select name="merchant" defaultValue={f.merchant} className="w-48"><option value="">{t("All merchants")}</option>{(merchants ?? []).map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</Select>
-        <Select name="status" defaultValue={f.status} className="w-36"><option value="">{t("All statuses")}</option>{["success", "flagged", "reversed"].map((s) => <option key={s} value={s}>{t(s)}</option>)}</Select>
-        <Select name="channel" defaultValue={f.channel} className="w-36"><option value="">{t("All channels")}</option><option value="in_store">{t("In-store")}</option><option value="online">{t("Online")}</option></Select>
-        <Select name="payment" defaultValue={f.payment} className="w-40"><option value="">{t("All payments")}</option><option value="merchant">{t("Paid at cashier")}</option><option value="in_app">{t("Paid in app")}</option></Select>
-        <label className="text-xs text-zinc-500">{t("From")}<Input type="date" name="from" defaultValue={f.from} className="w-40" /></label>
-        <label className="text-xs text-zinc-500">{t("To")}<Input type="date" name="to" defaultValue={f.to} className="w-40" /></label>
-        <Button variant="secondary">{t("Filter")}</Button>
-      </form>
+      <FilterBar path="/admin/redemptions"
+        keep={Object.fromEntries(Object.entries(f).filter(([k]) => !["merchant", "status", "channel", "payment", "from", "to"].includes(k))) as Record<string, string>}
+        fields={[
+          { name: "merchant", label: t("Merchant"), type: "select", value: f.merchant, all: t("All merchants"), options: (merchants ?? []).map((m) => ({ value: m.id, label: m.name })) },
+          { name: "status", label: t("Status"), type: "select", value: f.status, all: t("All statuses"), options: ["success", "flagged", "reversed"].map((x) => ({ value: x, label: t(x) })) },
+          { name: "channel", label: t("Channel"), type: "select", value: f.channel, all: t("All channels"), options: [{ value: "in_store", label: t("In-store") }, { value: "online", label: t("Online") }] },
+          { name: "payment", label: t("Payment"), type: "select", value: f.payment, all: t("All payments"), options: [{ value: "merchant", label: t("Paid at cashier") }, { value: "in_app", label: t("Paid in app") }] },
+          { name: "from", label: t("From"), type: "date", value: f.from },
+          { name: "to", label: t("To"), type: "date", value: f.to },
+        ]} />
       {chips.length > 0 && (
         <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
           <span className="text-zinc-500">{t("From Insights")}:</span>
           {chips.map((c) => <Link key={c.k} href={without(c.k)} className="rounded-full bg-perk-purple/10 px-3 py-1 font-semibold text-perk-purple hover:bg-perk-purple/20">{c.label} ✕</Link>)}
         </div>
       )}
-      <Table head={[t("Time"), t("Student"), t("Merchant"), t("Branch / cashier"), t("Perk"), t("Total GMV"), t("Discount"), t("Payment"), t("To settle"), t("Status"), ""]} empty={t("No transactions.")}>
+      <ExpandList empty={t("No transactions.")}>
+        {(data ?? []).map((r) => (
+          <ExpandItem key={r.id} accent={r.status === "flagged" ? "amber" : r.status === "reversed" ? "red" : undefined} summary={
+            <div className="flex items-center gap-3">
+              <Avatar name={r.merchant.name} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="truncate font-bold">{r.merchant.name}</span>
+                  <span className={`shrink-0 font-extrabold ${r.status === "reversed" ? "text-zinc-400 line-through" : ""}`}><Amount v={r.original_amount} /></span>
+                </div>
+                <div className="flex items-center justify-between gap-2 text-xs text-zinc-500">
+                  <span className="truncate">{r.student?.full_name ?? "—"} · {shortDateTime(r.created_at)}</span>
+                  <span className="shrink-0 text-emerald-600">−<Amount v={r.discount_amount} /></span>
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  <Badge tone={r.status} className="!text-[10px]">{t(r.status)}</Badge>
+                  <Badge tone={r.payment_method === "in_app" ? "active" : "paused"} className="!text-[10px]">{r.payment_method === "in_app" ? t("In app") : t("Cashier")}</Badge>
+                  {r.status !== "reversed" && <Badge tone={r.settlement?.status === "paid" ? "paid" : r.settlement?.status === "partially_paid" ? "pending" : "paused"} className="!text-[10px]">{t(settlementLabel(r.settlement?.status))}</Badge>}
+                </div>
+              </div>
+            </div>}>
+            <DetailRow label={t("Time")}>{dateTime(r.created_at)}</DetailRow>
+            <DetailRow label={t("Code")}><span className="font-mono">{r.verification_code}</span></DetailRow>
+            <DetailRow label={t("Student")}>{r.student?.full_name ?? "—"} <span className="font-mono text-xs text-zinc-500">{r.student?.student_code ?? r.student?.user_code}</span></DetailRow>
+            <DetailRow label={t("Merchant")}><Link href={`/admin/merchants/${r.merchant.id}`} className="underline">{r.merchant.name}</Link> <span className="font-mono text-xs text-zinc-500">{r.merchant.merchant_code}</span></DetailRow>
+            <DetailRow label={t("Branch / cashier")}>{r.branch?.name ?? `🌐 ${t("Online")}`}{(r.qr?.cashier_name ?? r.qr?.label) && <span className="block text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</span>}</DetailRow>
+            <DetailRow label={t("Perk")}>{r.perk.title}</DetailRow>
+            <DetailRow label={t("Total GMV")}>{egp(r.original_amount)}</DetailRow>
+            <DetailRow label={t("Discount")}>{egp(r.discount_amount)}</DetailRow>
+            <DetailRow label={t("Paid after discount")}>{egp(r.final_amount)}</DetailRow>
+            <DetailRow label={t("To settle")}>{r.status === "reversed" ? "—" : egp(r.settle_amount)}</DetailRow>
+            {r.flag_reason && <DetailRow label={t("Flag reason")}>{r.flag_reason}</DetailRow>}
+            {review && r.status !== "success" || review && r.status !== "reversed" ? (
+              <div className="my-2 flex gap-2">
+                {review && r.status !== "success" && (
+                  <form action={setRedemptionStatus} className="flex-1"><input type="hidden" name="id" value={r.id} /><input type="hidden" name="status" value="success" />
+                    <button className="w-full rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white">✓ {t("Mark OK")}</button></form>
+                )}
+                {review && r.status !== "reversed" && (
+                  <form action={setRedemptionStatus} className="flex-1"><input type="hidden" name="id" value={r.id} /><input type="hidden" name="status" value="reversed" /><input type="hidden" name="reason" value="reversed by Perkly" />
+                    <button className="w-full rounded-xl border border-red-200 bg-white py-2.5 text-sm font-semibold text-red-600">↩ {t("Reverse")}</button></form>
+                )}
+              </div>
+            ) : null}
+          </ExpandItem>
+        ))}
+      </ExpandList>
+      <Table className="hidden sm:block" head={[t("Time"), t("Student"), t("Merchant"), t("Branch / cashier"), t("Perk"), t("Total GMV"), t("Discount"), t("Payment"), t("To settle"), t("Status"), ""]} empty={t("No transactions.")}>
         {(data ?? []).map((r) => (
           <tr key={r.id}>
             <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>

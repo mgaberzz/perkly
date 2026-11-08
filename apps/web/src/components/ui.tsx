@@ -102,11 +102,11 @@ export function Textarea(props: ComponentProps<"textarea">) {
 }
 
 /** Wide table on desktop; on phones every row becomes a card with "LABEL  value" lines (labels come from `head`). */
-export function Table({ head, children, empty }: { head: ReactNode[]; children: ReactNode; empty?: ReactNode }) {
+export function Table({ head, children, empty, className = "" }: { head: ReactNode[]; children: ReactNode; empty?: ReactNode; className?: string }) {
   const hasRows = Array.isArray(children) ? children.length > 0 : Boolean(children);
   const labels = Object.fromEntries(head.map((h, i) => [`--h${i + 1}`, JSON.stringify(typeof h === "string" || typeof h === "number" ? String(h) : "")]));
   return (
-    <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white shadow-sm">
+    <div className={`overflow-x-auto rounded-2xl border border-zinc-200 bg-white shadow-sm ${className}`}>
       <table className="mtable w-full text-start text-sm" style={labels as CSSProperties}>
         <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
           <tr>{head.map((h, i) => <th key={i} className="whitespace-nowrap px-4 py-3 text-start font-semibold">{h}</th>)}</tr>

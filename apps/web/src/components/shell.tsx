@@ -4,6 +4,7 @@ import { getT } from "@/lib/i18n/server";
 import { LangSwitch } from "./lang-switch";
 import { Logo } from "./logo";
 import { NavLink } from "./nav-link";
+import { MobileMenu } from "./mobile-menu";
 
 export type NavItem = { href: string; label: string; icon: string; exact?: boolean; count?: number };
 
@@ -29,18 +30,18 @@ export async function Shell({ nav, children, top, user, badge }: { nav: NavItem[
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="no-print flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-3 md:hidden">
+        <header className="no-print sticky top-0 z-30 flex items-center justify-between border-b border-zinc-200 bg-white/90 px-4 py-2.5 backdrop-blur md:hidden">
           <Logo />
-          <details className="relative">
-            <summary className="cursor-pointer list-none rounded-xl border border-zinc-300 px-3 py-1.5 text-sm">{t("Menu")}</summary>
-            <div className="absolute end-0 z-20 mt-2 max-h-[80vh] w-64 overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-2 shadow-lg">
-              {top}
-              {nav.map((n) => <NavLink key={n.href} {...n} />)}
+          <MobileMenu head={<div><Logo /><div className="text-[10px] font-bold uppercase tracking-widest text-perk-pink">{badge}</div></div>}>
+            {top}
+            <nav className="flex flex-col gap-1">{nav.map((n) => <NavLink key={n.href} {...n} />)}</nav>
+            <div className="mt-3 border-t border-zinc-100 pt-3">
+              <div className="truncate px-3 pb-1 text-sm font-semibold">{user}</div>
               <Link href="/account/security" className="block rounded-xl px-3 py-2 text-sm font-semibold text-zinc-600 hover:bg-zinc-100">🔐 {t("Face ID / fingerprint")}</Link>
               <LangSwitch />
               {signOut("w-full rounded-xl px-3 py-2 text-start text-sm text-zinc-500 hover:bg-zinc-100")}
             </div>
-          </details>
+          </MobileMenu>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 p-4 md:p-8">{children}</main>
       </div>

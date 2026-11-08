@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "./i18n";
 import { Badge, Table, Td } from "./ui";
-import { dateTime, egp } from "@/lib/format";
+import { dateTime, egp, shortDateTime } from "@/lib/format";
+import { DetailRow, ExpandItem, ExpandList } from "./expand-list";
 
 export type FeedRow = {
   id: string; created_at: string; verification_code: string; branch_id: string | null;
@@ -42,7 +43,38 @@ export function LiveRedemptions({ merchantId, branchId, initial }: { merchantId:
         <span className={`h-2.5 w-2.5 rounded-full ${live ? "animate-pulse bg-emerald-500" : "bg-zinc-300"}`} />
         {live ? t("Live — new redemptions appear instantly") : t("Connecting…")}
       </div>
-      <Table head={[t("Code"), t("Time"), t("Perk"), t("Branch / cashier"), t("Bill"), t("Discount"), t("Payment"), t("Customer"), t("Status")]}
+      <ExpandList empty={t("No redemptions yet. Put your QR on the cashier table and they'll show up here.")}>
+        {rows.map((r) => (
+          <div key={r.id} className={r.id === fresh ? "rounded-2xl ring-2 ring-emerald-400 transition" : ""}>
+          <ExpandItem accent={r.status === "flagged" ? "amber" : r.status === "reversed" ? "red" : undefined} summary={
+            <div className="flex items-center gap-3">
+              <span className="shrink-0 rounded-xl bg-perk-ink px-2.5 py-2 font-mono text-base font-bold tracking-widest text-white">{r.verification_code}</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="truncate font-bold">{r.perk?.title}</span>
+                  <span className="shrink-0 font-extrabold">{egp(r.original_amount)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 text-xs text-zinc-500">
+                  <span className="truncate">{shortDateTime(r.created_at)} · {r.branch?.name ?? t("Online")}</span>
+                  <span className="shrink-0 font-semibold text-perk-purple">−{egp(r.discount_amount)}</span>
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  <Badge tone={r.status} className="!text-[10px]">{t(r.status)}</Badge>
+                  <Badge tone={r.payment_method === "in_app" ? "active" : "paused"} className="!text-[10px]">{r.payment_method === "in_app" ? t("Paid in app") : t("Pay at cashier")}</Badge>
+                  <Badge tone={r.first_time_at_merchant ? "live" : "paused"} className="!text-[10px]">{r.first_time_at_merchant ? t("New customer") : t("Recurring customer")}</Badge>
+                </div>
+              </div>
+            </div>}>
+            <DetailRow label={t("Time")}>{dateTime(r.created_at)}</DetailRow>
+            <DetailRow label={t("Branch / cashier")}>{r.branch?.name ?? `🌐 ${t("Online")}`}{(r.qr?.cashier_name ?? r.qr?.label) && <span className="block text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</span>}</DetailRow>
+            <DetailRow label={t("Bill")}>{egp(r.original_amount)}</DetailRow>
+            <DetailRow label={t("Discount")}>{egp(r.discount_amount)}</DetailRow>
+            <DetailRow label={t("Paid after discount")}>{egp(r.final_amount)}</DetailRow>
+          </ExpandItem>
+          </div>
+        ))}
+      </ExpandList>
+      <Table className="hidden sm:block" head={[t("Code"), t("Time"), t("Perk"), t("Branch / cashier"), t("Bill"), t("Discount"), t("Payment"), t("Customer"), t("Status")]}
         empty={t("No redemptions yet. Put your QR on the cashier table and they'll show up here.")}>
         {rows.map((r) => (
           <tr key={r.id} className={r.id === fresh ? "bg-emerald-50 transition-colors" : ""}>

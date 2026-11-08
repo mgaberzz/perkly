@@ -1,5 +1,6 @@
 import { requireMerchantArea } from "@/lib/auth";
-import { Button, Input, PageHeader, Select } from "@/components/ui";
+import { PageHeader } from "@/components/ui";
+import { FilterBar } from "@/components/filter-bar";
 import { ExportButtons } from "@/components/export-buttons";
 import { LiveRedemptions, FEED_SELECT, type FeedRow } from "@/components/live-redemptions";
 import { getT } from "@/lib/i18n/server";
@@ -28,17 +29,11 @@ export default async function RedemptionsPage({ searchParams }: PageProps<"/merc
         subtitle={t("Live feed. Match the 4-character code on the student's screen with the newest row before applying the discount.")}
         actions={<ExportButtons kind="transactions" params={{ scope: "merchant", branch: branch || undefined, from: from || undefined, to: to || undefined }} />}
       />
-      <form className="mb-4 flex flex-wrap items-end gap-2">
-        {!branchScope && (
-          <Select name="branch" defaultValue={branch} className="w-48">
-            <option value="">{t("All branches")}</option>
-            {(branches ?? []).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </Select>
-        )}
-        <label className="text-xs text-zinc-500">{t("From")}<Input type="date" name="from" defaultValue={from} className="w-40" /></label>
-        <label className="text-xs text-zinc-500">{t("To")}<Input type="date" name="to" defaultValue={to} className="w-40" /></label>
-        <Button variant="secondary">{t("Filter")}</Button>
-      </form>
+      <FilterBar path="/merchant/redemptions" fields={[
+        ...(branchScope ? [] : [{ name: "branch", label: t("Branch"), type: "select" as const, value: branch, all: t("All branches"), options: (branches ?? []).map((b) => ({ value: b.id, label: b.name })) }]),
+        { name: "from", label: t("From"), type: "date", value: from },
+        { name: "to", label: t("To"), type: "date", value: to },
+      ]} />
       <LiveRedemptions key={`${branch}-${from}-${to}`} merchantId={merchant.id} branchId={branch || null} initial={data ?? []} />
     </>
   );

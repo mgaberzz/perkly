@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { inScope, requireStaff } from "@/lib/auth";
-import { Amount, Badge, Button, Input, LinkButton, PageHeader, Select, Table, Td } from "@/components/ui";
+import { Amount, Badge, LinkButton, PageHeader, Table, Td } from "@/components/ui";
 import { getT } from "@/lib/i18n/server";
+import { FilterBar } from "@/components/filter-bar";
+import { Avatar, DetailRow, ExpandItem, ExpandList } from "@/components/expand-list";
 import { BRAND_TYPE_LABEL, CHANNEL_LABEL } from "@/lib/labels";
 import { BRAND_TYPES, CATEGORIES, type Balance, type Merchant } from "@/lib/types";
 
@@ -37,27 +39,41 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
     <>
       <PageHeader title={role === "account_manager" ? t("My merchants") : t("Merchants")} subtitle={t("{n} shown", { n: data?.length ?? 0 })}
         actions={can("merchants_create") && <LinkButton href="/admin/merchants/new">+ {t("New merchant")}</LinkButton>} />
-      <form className="mb-4 flex flex-wrap gap-2">
-        <Input name="q" defaultValue={q} placeholder={t("Search name or MER-…")} className="w-full sm:max-w-xs" />
-        <Select name="status" defaultValue={status} className="w-36">
-          <option value="">{t("All statuses")}</option>{["pending", "live", "paused", "churned"].map((x) => <option key={x} value={x}>{t(x)}</option>)}
-        </Select>
-        <Select name="brand" defaultValue={brand} className="w-40">
-          <option value="">{t("All brand types")}</option>{BRAND_TYPES.map((b) => <option key={b} value={b}>{t(BRAND_TYPE_LABEL[b])}</option>)}
-        </Select>
-        <Select name="channel" defaultValue={channel} className="w-40">
-          <option value="">{t("All channels")}</option>{Object.entries(CHANNEL_LABEL).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}
-        </Select>
-        <Select name="category" defaultValue={category} className="w-40">
-          <option value="">{t("All categories")}</option>{CATEGORIES.map((c) => <option key={c} value={c}>{t(c)}</option>)}
-        </Select>
-        <label className="flex items-center gap-2 rounded-xl border border-zinc-300 bg-white px-3 text-sm font-semibold">
-          <input type="checkbox" name="due" value="1" defaultChecked={!!due} className="accent-perk-purple" /> {t("With amounts due")}
-        </label>
-        <Button variant="secondary">{t("Filter")}</Button>
-      </form>
+      <FilterBar path="/admin/merchants" search={{ name: "q", value: q, placeholder: t("Search name or MER-…") }} fields={[
+        { name: "status", label: t("Status"), type: "select", value: status, all: t("All statuses"), options: ["pending", "live", "paused", "churned"].map((x) => ({ value: x, label: t(x) })) },
+        { name: "brand", label: t("Brand type"), type: "select", value: brand, all: t("All brand types"), options: BRAND_TYPES.map((b) => ({ value: b, label: t(BRAND_TYPE_LABEL[b]) })) },
+        { name: "channel", label: t("Channel"), type: "select", value: channel, all: t("All channels"), options: Object.entries(CHANNEL_LABEL).map(([k, v]) => ({ value: k, label: t(v) })) },
+        { name: "category", label: t("Category"), type: "select", value: category, all: t("All categories"), options: CATEGORIES.map((c) => ({ value: c, label: t(c) })) },
+        { name: "due", label: t("With amounts due"), type: "toggle", value: due },
+      ]} />
       {due && <p className="mb-4 text-sm text-zinc-600">{t("To be paid to these merchants")}: <Link href="/admin/explain?metric=to_be_paid" className="font-bold hover:underline"><Amount v={totalOwedTo} /></Link></p>}
-      <Table head={[t("Merchant"), t("ID"), t("Brand type"), t("Channel"), t("Branches"), t("Perks"), t("Commission"), t("To be paid to merchant"), t("Owed to Perkly"), t("Paid to merchant"), t("Status")]} empty={t("No merchants.")}>
+      <ExpandList empty={t("No merchants.")}>
+        {data.map((m) => {
+          const to = owedTo(m.id), by = owedBy(m.id), paid = Number(balances.get(m.id)?.paid_out ?? 0);
+          return (
+            <ExpandItem key={m.id} accent={to > 0 ? "purple" : by > 0 ? "amber" : undefined} summary={
+              <div className="flex items-center gap-3">
+                <Avatar name={m.name} src={m.logo_url} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2"><span className="truncate font-bold">{m.name}</span><Badge tone={m.status} className="shrink-0 !px-2 !text-[10px]">{t(m.status)}</Badge></div>
+                  <div className="truncate text-xs text-zinc-500">{t(m.category)} · {t(BRAND_TYPE_LABEL[m.brand_type] ?? m.brand_type)} · <span className="font-mono">{m.merchant_code}</span></div>
+                  {to > 0 ? <div className="mt-1 text-xs font-bold text-perk-purple">{t("To be paid to merchant")}: <Amount v={to} /></div>
+                    : by > 0 ? <div className="mt-1 text-xs font-bold text-amber-700">{t("Owed to Perkly")}: <Amount v={by} /></div> : null}
+                </div>
+              </div>}>
+              <DetailRow label={t("Channel")}>{t(CHANNEL_LABEL[m.channel])}</DetailRow>
+              <DetailRow label={t("Branches")}>{m.branches[0]?.count ?? 0}</DetailRow>
+              <DetailRow label={t("Perks")}>{m.perks[0]?.count ?? 0}</DetailRow>
+              <DetailRow label={t("Commission")}>{m.commission_pct}%</DetailRow>
+              <DetailRow label={t("To be paid to merchant")}>{to > 0 ? <Link href={`/admin/explain?metric=net_to_settle&merchant=${m.id}`} className="text-perk-purple underline"><Amount v={to} /></Link> : "—"}</DetailRow>
+              <DetailRow label={t("Owed to Perkly")}>{by > 0 ? <Link href={`/admin/explain?metric=net_to_settle&merchant=${m.id}`} className="text-amber-700 underline"><Amount v={by} /></Link> : "—"}</DetailRow>
+              <DetailRow label={t("Paid to merchant")}>{paid > 0 ? <Link href={`/admin/explain?metric=paid_to_merchants&merchant=${m.id}`} className="underline"><Amount v={paid} /></Link> : "—"}</DetailRow>
+              <Link href={`/admin/merchants/${m.id}`} className="perk-gradient my-2 flex items-center justify-center rounded-xl py-2.5 text-sm font-semibold text-white">{t("Open merchant")} →</Link>
+            </ExpandItem>
+          );
+        })}
+      </ExpandList>
+      <Table className="hidden sm:block" head={[t("Merchant"), t("ID"), t("Brand type"), t("Channel"), t("Branches"), t("Perks"), t("Commission"), t("To be paid to merchant"), t("Owed to Perkly"), t("Paid to merchant"), t("Status")]} empty={t("No merchants.")}>
         {(data ?? []).map((m) => (
           <tr key={m.id}>
             <Td><Link href={`/admin/merchants/${m.id}`} className="font-semibold hover:text-perk-purple">{m.name}</Link><div className="text-xs text-zinc-500">{t(m.category)}{m.subcategory && ` · ${m.subcategory}`}</div></Td>

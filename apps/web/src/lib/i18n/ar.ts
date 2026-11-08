@@ -734,4 +734,12 @@ export const AR: Record<string, string> = {
   "{n} shown": "{n} معروض",
   "{n}% off": "خصم {n}٪",
   "“More redemptions = more youth visibility.” 💜": "«عمليات أكثر = ظهور أكبر بين الشباب.» 💜",
+  "Close": "إغلاق",
+  "Filters": "الفلاتر",
+  "Clear all": "مسح الكل",
+  "Show results": "عرض النتائج",
+  "Open merchant": "فتح التاجر",
+  "Flag reason": "سبب التنبيه",
+  "Overview": "نظرة عامة",
+  "Notifications": "الإشعارات",
 };

@@ -6,6 +6,10 @@ export const egp = (n: number | null | undefined) =>
 export const dateTime = (s: string | null | undefined) =>
   s ? new Date(s).toLocaleString("en-GB", { timeZone: "Africa/Cairo", dateStyle: "medium", timeStyle: "short" }) : "—";
 
+/** Compact for phone cards: "7 Nov, 22:18" */
+export const shortDateTime = (s: string | null | undefined) =>
+  s ? new Date(s).toLocaleString("en-GB", { timeZone: "Africa/Cairo", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hour12: false }) : "—";
+
 export const date = (s: string | null | undefined) =>
   s ? new Date(s).toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", dateStyle: "medium" }) : "—";
 
