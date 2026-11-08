@@ -523,3 +523,28 @@ do $$ declare v_p uuid := current_setting('test.partner')::uuid; begin
   assert (select cut_value from partners where id = v_p) = 3, 'partner cannot change the deal';
 end $$;
 reset role;
+
+-- ── Overview numbers in the database: match the raw data, respect filters and scope ──
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ declare s jsonb := dashboard_stats(cairo_today() - 400, cairo_today()); begin
+  assert (s->>'transactions')::int = (select count(*) from redemptions where status <> 'reversed'), 'ops: all transactions';
+  assert (s->>'gmv')::numeric = (select coalesce(sum(original_amount), 0) from redemptions where status <> 'reversed'), 'gmv matches';
+  assert (select sum((d->>'count')::int) from jsonb_array_elements(s->'by_day') d) = (s->>'transactions')::int, 'days add up';
+  assert (dashboard_stats(cairo_today() - 400, cairo_today(), p_payment => 'in_app')->>'transactions')::int
+       = (select count(*) from redemptions where status <> 'reversed' and payment_method = 'in_app'), 'payment filter';
+  assert (dashboard_stats(cairo_today() - 400, cairo_today(), p_category => 'Coffee')->>'transactions')::int
+       = (select count(*) from redemptions r join merchants m on m.id = r.merchant_id where r.status <> 'reversed' and m.category = 'Coffee'), 'sector filter';
+  assert (dashboard_stats(cairo_today() + 1, cairo_today() + 2)->>'transactions')::int = 0, 'future is empty';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e2', false);
+do $$ begin
+  assert (dashboard_stats(cairo_today() - 400, cairo_today())->>'transactions')::int
+       = (select count(*) from redemptions r where r.status <> 'reversed' and exists (select 1 from staff_assignments a where a.user_id = '00000000-0000-0000-0000-0000000000e2' and a.merchant_id = r.merchant_id)), 'AM: only assigned merchants';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', false);
+do $$ declare ok boolean := false; begin
+  begin perform dashboard_stats(cairo_today() - 30, cairo_today()); exception when insufficient_privilege then ok := true; end;
+  assert ok, 'merchants cannot read platform stats';
+end $$;
+reset role;

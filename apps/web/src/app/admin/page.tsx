@@ -29,14 +29,41 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
   const f: TxFilters = { from, to };
   for (const k of ["merchant", "category", "city", "campus", "payment", "channel"] as const) if (g(k)) f[k] = g(k);
 
-  const select = txSelect("created_at, user_id, merchant_id, original_amount, discount_amount, final_amount, commission_amount, status, merchant:merchants(name), branch:merchant_branches(city)", f);
-  type Row = { created_at: string; user_id: string; merchant_id: string; original_amount: number | null; commission_amount: number | null; status: string; merchant: { name: string } | null };
-  const rows: Row[] = [];
-  for (let page = 0; page < 30; page++) {
-    const { data } = await applyTxFilters(inScope(supabase.from("redemptions").select(select).neq("status", "reversed"), merchantScope), f)
-      .order("created_at").range(page * 1000, page * 1000 + 999).returns<Row[]>();
-    rows.push(...(data ?? []));
-    if (!data || data.length < 1000) break;
+  // Period numbers come from the database (dashboard_stats). If that function isn't installed yet,
+  // fall back to adding up the transactions here (fine up to ~30k per period).
+  type Stats = { transactions: number; gmv: number; commission: number; students: number; active_merchants: number;
+    by_day: { day: string; count: number }[]; top_merchants: { id: string; name: string; count: number }[] };
+  const campusOk = f.campus && /^[0-9a-f-]{36}$/.test(f.campus) ? f.campus : null;
+  const { data: dbStats, error: statsErr } = await supabase.rpc("dashboard_stats", {
+    p_from: from, p_to: to, p_merchant_id: f.merchant || null, p_category: f.category || null, p_city: f.city || null,
+    p_campus_id: campusOk, p_payment: f.payment || null,
+  });
+  let st = dbStats as Stats | null;
+  if (statsErr || !st) {
+    const select = txSelect("created_at, user_id, merchant_id, original_amount, commission_amount, status, merchant:merchants(name), branch:merchant_branches(city)", f);
+    type Row = { created_at: string; user_id: string; merchant_id: string; original_amount: number | null; commission_amount: number | null; merchant: { name: string } | null };
+    const rows: Row[] = [];
+    for (let page = 0; page < 30; page++) {
+      const { data: chunk } = await applyTxFilters(inScope(supabase.from("redemptions").select(select).neq("status", "reversed"), merchantScope), f)
+        .order("created_at").range(page * 1000, page * 1000 + 999).returns<Row[]>();
+      rows.push(...(chunk ?? []));
+      if (!chunk || chunk.length < 1000) break;
+    }
+    const byDay = new Map<string, number>(), top = new Map<string, { name: string; count: number }>();
+    for (const r of rows) {
+      const d = new Date(r.created_at).toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
+      byDay.set(d, (byDay.get(d) ?? 0) + 1);
+      const x = top.get(r.merchant_id) ?? { name: r.merchant?.name ?? "—", count: 0 }; x.count += 1; top.set(r.merchant_id, x);
+    }
+    st = {
+      transactions: rows.length,
+      gmv: rows.reduce((a2, r) => a2 + Number(r.original_amount ?? 0), 0),
+      commission: rows.reduce((a2, r) => a2 + Number(r.commission_amount ?? 0), 0),
+      students: new Set(rows.map((r) => r.user_id)).size,
+      active_merchants: new Set(rows.map((r) => r.merchant_id)).size,
+      by_day: [...byDay].map(([day, count]) => ({ day, count })),
+      top_merchants: [...top].map(([id, m]) => ({ id, ...m })).sort((x, y) => y.count - x.count).slice(0, 5),
+    };
   }
   const [{ data, error }, { data: bal }, { data: merchants }, { data: branches }, { data: campuses }] = await Promise.all([
     supabase.rpc("admin_overview", { p_days: 30 }),
@@ -48,20 +75,16 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
   const o = (data ?? {}) as Overview;
 
   // Totals for the period
-  const gmv = rows.reduce((a, r) => a + Number(r.original_amount ?? 0), 0);
-  const commission = rows.reduce((a, r) => a + Number(r.commission_amount ?? 0), 0);
-  const buyers = new Set(rows.map((r) => r.user_id)).size;
-  const activeMerchants = new Set(rows.map((r) => r.merchant_id)).size;
+  const gmv = Number(st.gmv), commission = Number(st.commission), buyers = Number(st.students), activeMerchants = Number(st.active_merchants);
+  const txCount = Number(st.transactions);
   const days = daysBetween(from, to);
   const monthly = days.length > 92;
   const bucket = (iso: string) => (monthly ? iso.slice(0, 7) : iso);
   const counts = new Map<string, number>();
-  for (const r of rows) { const k = bucket(new Date(r.created_at).toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" })); counts.set(k, (counts.get(k) ?? 0) + 1); }
+  for (const d of st.by_day) { const k = bucket(String(d.day).slice(0, 10)); counts.set(k, (counts.get(k) ?? 0) + Number(d.count)); }
   const keys = [...new Set(days.map(bucket))];
   const series = keys.map((k) => ({ label: monthly ? k.slice(5) : k.slice(8), value: counts.get(k) ?? 0, href: `/admin/redemptions?${new URLSearchParams({ ...(f as Record<string, string>), from: monthly ? `${k}-01` : k, to: monthly ? days.filter((d) => d.startsWith(k)).at(-1)! : k })}` }));
-  const top = new Map<string, { name: string; n: number }>();
-  for (const r of rows) { const x = top.get(r.merchant_id) ?? { name: r.merchant?.name ?? "—", n: 0 }; x.n += 1; top.set(r.merchant_id, x); }
-  const topList = [...top.entries()].sort((a, b) => b[1].n - a[1].n).slice(0, 5);
+  const topList = st.top_merchants.map((m) => [m.id, { name: m.name, n: Number(m.count) }] as const);
   const txLink = (extra: Record<string, string> = {}) => `/admin/redemptions?${new URLSearchParams({ ...(f as Record<string, string>), ...extra })}`;
 
   const first = profile.full_name?.split(" ")[0] ?? "";
@@ -85,17 +108,17 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
   const sumB = (k: keyof Balance) => b.reduce((a, x) => a + Number(x[k] ?? 0), 0);
   const card = "block transition hover:-translate-y-0.5";
   const stats = role === "finance" ? [
-    <Link key="g" href={txLink()} className={card}><Stat accent label={t("Total GMV")} value={<Amount v={gmv} />} hint={t("{n} transactions", { n: rows.length })} /></Link>,
+    <Link key="g" href={txLink()} className={card}><Stat accent label={t("Total GMV")} value={<Amount v={gmv} />} hint={t("{n} transactions", { n: txCount })} /></Link>,
     <Link key="r" href={txLink()} className={card}><Stat label={t("Net revenue")} value={<Amount v={commission} />} hint={t("Perkly commission")} /></Link>,
     <Link key="n" href="/admin/explain?metric=net_to_settle" className={card}><Stat label={t("Net to settle")} value={<Amount v={sumB("net_to_settle")} />} hint={t("Right now, all time")} /></Link>,
     <Link key="o" href="/admin/explain?metric=open_settlements" className={card}><Stat label={t("Open settlements")} value={<Amount v={sumB("pending_settlements")} />} hint={t("Right now, all time")} /></Link>,
   ] : role === "account_manager" ? [
-    <Link key="t" href={txLink()} className={card}><Stat accent label={t("Transactions")} value={rows.length} hint={t("{n} students", { n: buyers })} /></Link>,
+    <Link key="t" href={txLink()} className={card}><Stat accent label={t("Transactions")} value={txCount} hint={t("{n} students", { n: buyers })} /></Link>,
     <Link key="g" href={txLink()} className={card}><Stat label={t("Total GMV")} value={<Amount v={gmv} />} /></Link>,
     <Link key="m" href="/admin/merchants" className={card}><Stat label={t("Active merchants")} value={`${activeMerchants} / ${o.merchants ?? 0}`} hint={t("with transactions / assigned")} /></Link>,
     <Link key="c" href={txLink()} className={card}><Stat label={t("Net revenue")} value={<Amount v={commission} />} hint={t("Perkly commission")} /></Link>,
   ] : [
-    <Link key="g" href={txLink()} className={card}><Stat accent label={t("Total GMV")} value={<Amount v={gmv} />} hint={t("{n} transactions", { n: rows.length })} /></Link>,
+    <Link key="g" href={txLink()} className={card}><Stat accent label={t("Total GMV")} value={<Amount v={gmv} />} hint={t("{n} transactions", { n: txCount })} /></Link>,
     <Link key="r" href={txLink()} className={card}><Stat label={t("Net revenue")} value={<Amount v={commission} />} hint={t("Perkly commission")} /></Link>,
     <Link key="s" href={txLink()} className={card}><Stat label={t("Students")} value={buyers} hint={t("Used Perkly in this period")} /></Link>,
     <Link key="m" href="/admin/merchants?status=live" className={card}><Stat label={t("Active merchants")} value={activeMerchants} hint={t("{n} live in total", { n: o.live_merchants ?? 0 })} /></Link>,
