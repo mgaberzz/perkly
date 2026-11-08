@@ -6,7 +6,7 @@ import { getLang, getT } from "@/lib/i18n/server";
 import { settlementLabel, type Balance, type Settlement } from "@/lib/types";
 
 type Tx = {
-  id: string; created_at: string; verification_code: string; status: string; flag_reason: string | null; first_time_at_merchant: boolean;
+  id: string; created_at: string; verification_code: string; tx_code: string; status: string; flag_reason: string | null; first_time_at_merchant: boolean;
   channel: string; payment_method: string; payment_status: string; payment_ref: string | null;
   original_amount: number | null; discount_amount: number | null; final_amount: number | null;
   commission_amount: number | null; vat_amount: number | null; merchant_net: number | null; settle_amount: number | null; settlement_id: string | null; xp_awarded: number;
@@ -16,7 +16,7 @@ type Tx = {
   student?: { student_code: string | null; user_code: string } | null;
 };
 
-const TX_SELECT = "id, created_at, verification_code, status, flag_reason, first_time_at_merchant, channel, payment_method, payment_status, payment_ref, original_amount, discount_amount, final_amount, commission_amount, vat_amount, merchant_net, settle_amount, settlement_id, xp_awarded, settlement:settlements(status, paid_at, reference), merchant:merchants(merchant_code, name), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), perk:perks(title)";
+const TX_SELECT = "id, created_at, verification_code, tx_code, status, flag_reason, first_time_at_merchant, channel, payment_method, payment_status, payment_ref, original_amount, discount_amount, final_amount, commission_amount, vat_amount, merchant_net, settle_amount, settlement_id, xp_awarded, settlement:settlements(status, paid_at, reference), merchant:merchants(merchant_code, name), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), perk:perks(title)";
 
 const forbidden = () => new Response("Not allowed", { status: 403 });
 
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
       if (!data || data.length < 1000) break;
     }
     const cols: Column<Tx>[] = [
-      { header: t("Transaction ID"), value: (r) => r.id, width: 38 },
+      { header: t("Transaction ID"), value: (r) => r.tx_code, width: 14 },
       { header: t("Date (Cairo)"), value: (r) => cairo(r.created_at), width: 18 },
       { header: t("Code"), value: (r) => r.verification_code },
       { header: t("Merchant ID"), value: (r) => r.merchant?.merchant_code },

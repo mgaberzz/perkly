@@ -513,4 +513,5 @@ export const AR: Record<string, string> = {
   "{n}m left": "فاضل {n} دقيقة",
   "{perk} at {place} — on Perkly 💜": "{perk} في {place} — على Perkly 💜",
   "{place} gives students instant discounts with Perkly.": "{place} بيدّي الطلاب خصومات فورية مع Perkly.",
+  'Transaction ID': 'رقم المعاملة',
 };

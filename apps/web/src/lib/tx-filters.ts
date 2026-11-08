@@ -6,9 +6,10 @@ export type TxFilters = {
   status?: string; channel?: string; payment?: string; from?: string; to?: string;
   merchant?: string; category?: string; city?: string; campus?: string; age?: string;
   /** "1" = not yet in a settlement (and not reversed) */ unsettled?: string; settlement?: string;
+  /** search: transaction ID (TRX-…) or 4-char code */ q?: string;
   /** "new" | "recurring" */ customer?: string; /** perk title */ perk?: string; qr?: string; branch?: string;
 };
-export const TX_FILTER_KEYS = ["status", "channel", "payment", "from", "to", "merchant", "category", "city", "campus", "age", "unsettled", "settlement", "customer", "perk", "qr", "branch"] as const;
+export const TX_FILTER_KEYS = ["q", "status", "channel", "payment", "from", "to", "merchant", "category", "city", "campus", "age", "unsettled", "settlement", "customer", "perk", "qr", "branch"] as const;
 
 export function readTxFilters(get: (k: string) => string | null | undefined): TxFilters {
   const f: TxFilters = {};
@@ -41,6 +42,10 @@ export function txSelect(select: string, f: TxFilters) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function applyTxFilters<Q extends Record<string, any>>(q: Q, f: TxFilters): Q {
   let x = q;
+  if (f.q) {
+    const c = f.q.trim().toUpperCase().replace(/[^A-Z0-9-]/g, "");
+    if (c) x = /^\d+$/.test(c) ? x.ilike("tx_code", `%${c}%`) : x.or(`tx_code.ilike.%${c}%,verification_code.eq.${c}`);
+  }
   if (f.status) x = x.eq("status", f.status);
   if (f.channel) x = x.eq("channel", f.channel);
   if (f.payment) x = x.eq("payment_method", f.payment);

@@ -32,8 +32,8 @@ export async function Shell({ nav, children, top, user, badge }: { nav: NavItem[
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="no-print sticky top-0 z-30 flex items-center justify-between border-b border-zinc-200 bg-white/90 px-4 py-2.5 backdrop-blur md:hidden">
-          <Logo />
-          <MobileMenu head={<div><Logo /><div className="text-[10px] font-bold uppercase tracking-widest text-perk-pink">{badge}</div></div>}>
+          <Link href="/" aria-label={t("Home")} className="rounded-xl active:opacity-70"><Logo /></Link>
+          <MobileMenu head={<Link href="/" aria-label={t("Home")} className="block"><Logo /><div className="text-[10px] font-bold uppercase tracking-widest text-perk-pink">{badge}</div></Link>}>
             {top}
             <nav className="flex flex-col gap-1">{nav.map((n) => <NavLink key={n.href} {...n} />)}</nav>
             <div className="mt-3 border-t border-zinc-100 pt-3">

@@ -384,3 +384,12 @@ do $$ begin
   assert (select sum(transactions) from insights_series('merchant', 365)) = (select count(*) from redemptions where status <> 'reversed'), 'series covers all';
 end $$;
 reset role;
+
+-- Transaction IDs: every transaction has a unique TRX- ID that never changes
+do $$ declare v_id uuid; v_code text; begin
+  assert (select count(*) from redemptions where tx_code !~ '^TRX-[0-9]{7,}$') = 0, 'tx_code format';
+  assert (select count(distinct tx_code) from redemptions) = (select count(*) from redemptions), 'tx_code unique';
+  select id, tx_code into v_id, v_code from redemptions order by created_at limit 1;
+  update redemptions set tx_code = 'TRX-1' where id = v_id;
+  assert (select tx_code from redemptions where id = v_id) = v_code, 'tx_code cannot be changed';
+end $$;

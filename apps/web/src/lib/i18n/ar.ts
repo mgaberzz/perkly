@@ -742,4 +742,7 @@ export const AR: Record<string, string> = {
   "Flag reason": "سبب التنبيه",
   "Overview": "نظرة عامة",
   "Notifications": "الإشعارات",
+  "Time / ID": "الوقت / الرقم",
+  "Search TRX-… or code": "ابحث برقم TRX-… أو الكود",
+  "Home": "الرئيسية",
 };

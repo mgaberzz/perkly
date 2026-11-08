@@ -7,13 +7,13 @@ import { dateTime, egp, shortDateTime } from "@/lib/format";
 import { DetailRow, ExpandItem, ExpandList } from "./expand-list";
 
 export type FeedRow = {
-  id: string; created_at: string; verification_code: string; branch_id: string | null;
+  id: string; created_at: string; verification_code: string; tx_code: string; branch_id: string | null;
   original_amount: number | null; discount_amount: number | null; final_amount: number | null;
   status: string; first_time_at_merchant: boolean; channel: string; payment_method: string;
   perk: { title: string } | null; branch: { name: string } | null; qr: { label: string; cashier_name: string | null } | null;
 };
 
-export const FEED_SELECT = "id, created_at, verification_code, branch_id, original_amount, discount_amount, final_amount, status, first_time_at_merchant, channel, payment_method, perk:perks(title), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name)";
+export const FEED_SELECT = "id, created_at, verification_code, tx_code, branch_id, original_amount, discount_amount, final_amount, status, first_time_at_merchant, channel, payment_method, perk:perks(title), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name)";
 
 export function LiveRedemptions({ merchantId, branchId, initial }: { merchantId: string; branchId: string | null; initial: FeedRow[] }) {
   const t = useT();
@@ -55,7 +55,7 @@ export function LiveRedemptions({ merchantId, branchId, initial }: { merchantId:
                   <span className="shrink-0 font-extrabold">{egp(r.original_amount)}</span>
                 </div>
                 <div className="flex items-center justify-between gap-2 text-xs text-zinc-500">
-                  <span className="truncate">{shortDateTime(r.created_at)} · {r.branch?.name ?? t("Online")}</span>
+                  <span className="truncate"><span className="font-mono font-semibold text-perk-purple">{r.tx_code}</span> · {shortDateTime(r.created_at)}</span>
                   <span className="shrink-0 font-semibold text-perk-purple">−{egp(r.discount_amount)}</span>
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-1">
@@ -65,6 +65,7 @@ export function LiveRedemptions({ merchantId, branchId, initial }: { merchantId:
                 </div>
               </div>
             </div>}>
+            <DetailRow label={t("Transaction ID")}><span className="font-mono text-perk-purple">{r.tx_code}</span></DetailRow>
             <DetailRow label={t("Time")}>{dateTime(r.created_at)}</DetailRow>
             <DetailRow label={t("Branch / cashier")}>{r.branch?.name ?? `🌐 ${t("Online")}`}{(r.qr?.cashier_name ?? r.qr?.label) && <span className="block text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</span>}</DetailRow>
             <DetailRow label={t("Bill")}>{egp(r.original_amount)}</DetailRow>
@@ -79,7 +80,7 @@ export function LiveRedemptions({ merchantId, branchId, initial }: { merchantId:
         {rows.map((r) => (
           <tr key={r.id} className={r.id === fresh ? "bg-emerald-50 transition-colors" : ""}>
             <Td><span className="rounded-lg bg-perk-ink px-2 py-1 font-mono text-base font-bold tracking-widest text-white">{r.verification_code}</span></Td>
-            <Td className="whitespace-nowrap">{dateTime(r.created_at)}</Td>
+            <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-perk-purple">{r.tx_code}</div></Td>
             <Td>{r.perk?.title}</Td>
             <Td>{r.branch?.name ?? `🌐 ${t("Online")}`}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>
             <Td>{egp(r.original_amount)}</Td>

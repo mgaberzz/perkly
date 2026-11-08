@@ -11,7 +11,7 @@ import { settlementLabel } from "@/lib/types";
 export const metadata = { title: "Explain" };
 
 type Tx = {
-  id: string; created_at: string; verification_code: string; payment_method: string; first_time_at_merchant: boolean;
+  id: string; created_at: string; verification_code: string; tx_code: string; payment_method: string; first_time_at_merchant: boolean;
   original_amount: number | null; discount_amount: number | null; final_amount: number | null;
   commission_amount: number | null; vat_amount: number | null; merchant_net: number | null; settle_amount: number | null;
   perk: { title: string } | null; branch: { name: string } | null; qr: { label: string; cashier_name: string | null } | null;
@@ -20,7 +20,7 @@ type Tx = {
 type Settlement = { id: string; period_start: string | null; period_end: string; amount: number; paid_amount: number; status: string };
 type Payment = { id: string; amount: number; reference: string; paid_at: string; settlement: { id: string; amount: number } | null };
 
-const SELECT = "id, created_at, verification_code, payment_method, first_time_at_merchant, original_amount, discount_amount, final_amount, commission_amount, vat_amount, merchant_net, settle_amount, perk:perks(title), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), settlement:settlements(id, status)";
+const SELECT = "id, created_at, verification_code, tx_code, payment_method, first_time_at_merchant, original_amount, discount_amount, final_amount, commission_amount, vat_amount, merchant_net, settle_amount, perk:perks(title), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), settlement:settlements(id, status)";
 const sum = <T,>(rows: T[], f: (r: T) => number | null | undefined) => rows.reduce((a, r) => a + Number(f(r) ?? 0), 0);
 
 function Line({ label, value, href, sign, strong, count }: { label: string; value: number; href?: string; sign?: string; strong?: boolean; count?: boolean }) {
@@ -196,7 +196,7 @@ function TxTable({ rows, t, money }: { rows: Tx[]; t: (s: string, v?: Record<str
       ...(money ? [t("Commission"), t("VAT"), t("Your net"), t("Status")] : [])]} empty={t("No transactions.")}>
       {rows.map((r) => (
         <tr key={r.id}>
-          <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
+          <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-perk-purple">{r.tx_code}</div><div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
           <Td>{r.branch?.name ?? `🌐 ${t("Online")}`}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>
           <Td phone="lead">{r.perk?.title}</Td>
           <Td>{r.first_time_at_merchant ? <Badge tone="live">{t("New customer")}</Badge> : <Badge tone="paused">{t("Recurring customer")}</Badge>}</Td>

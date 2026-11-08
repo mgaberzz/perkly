@@ -14,7 +14,7 @@ import { settlementLabel } from "@/lib/types";
 export const metadata = { title: "Transactions" };
 
 type Row = {
-  id: string; created_at: string; verification_code: string; original_amount: number | null; discount_amount: number | null; final_amount: number | null;
+  id: string; created_at: string; verification_code: string; tx_code: string; original_amount: number | null; discount_amount: number | null; final_amount: number | null;
   status: string; flag_reason: string | null; xp_awarded: number; channel: string; payment_method: string; first_time_at_merchant: boolean;
   merchant: { id: string; name: string; merchant_code: string }; perk: { title: string }; branch: { name: string } | null;
   qr: { label: string; cashier_name: string | null } | null;
@@ -28,7 +28,7 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
   const f = readTxFilters(g);
   const { supabase, can, merchantScope } = await requireStaff("redemptions_view");
   const t = await getT();
-  const select = txSelect("id, created_at, verification_code, original_amount, discount_amount, final_amount, status, flag_reason, xp_awarded, channel, payment_method, first_time_at_merchant, merchant:merchants(id, name, merchant_code), perk:perks(title), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), student:profiles(full_name, student_code, user_code), settle_amount, settlement:settlements(status)", f);
+  const select = txSelect("id, created_at, verification_code, tx_code, original_amount, discount_amount, final_amount, status, flag_reason, xp_awarded, channel, payment_method, first_time_at_merchant, merchant:merchants(id, name, merchant_code), perk:perks(title), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), student:profiles(full_name, student_code, user_code), settle_amount, settlement:settlements(status)", f);
   const query = applyTxFilters(inScope(supabase.from("redemptions").select(select)
     .order("created_at", { ascending: false }).limit(200), merchantScope), f);
   const [{ data }, { data: merchants }, { data: campus }] = await Promise.all([
@@ -49,8 +49,8 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
     <>
       <PageHeader title={t("Transactions")} subtitle={t("Flagged = no location shared or scanned 300m+ from the branch. Review and reverse fraud.")}
         actions={<ExportButtons kind="transactions" params={f} />} />
-      <FilterBar path="/admin/redemptions"
-        keep={Object.fromEntries(Object.entries(f).filter(([k]) => !["merchant", "status", "channel", "payment", "from", "to"].includes(k))) as Record<string, string>}
+      <FilterBar path="/admin/redemptions" search={{ name: "q", value: f.q, placeholder: t("Search TRX-… or code") }}
+        keep={Object.fromEntries(Object.entries(f).filter(([k]) => !["q", "merchant", "status", "channel", "payment", "from", "to"].includes(k))) as Record<string, string>}
         fields={[
           { name: "merchant", label: t("Merchant"), type: "select", value: f.merchant, all: t("All merchants"), options: (merchants ?? []).map((m) => ({ value: m.id, label: m.name })) },
           { name: "status", label: t("Status"), type: "select", value: f.status, all: t("All statuses"), options: ["success", "flagged", "reversed"].map((x) => ({ value: x, label: t(x) })) },
@@ -76,7 +76,7 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
                   <span className={`shrink-0 font-extrabold ${r.status === "reversed" ? "text-zinc-400 line-through" : ""}`}><Amount v={r.original_amount} /></span>
                 </div>
                 <div className="flex items-center justify-between gap-2 text-xs text-zinc-500">
-                  <span className="truncate">{r.student?.full_name ?? "—"} · {shortDateTime(r.created_at)}</span>
+                  <span className="truncate"><span className="font-mono font-semibold text-perk-purple">{r.tx_code}</span> · {shortDateTime(r.created_at)}</span>
                   <span className="shrink-0 text-emerald-600">−<Amount v={r.discount_amount} /></span>
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-1">
@@ -87,6 +87,7 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
               </div>
             </div>}>
             <DetailRow label={t("Time")}>{dateTime(r.created_at)}</DetailRow>
+            <DetailRow label={t("Transaction ID")}><span className="font-mono text-perk-purple">{r.tx_code}</span></DetailRow>
             <DetailRow label={t("Code")}><span className="font-mono">{r.verification_code}</span></DetailRow>
             <DetailRow label={t("Student")}>{r.student?.full_name ?? "—"} <span className="font-mono text-xs text-zinc-500">{r.student?.student_code ?? r.student?.user_code}</span></DetailRow>
             <DetailRow label={t("Merchant")}><Link href={`/admin/merchants/${r.merchant.id}`} className="underline">{r.merchant.name}</Link> <span className="font-mono text-xs text-zinc-500">{r.merchant.merchant_code}</span></DetailRow>
@@ -112,10 +113,10 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
           </ExpandItem>
         ))}
       </ExpandList>
-      <Table className="hidden sm:block" head={[t("Time"), t("Student"), t("Merchant"), t("Branch / cashier"), t("Perk"), t("Total GMV"), t("Discount"), t("Payment"), t("To settle"), t("Status"), ""]} empty={t("No transactions.")}>
+      <Table className="hidden sm:block" head={[t("Time / ID"), t("Student"), t("Merchant"), t("Branch / cashier"), t("Perk"), t("Total GMV"), t("Discount"), t("Payment"), t("To settle"), t("Status"), ""]} empty={t("No transactions.")}>
         {(data ?? []).map((r) => (
           <tr key={r.id}>
-            <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
+            <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-perk-purple">{r.tx_code}</div><div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
             <Td>{r.student?.full_name ?? "—"}<div className="font-mono text-xs text-zinc-500">{r.student?.student_code ?? r.student?.user_code}</div></Td>
             <Td><Link href={`/admin/merchants/${r.merchant.id}`} className="hover:underline">{r.merchant.name}</Link><div className="font-mono text-xs text-zinc-500">{r.merchant.merchant_code}</div></Td>
             <Td>{r.branch?.name ?? `🌐 ${t("Online")}`}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>

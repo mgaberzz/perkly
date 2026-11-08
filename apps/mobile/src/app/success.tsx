@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui';
 import { discountLabel, egp } from '@/lib/format';
 import { getLastRedemption } from '@/lib/redemption-store';
+import { supabase } from '@/lib/supabase';
 import { brand } from '@/lib/theme';
 import { locale, t } from '@/lib/i18n';
 
@@ -23,6 +24,15 @@ export default function Success() {
   const pop = useRef(new Animated.Value(0)).current;
   const xp = useRef(new Animated.Value(0)).current;
   const shimmer = useRef(new Animated.Value(0)).current;
+  const [txCode, setTxCode] = useState<string | null>(null);
+  const rid = r?.redemption_id;
+  useEffect(() => {
+    if (!rid) return;
+    let live = true;
+    supabase.from('my_redemptions').select('tx_code').eq('id', rid).maybeSingle()
+      .then(({ data }) => { if (live && data?.tx_code) setTxCode(data.tx_code as string); });
+    return () => { live = false; };
+  }, [rid]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
@@ -100,7 +110,7 @@ export default function Success() {
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text style={{ fontWeight: '900', fontSize: 18, color: brand.ink }}>{t('Receipt')}</Text>
               <View style={{ backgroundColor: '#12B76A1A', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
-                <Text style={{ color: brand.success, fontWeight: '800', fontSize: 12 }}>ID {r.redemption_id.slice(0, 4).toUpperCase()}-{r.verification_code}</Text>
+                <Text style={{ color: brand.success, fontWeight: '800', fontSize: 12 }}>{txCode ?? `ID ${r.redemption_id.slice(0, 4).toUpperCase()}-${r.verification_code}`}</Text>
               </View>
             </View>
             <Text style={{ color: '#6B6680', fontWeight: '600' }}>

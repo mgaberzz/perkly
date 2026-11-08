@@ -14,7 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 type Red = {
   id: string; created_at: string; merchant_name: string; logo_url: string | null; branch_name: string; perk_title: string;
   original_amount: number | null; discount_amount: number | null; final_amount: number | null; xp_awarded: number;
-  status: string; verification_code: string; channel: string; payment_method: string;
+  status: string; verification_code: string; tx_code?: string | null; channel: string; payment_method: string;
 };
 type Xp = { id: number; amount: number; reason: string; created_at: string; context: Record<string, string> };
 type Order = { id: string; order_ref: string; amount: number; cashback_amount: number; status: string; created_at: string; merchant: { name: string } | null };
@@ -193,6 +193,7 @@ export default function Explain() {
           <Card style={{ gap: 4 }}>
             <T v="small">{r.perk_title}</T>
             <T v="small">{r.branch_name === 'Online' ? t('Online') : r.branch_name} · {new Date(r.created_at).toLocaleString(locale(), { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</T>
+            {r.tx_code ? <T v="small">{t('Transaction ID')}: <Text style={{ fontWeight: '900' }}>{r.tx_code}</Text></T> : null}
             <T v="small">{t('Code')}: <Text style={{ fontWeight: '900', letterSpacing: 2 }}>{r.verification_code}</Text>{r.status === 'reversed' ? ` · ${t('reversed')}` : ''}</T>
           </Card>
         ),

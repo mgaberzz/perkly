@@ -10,7 +10,7 @@ import { settlementLabel, type Balance } from "@/lib/types";
 export const metadata = { title: "Explain" };
 
 type Tx = {
-  id: string; created_at: string; verification_code: string; payment_method: string; status: string;
+  id: string; created_at: string; verification_code: string; tx_code: string; payment_method: string; status: string;
   original_amount: number | null; discount_amount: number | null; final_amount: number | null;
   commission_amount: number | null; vat_amount: number | null; merchant_net: number | null; settle_amount: number | null;
   merchant: { id: string; name: string; merchant_code: string } | null; perk: { title: string } | null;
@@ -22,7 +22,7 @@ type Settlement = { id: string; created_at: string; period_start: string | null;
 type Payment = { id: string; amount: number; reference: string; paid_at: string;
   settlement: { id: string; amount: number; merchant: { id: string; name: string; merchant_code: string } | null } | null };
 
-const TX_SELECT = "id, created_at, verification_code, payment_method, status, original_amount, discount_amount, final_amount, commission_amount, vat_amount, merchant_net, settle_amount, merchant:merchants(id, name, merchant_code), perk:perks(title), settlement:settlements(id, status)";
+const TX_SELECT = "id, created_at, verification_code, tx_code, payment_method, status, original_amount, discount_amount, final_amount, commission_amount, vat_amount, merchant_net, settle_amount, merchant:merchants(id, name, merchant_code), perk:perks(title), settlement:settlements(id, status)";
 const sum = <T,>(rows: T[], f: (r: T) => number | null | undefined) => rows.reduce((a, r) => a + Number(f(r) ?? 0), 0);
 
 /** One line of the "how it's calculated" box; clickable when it has a link */
@@ -237,7 +237,7 @@ function TxTable({ rows, t }: { rows: Tx[]; t: (s: string, v?: Record<string, st
     <Table head={[t("Time"), t("Merchant"), t("Perk"), t("Payment"), t("Total GMV"), t("Paid"), t("Commission"), t("VAT"), t("Settlement amount"), t("To settle"), t("Status")]} empty={t("No transactions.")}>
       {rows.map((r) => (
         <tr key={r.id}>
-          <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
+          <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-perk-purple">{r.tx_code}</div><div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
           <Td phone="lead">{r.merchant && <Link href={`/admin/merchants/${r.merchant.id}`} className="hover:underline">{r.merchant.name}</Link>}</Td>
           <Td>{r.perk?.title}</Td>
           <Td><Badge tone={r.payment_method === "in_app" ? "active" : "paused"}>{r.payment_method === "in_app" ? t("In app") : t("Cashier")}</Badge></Td>
