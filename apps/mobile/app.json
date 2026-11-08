@@ -79,7 +79,11 @@
       "reactCompiler": true
     },
     "extra": {
-      "supportsRTL": true
-    }
+      "supportsRTL": true,
+      "eas": {
+        "projectId": "16463b86-d00a-45d7-80b9-5824d2e14378"
+      }
+    },
+    "owner": "perklyio"
   }
 }
