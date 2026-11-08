@@ -7,6 +7,7 @@ import { deleteMyAccount } from '@/lib/account';
 import { biometricAvailable, biometricEnabled, faceIdLimitedHere, setBiometricEnabled } from '@/lib/biometric';
 import { fwdChevron, lang, setLanguage, t } from '@/lib/i18n';
 import { legalUrl } from '@/lib/links';
+import { registerPush } from '@/lib/push';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { brand, useTheme } from '@/lib/theme';
@@ -27,6 +28,11 @@ export default function Settings() {
   async function toggleDrops(v: boolean) {
     setDrops(v);
     if (session) await supabase.from('profiles').update({ marketing_opt_in: v }).eq('id', session.user.id);
+    if (v && (await registerPush(true)) === 'denied' && Platform.OS !== 'web') {
+      Alert.alert(t('Notifications are off'), t('Turn on notifications for Perkly in your phone settings to get perk drops.'), [
+        { text: t('Not now'), style: 'cancel' }, { text: t('Open Settings'), onPress: () => Linking.openSettings() },
+      ]);
+    }
     refreshProfile();
   }
   async function toggleBio(v: boolean) {
@@ -113,6 +119,7 @@ export default function Settings() {
       <T v="label">{t('Notifications')}</T>
       <Card style={{ gap: 0, paddingVertical: 0 }}>
         <Row label={`🔥 ${t('Perk drops & flash deals')}`} right={<Switch value={drops} onValueChange={toggleDrops} trackColor={{ true: brand.purple }} />} />
+        <Row label={`📬 ${t('Notifications')}`} onPress={() => router.push('/notifications')} />
         <Row label={`🔔 ${t('Phone permissions')}`} onPress={() => Linking.openSettings()} />
       </Card>
       <T v="label">{t('Help')}</T>

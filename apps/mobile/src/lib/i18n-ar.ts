@@ -1,5 +1,13 @@
 // Arabic translations for the student app. Keys are the English text used in the code (see lib/i18n.ts).
 export const AR: Record<string, string> = {
+  "No notifications yet": "لا توجد إشعارات بعد",
+  "Perk drops, payment receipts and your student verification result show up here.": "تظهر هنا العروض الجديدة وإيصالات الدفع ونتيجة توثيق الطالب.",
+  "now": "الآن",
+  "{n}m": "{n} د",
+  "{n}h": "{n} س",
+  "{n}d": "{n} ي",
+  "Notifications are off": "الإشعارات متوقفة",
+  "Turn on notifications for Perkly in your phone settings to get perk drops.": "فعّل إشعارات Perkly من إعدادات هاتفك لتصلك العروض الجديدة.",
   "Student verification": "التحقق من الطالب",
   "Not verified": "غير موثّق",
   "Checking…": "قيد المراجعة…",

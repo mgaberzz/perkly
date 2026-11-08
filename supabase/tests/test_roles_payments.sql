@@ -641,3 +641,89 @@ do $$ begin
   assert not student_can_redeem('00000000-0000-0000-0000-0000000000c1'), 'expired blocks again';
 end $$;
 update app_settings set value = '{"required": false, "free_redemptions": 0}' where key = 'student_verification';
+
+-- ── Push notifications ──
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-0000000000d1', 'push1@perkly.test', '{"full_name":"Pia Push"}'),
+  ('00000000-0000-0000-0000-0000000000d2', 'push2@perkly.test', '{"full_name":"Paul Push"}');
+update profiles set marketing_opt_in = true, lang = 'ar' where id = '00000000-0000-0000-0000-0000000000d1';
+update profiles set marketing_opt_in = false where id = '00000000-0000-0000-0000-0000000000d2';
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000d1', false);
+do $$ begin
+  assert register_push_token('not a token')->>'error' = 'bad_token', 'token format checked';
+  assert (register_push_token('ExponentPushToken[aaaaaaaaaaaaaaaaaaaa]', 'ios')->>'ok')::boolean, 'registered';
+  assert (register_push_token('ExponentPushToken[bbbbbbbbbbbbbbbbbbbb]', 'android')->>'ok')::boolean, 'second device';
+  declare ok boolean := false; begin
+    begin perform 1 from push_tokens; exception when insufficient_privilege then ok := true; end;
+    assert ok, 'tokens are not readable directly';
+  end;
+  assert send_broadcast('Hi', 'There')->>'error' = 'not_allowed', 'students cannot broadcast';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000d2', false);
+do $$ begin
+  assert (register_push_token('ExponentPushToken[cccccccccccccccccccc]')->>'ok')::boolean, 'registered d2';
+end $$;
+-- verification result → inbox + push in the student's language
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000d1', false);
+select submit_student_verification('00000000-0000-0000-0000-0000000000d1/id-1.jpg');
+reset role; truncate net.calls; set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+select review_student_verification((select id from student_verifications where user_id = '00000000-0000-0000-0000-0000000000d1'), true);
+reset role;
+do $$ begin
+  assert (select count(*) from net.calls) = 1, 'one push request';
+  assert (select jsonb_array_length(body) from net.calls) = 2, 'both devices';
+  assert (select body->0->>'title' from net.calls) = 'تم توثيقك! 🎓', 'Arabic title';
+  assert (select body->0->'data'->>'url' from net.calls) = '/student-verification', 'opens verification';
+  assert (select url from net.calls) = 'https://exp.host/--/api/v2/push/send', 'Expo push API';
+end $$;
+set role authenticated;
+-- broadcasts: staff only, opted-in students only, campus filter, double-send guard
+reset role; truncate net.calls; set role authenticated;
+do $$ declare r jsonb; begin
+  assert broadcast_audience() >= 1, 'audience count';
+  r := send_broadcast('Flash deal 🔥', '50% off today', 'عرض سريع 🔥', 'خصم 50% اليوم');
+  assert (r->>'ok')::boolean, r::text;
+  assert (select count(*) from notifications where broadcast_id is not null and user_id = '00000000-0000-0000-0000-0000000000d2') = 0, 'not opted in: skipped';
+  assert send_broadcast('Again', 'Again')->>'error' = 'too_soon', 'double send blocked';
+  assert (select recipients from broadcasts order by created_at desc limit 1) = (r->>'recipients')::int, 'recipients recorded';
+end $$;
+reset role;
+do $$ begin
+  assert (select count(*) from net.calls c, jsonb_array_elements(c.body) m where m->>'to' = 'ExponentPushToken[aaaaaaaaaaaaaaaaaaaa]' and m->>'title' = 'عرض سريع 🔥') = 1, 'Arabic broadcast to opted-in';
+  assert (select count(*) from net.calls c, jsonb_array_elements(c.body) m where m->>'to' = 'ExponentPushToken[cccccccccccccccccccc]') = 0, 'opted-out device got nothing';
+end $$;
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e2', false);
+do $$ begin
+  assert send_broadcast('x', 'y')->>'error' = 'not_allowed', 'AM cannot broadcast';
+  assert broadcast_audience() is null, 'AM cannot count audience';
+end $$;
+-- inbox: own only, mark read
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000d1', false);
+do $$ begin
+  assert (select count(*) from notifications) = 2 and (select bool_and(user_id = auth.uid()) from notifications), 'own inbox';
+  perform mark_notifications_read();
+  assert (select count(*) from notifications where read_at is null) = 0, 'marked read';
+  perform unregister_push_token('ExponentPushToken[bbbbbbbbbbbbbbbbbbbb]');
+end $$;
+reset role;
+do $$ begin
+  assert (select count(*) from push_tokens where user_id = '00000000-0000-0000-0000-0000000000d1') = 1, 'unregistered on sign-out';
+  -- a phone that changes hands moves to the new account
+end $$;
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000d2', false);
+select register_push_token('ExponentPushToken[aaaaaaaaaaaaaaaaaaaa]');
+reset role;
+do $$ begin
+  assert (select user_id from push_tokens where token = 'ExponentPushToken[aaaaaaaaaaaaaaaaaaaa]') = '00000000-0000-0000-0000-0000000000d2', 'token moved';
+end $$;
+-- in-app payment → receipt notification
+do $$ declare p perks; begin
+  select * into p from perks where status = 'active' limit 1;
+  insert into redemptions (user_id, perk_id, merchant_id, verification_code, status, payment_method, payment_status, final_amount)
+  values ('00000000-0000-0000-0000-0000000000d2', p.id, p.merchant_id, 'PAY1', 'success', 'in_app', 'paid', 123.5);
+  assert (select body from notifications where user_id = '00000000-0000-0000-0000-0000000000d2' and kind = 'payment') like 'You paid EGP 123.50 at %', 'payment receipt';
+end $$;

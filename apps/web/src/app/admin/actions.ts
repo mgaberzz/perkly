@@ -147,6 +147,25 @@ export async function setVerificationRules(_: ActionState, fd: FormData): Promis
   return { ok: "Saved." };
 }
 
+// ───────── Push notifications ─────────
+const BROADCAST_ERRORS: Record<string, string> = {
+  missing_text: "Write a title and a message.",
+  too_long: "Keep the title under 80 characters and the message under 240.",
+  too_soon: "A notification was just sent. Wait 2 minutes before sending another.",
+  not_allowed: "You don't have permission to send notifications.",
+};
+export async function sendBroadcast(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireStaff("broadcasts");
+  const { data, error } = await supabase.rpc("send_broadcast", {
+    p_title: str(fd, "title"), p_body: str(fd, "body"), p_title_ar: str(fd, "title_ar") || null, p_body_ar: str(fd, "body_ar") || null,
+    p_campus_id: str(fd, "campus_id") || null, p_perk_id: str(fd, "perk_id") || null,
+  });
+  const res = data as { ok: boolean; error?: string; recipients?: number } | null;
+  if (error || !res?.ok) return { error: error?.message ?? BROADCAST_ERRORS[res?.error ?? ""] ?? "Could not send." };
+  revalidatePath("/admin/broadcasts");
+  return { ok: "Sent! Students get it within a few seconds; see the count under Sent." };
+}
+
 // ───────── Perks ─────────
 export async function reviewPerk(fd: FormData) {
   const { supabase } = await requireStaff("perks");

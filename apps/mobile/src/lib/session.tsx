@@ -5,7 +5,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { biometricEnabled, unlock } from './biometric';
 import { supabase } from './supabase';
 import type { Campus, Merchant, Profile, Stats } from './types';
-import { t } from './i18n';
+import { lang, t } from './i18n';
+import { registerPush, unregisterPush } from './push';
 
 type Coords = { lat: number; lng: number } | null;
 /** Where the student is browsing: around their GPS position, or a chosen campus/area. */
@@ -88,18 +89,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const refreshProfile = useCallback(async () => {
     if (!userId) return;
     const [{ data: p }, { data: s }, { data: f }] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, phone, email, campus_id, referral_code, status, role, birth_date, marketing_opt_in, terms_accepted_at, referred_by, user_code, student_code, avatar_path, avatar_config, avatar_kind, verification_status, verified_until').eq('id', userId).single<Profile>(),
+      supabase.from('profiles').select('id, full_name, phone, email, campus_id, referral_code, status, role, birth_date, marketing_opt_in, terms_accepted_at, referred_by, user_code, student_code, avatar_path, avatar_config, avatar_kind, verification_status, verified_until, lang').eq('id', userId).single<Profile>(),
       supabase.from('user_stats').select('*').eq('user_id', userId).single<Stats>(),
       supabase.from('favorites').select('merchant_id').eq('user_id', userId),
     ]);
     setProfile(p ?? null);
     setStats(s ?? null);
+    // Messages from Perkly arrive in the language the app is in
+    if (p && (p as Profile & { lang?: string }).lang !== lang()) supabase.from('profiles').update({ lang: lang() }).eq('id', p.id).then(() => {});
     setFavorites(new Set((f ?? []).map((x: { merchant_id: string }) => x.merchant_id)));
     if (p?.campus_id) {
       const { data: c } = await supabase.from('campuses').select('*').eq('id', p.campus_id).single<Campus>();
       setCampus(c ?? null);
     } else setCampus(null);
   }, [userId]);
+
+  useEffect(() => { if (userId) registerPush(false); }, [userId]);
 
   const refreshMerchants = useCallback(async () => {
     const [{ data }, { data: pop }] = await Promise.all([
@@ -152,7 +157,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setParked(true);
       return;
     }
-    // Full sign-out: never waits on the network; the session is cleared on this device right away
+    // Full sign-out: stop pushes to this phone, then clear the session on this device right away
+    await Promise.race([unregisterPush(), new Promise((r) => setTimeout(r, 2500))]);
     await AsyncStorage.removeItem(PARKED_KEY).catch(() => {});
     await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
     setParked(false);

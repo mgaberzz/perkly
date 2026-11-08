@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { brand } from '@/lib/theme';
 import { t } from '@/lib/i18n';
 import { legalUrl } from '@/lib/links';
+import { registerPush } from '@/lib/push';
 
 export default function Consent() {
   const { session, refreshProfile } = useSession();
@@ -20,6 +21,7 @@ export default function Consent() {
     setSaving(marketing ? 'all' : 'basic');
     await supabase.from('profiles').update({ terms_accepted_at: new Date().toISOString(), marketing_opt_in: marketing }).eq('id', session.user.id);
     await refreshProfile();
+    if (marketing) await registerPush(true);
     setSaving(null);
     router.replace('/location');
   }

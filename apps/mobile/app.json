@@ -66,6 +66,12 @@
           "photosPermission": "Perkly lets you choose a profile photo from your photos.",
           "cameraPermission": "Perkly uses your camera to scan the merchant's QR code and to take your profile photo."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#7B2FF7"
+        }
       ]
     ],
     "experiments": {

@@ -17,10 +17,12 @@ export default function Me() {
   const { c } = useTheme();
   const { session, profile, stats, campus, merchants, favorites, refreshProfile } = useSession();
   const [recent, setRecent] = useState<Recent[]>([]);
+  const [unread, setUnread] = useState(0);
 
   useFocusEffect(useCallback(() => {
     refreshProfile();
     if (!session) return;
+    supabase.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null).then(({ count }) => setUnread(count ?? 0));
     supabase.from('my_redemptions').select('id, created_at, merchant_name, perk_title, discount_amount, xp_awarded')
       .order('created_at', { ascending: false }).limit(3).then(({ data }) => setRecent((data ?? []) as Recent[]));
   }, [session, refreshProfile]));
@@ -33,6 +35,10 @@ export default function Me() {
       <View style={{ alignItems: 'center', gap: 6 }}>
         <Pressable onPress={() => router.push('/settings')} hitSlop={12} style={{ position: 'absolute', end: 0, top: 0 }}>
           <Text style={{ fontSize: 26 }}>⚙️</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push('/notifications')} hitSlop={12} style={{ position: 'absolute', start: 0, top: 0 }}>
+          <Text style={{ fontSize: 26 }}>🔔</Text>
+          {unread > 0 && <View style={{ position: 'absolute', top: -2, end: -4, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: brand.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}><Text style={{ color: '#fff', fontSize: 11, fontWeight: '900' }}>{unread > 9 ? '9+' : unread}</Text></View>}
         </Pressable>
         <EditableAvatar size={96} />
         <T v="h2" style={{ textAlign: 'center' }}>{profile?.full_name ?? t('Student')}</T>

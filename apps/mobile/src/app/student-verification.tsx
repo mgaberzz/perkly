@@ -9,6 +9,7 @@ import { shortDate } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { brand, useTheme } from '@/lib/theme';
+import { registerPush } from '@/lib/push';
 import { getMyVerification, pickIdCard, submitIdCard, type PickedPhoto, type Verification } from '@/lib/verification';
 
 const ERRORS: Record<string, string> = {
@@ -50,6 +51,7 @@ export default function StudentVerification() {
     setSending(false);
     if (!r.ok) return setError(t(ERRORS[r.error] ?? 'Could not send your photo. Check your connection and try again.'));
     setPhoto(null); setNumber('');
+    registerPush(true); // so the result can reach them
     refreshProfile();
     load();
   }

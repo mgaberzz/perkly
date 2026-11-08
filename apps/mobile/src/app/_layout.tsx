@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BiometricGate } from '@/components/biometric-gate';
 import { biometricAvailable, biometricEnabled, setBiometricEnabled } from '@/lib/biometric';
 import { initLanguage, t } from '@/lib/i18n';
+import { useNotificationTaps } from '@/lib/push';
 import { SessionProvider, useSession } from '@/lib/session';
 import { brand } from '@/lib/theme';
 
@@ -17,6 +18,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 function RootStack() {
   const { ready, session, profile, quickLogin, signOut } = useSession();
   const segments = useSegments();
+  useNotificationTaps(ready && !!session);
   useEffect(() => { if (ready) SplashScreen.hideAsync().catch(() => {}); }, [ready]);
 
   // Signed out anywhere (logout from Settings, expired session…) → back to the welcome screen
@@ -57,6 +59,7 @@ function RootStack() {
       <Stack.Screen name="collection/[key]" />
       <Stack.Screen name="explain" />
       <Stack.Screen name="arcade" options={{ animation: 'fade_from_bottom' }} />
+      <Stack.Screen name="notifications" options={{ headerShown: true, title: t('Notifications') }} />
       <Stack.Screen name="student-verification" options={{ headerShown: true, title: t('Student verification') }} />
       <Stack.Screen name="settings" options={{ headerShown: true, title: t('Settings') }} />
       <Stack.Screen name="avatar" options={{ headerShown: false, presentation: 'modal' }} />
