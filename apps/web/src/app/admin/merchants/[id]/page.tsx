@@ -8,9 +8,10 @@ import { MerchantAdminForm } from "@/components/merchant-admin-form";
 import { QrImage } from "@/components/qr-image";
 import { discountLabel } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
+import { dealLabel } from "@/components/partner-form";
 import { BRAND_TYPE_LABEL, CHANNEL_LABEL, MEMBER_ROLE_LABEL } from "@/lib/labels";
 import type { Balance, Merchant, Perk, QrCode } from "@/lib/types";
-import { adminAddMember, adminCreateBranch, adminCreateQr, adminRemoveMember, adminToggleQr, resolveRequest, updateMerchant } from "../../actions";
+import { adminAddMember, adminCreateBranch, adminCreateQr, adminRemoveMember, adminToggleQr, resolveRequest, updateMerchant, setMerchantPartner } from "../../actions";
 
 export const metadata = { title: "Merchant" };
 
@@ -25,6 +26,11 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
   const { data: merchant } = await supabase.from("merchants").select("*").eq("id", id).maybeSingle<Merchant>();
   if (!merchant) notFound();
   const editable = can("merchants_edit");
+  const partnerId = (merchant as Merchant & { partner_id?: string | null }).partner_id ?? null;
+  const { data: partnerList } = can("partners_view")
+    ? await supabase.from("partners").select("id, name, partner_code, cut_type, cut_value, status").order("name")
+    : { data: null };
+  const partner = (partnerList ?? []).find((p) => p.id === partnerId);
 
   const [{ data: branches }, { data: perks }, { data: members }, { data: campuses }, { data: stats }, { data: balance }, { data: requests }] = await Promise.all([
     supabase.from("merchant_branches").select("id, name, address, is_active, lat, qr:branch_qr_codes(*)").eq("merchant_id", id).order("name").returns<BranchRow[]>(),
@@ -49,6 +55,26 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
       <PageHeader title={merchant.name}
         subtitle={<span className="flex flex-wrap items-center gap-2"><span className="font-mono">{merchant.merchant_code}</span> · {t(merchant.category)} · {t(BRAND_TYPE_LABEL[merchant.brand_type])} · {t(CHANNEL_LABEL[merchant.channel])} <Badge tone={merchant.status}>{t(merchant.status)}</Badge></span>} />
       {typeof invite_error === "string" && <div className="mb-4"><Notice tone="error">{t("Merchant created, but the owner invite failed:")} {invite_error}</Notice></div>}
+
+      {partnerList && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm shadow-sm">
+          <span className="font-semibold">🤝 {t("Partner")}:</span>
+          {partner
+            ? <Link href={`/admin/partners/${partner.id}`} className="font-semibold text-perk-purple hover:underline">{partner.name} <span className="font-mono text-xs text-zinc-500">{partner.partner_code}</span></Link>
+            : <span className="text-zinc-500">{t("None (onboarded by Perkly)")}</span>}
+          {partner && <Badge tone="active">{dealLabel(partner, t)}</Badge>}
+          {can("partners_manage") && (
+            <form action={setMerchantPartner} className="ms-auto flex gap-2">
+              <input type="hidden" name="merchant_id" value={id} />
+              <Select name="partner_id" defaultValue={partnerId ?? ""} className="w-48 py-1.5 text-xs">
+                <option value="">{t("No partner")}</option>
+                {partnerList.map((p) => <option key={p.id} value={p.id}>{p.name}{p.status === "paused" ? ` (${t("paused")})` : ""}</option>)}
+              </Select>
+              <button className="rounded-xl border border-zinc-300 px-3 text-xs font-semibold hover:bg-zinc-50">{t("Save")}</button>
+            </form>
+          )}
+        </div>
+      )}
 
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
         <Stat accent label={t("Redemptions (30d)")} value={s.redemptions ?? 0} />

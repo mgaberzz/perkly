@@ -66,3 +66,12 @@ export const BRAND_TYPES = ["local", "chain", "mega_account"] as const;
 /** Settlement status shown on every transaction (follows its settlement batch; changes only when finance records a payment) */
 export const SETTLEMENT_LABEL: Record<string, string> = { paid: "Settled", partially_paid: "Partially settled", pending: "Not settled yet" };
 export const settlementLabel = (status: string | null | undefined) => SETTLEMENT_LABEL[status ?? "pending"] ?? "Not settled yet";
+
+export type Partner = {
+  id: string; partner_code: string; name: string; contact_name: string | null; contact_phone: string | null; contact_email: string | null;
+  cut_type: "percentage" | "fixed"; cut_value: number; status: "active" | "paused"; notes: string | null; created_at: string;
+};
+export type PartnerBalance = {
+  partner_id: string; partner_code: string; name: string; status: string; cut_type: "percentage" | "fixed"; cut_value: number;
+  merchants: number; transactions: number; gmv: number; commission: number; earned: number; paid: number; due: number; last_paid_at: string | null;
+};

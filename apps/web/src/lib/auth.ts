@@ -33,6 +33,9 @@ export const PERMS = {
   redemptions_view: ["admin", "operations", "account_manager", "finance"],
   redemptions_review: ["admin", "operations"],
   finance: ["admin", "finance"],
+  partners_view: ["admin", "operations", "finance"],
+  partners_manage: ["admin", "operations"],          // create partners, set deals, link merchants
+  partner_payouts: ["admin", "finance"],
   campuses_view: ["admin", "operations", "account_manager"],
   campuses_edit: ["admin", "operations"],
   quests: ["admin", "operations"],

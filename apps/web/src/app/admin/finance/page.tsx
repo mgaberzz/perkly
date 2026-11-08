@@ -7,7 +7,7 @@ import { ExportButtons } from "@/components/export-buttons";
 import { date, egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { BRAND_TYPE_LABEL } from "@/lib/labels";
-import { settlementLabel, type Balance, type Settlement } from "@/lib/types";
+import { settlementLabel, type Balance, type PartnerBalance, type Settlement } from "@/lib/types";
 import { createSettlements, markSettlementPaid, setPaymentsMode, setVatRate } from "../actions";
 
 export const metadata = { title: "Finance" };
@@ -17,13 +17,16 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
   const t = await getT();
   const sp = await searchParams;
   const view = sp.view === "all" ? "all" : "due";
-  const [{ data: balances }, { data: settlements }, { data: setting }, { data: tax }] = await Promise.all([
+  const [{ data: balances }, { data: settlements }, { data: setting }, { data: tax }, { data: partnerBal }] = await Promise.all([
     supabase.rpc("merchant_balances"),
     supabase.from("settlements").select("*, merchant:merchants(id, name, merchant_code)").order("created_at", { ascending: false }).limit(100)
       .returns<(Settlement & { merchant: { id: string; name: string; merchant_code: string } })[]>(),
     supabase.from("app_settings").select("value").eq("key", "payments").maybeSingle<{ value: { mode: string; provider: string | null } }>(),
     supabase.from("app_settings").select("value").eq("key", "tax").maybeSingle<{ value: { vat_pct: number } }>(),
+    supabase.rpc("partner_balances"),
   ]);
+  const partners = (partnerBal ?? []) as PartnerBalance[];
+  const pSum = (k: keyof PartnerBalance) => partners.reduce((a, p) => a + Number(p[k] ?? 0), 0);
   const all = (balances ?? []) as Balance[];
   const sum = (k: keyof Balance) => all.reduce((a, b) => a + Number(b[k] ?? 0), 0);
   const rows = view === "all" ? all : all.filter((b) => Number(b.net_to_settle) !== 0 || Number(b.pending_settlements) !== 0);
@@ -44,6 +47,14 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
         <Link href={`/admin/explain?metric=open_settlements`} className="block transition hover:-translate-y-0.5"><Stat label={t("Open settlements")} value={<Amount v={sum("pending_settlements")} />} hint={t("{n} settlement(s) not fully paid", { n: pending.length })} /></Link>
         <Link href={`/admin/explain?metric=paid_to_merchants`} className="block transition hover:-translate-y-0.5"><Stat label={t("Paid to merchants")} value={<Amount v={sum("paid_out")} />} /></Link>
         <Link href={`/admin/explain?metric=received_from_merchants`} className="block transition hover:-translate-y-0.5"><Stat label={t("Received from merchants")} value={<Amount v={sum("received_from_merchant")} />} hint={t("Commission collected")} /></Link>
+      </div>
+
+      <div className="mb-3 mt-2 flex items-center justify-between"><h2 className="font-bold">🤝 {t("Partners")}</h2><Link href="/admin/partners" className="text-sm font-semibold text-perk-purple hover:underline">{t("Open partners")} →</Link></div>
+      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Link href="/admin/partners" className="block transition hover:-translate-y-0.5"><Stat label={t("Owed to partners")} value={<Amount v={pSum("due")} />} hint={t("Earned minus paid")} /></Link>
+        <Link href="/admin/partners" className="block transition hover:-translate-y-0.5"><Stat label={t("Partner cuts")} value={<Amount v={pSum("earned")} />} hint={t("All time")} /></Link>
+        <Link href="/admin/partners" className="block transition hover:-translate-y-0.5"><Stat label={t("Paid to partners")} value={<Amount v={pSum("paid")} />} hint={t("All time")} /></Link>
+        <Link href="/admin/partners" className="block transition hover:-translate-y-0.5"><Stat label={t("Perkly commission after partners")} value={<Amount v={partners.reduce((a, p) => a + Number(p.commission) - Number(p.earned), 0)} />} hint={t("On partner merchants, all time")} /></Link>
       </div>
 
       <div className="mb-6 grid gap-6 lg:grid-cols-4">

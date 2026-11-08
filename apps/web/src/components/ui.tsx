@@ -183,5 +183,5 @@ export function HBarList({ data, format = (n: number) => String(n), empty = "No 
 
 /** Money that stays readable when huge: short form (e.g. 1.2M EGP), exact amount on hover */
 export function Amount({ v, className = "" }: { v: number | null | undefined; className?: string }) {
-  return <span title={egp(v)} className={className}>{egpShort(v)}</span>;
+  return <span title={egp(v)} className={`whitespace-nowrap ${className}`}>{egpShort(v)}</span>;
 }

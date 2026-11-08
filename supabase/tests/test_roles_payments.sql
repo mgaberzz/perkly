@@ -432,3 +432,69 @@ do $$ begin
   assert id_kind('12345') is null and id_kind('MER-10001') is null, 'unknown ids';
   assert (select min(user_code) from profiles) = '10000001', 'first user keeps running number';
 end $$;
+
+-- ── Partners: deal %, fixed (capped), only new transactions, payouts, visibility ──
+do $$
+declare v_p uuid; v_f uuid; v_m uuid := current_setting('test.costa_id')::uuid; v_src redemptions; v_r uuid; v_r2 uuid; v_r3 uuid; v_old uuid;
+begin
+  select * into v_src from redemptions where merchant_id = v_m and status <> 'reversed' and commission_amount > 0 order by created_at limit 1;
+  v_old := v_src.id;
+  insert into partners (name, cut_type, cut_value) values ('Cairo Growth Co', 'percentage', 20) returning id into v_p;
+  assert (select partner_code from partners where id = v_p) ~ '^4[0-9]{5}$' and id_kind((select partner_code from partners where id = v_p)) = 'partner', 'partner id 4xxxxx';
+  update merchants set partner_id = v_p where id = v_m;
+  assert not exists (select 1 from partner_earnings where redemption_id = v_old), 'older transactions earn nothing';
+  insert into redemptions (user_id, perk_id, merchant_id, branch_id, original_amount, discount_amount, final_amount, commission_amount, verification_code, payment_method)
+  values (v_src.user_id, v_src.perk_id, v_m, v_src.branch_id, 250, 25, 225, 22.50, 'PT01', 'merchant') returning id into v_r;
+  assert (select cut from partner_earnings where redemption_id = v_r) = 4.50, '20% of 22.50 commission = 4.50';
+  -- deal changes to fixed 3 EGP: old cut stays, new one is fixed; a tiny commission caps the fixed cut
+  update partners set cut_type = 'fixed', cut_value = 3 where id = v_p;
+  assert (select cut from partner_earnings where redemption_id = v_r) = 4.50, 'history unchanged';
+  insert into redemptions (user_id, perk_id, merchant_id, branch_id, original_amount, discount_amount, final_amount, commission_amount, verification_code, payment_method)
+  values (v_src.user_id, v_src.perk_id, v_m, v_src.branch_id, 100, 10, 90, 9, 'PT02', 'merchant') returning id into v_r2;
+  assert (select cut from partner_earnings where redemption_id = v_r2) = 3, 'fixed 3 EGP';
+  insert into redemptions (user_id, perk_id, merchant_id, branch_id, original_amount, discount_amount, final_amount, commission_amount, verification_code, payment_method)
+  values (v_src.user_id, v_src.perk_id, v_m, v_src.branch_id, 20, 2, 18, 1.80, 'PT03', 'merchant') returning id into v_r3;
+  assert (select cut from partner_earnings where redemption_id = v_r3) = 1.80, 'fixed cut capped at commission';
+  -- reversed transaction drops out of what the partner earned
+  update redemptions set status = 'reversed' where id = v_r3;
+  assert (select earned from partner_balances(v_p)) = 7.50, 'earned 4.50 + 3 (reversed excluded)';
+  -- paused partner: no cut on new transactions
+  update partners set status = 'paused' where id = v_p;
+  insert into redemptions (user_id, perk_id, merchant_id, branch_id, original_amount, discount_amount, final_amount, commission_amount, verification_code, payment_method)
+  values (v_src.user_id, v_src.perk_id, v_m, v_src.branch_id, 100, 10, 90, 9, 'PT04', 'merchant');
+  assert (select transactions from partner_balances(v_p)) = 2, 'paused partner earns nothing new';
+  update partners set status = 'active' where id = v_p;
+  perform set_config('test.partner', v_p::text, false);
+end $$;
+
+-- finance pays (partial, then too much), ops cannot pay, AM and merchants see nothing
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e3', false);
+do $$ declare v_p uuid := current_setting('test.partner')::uuid; begin
+  assert (select count(*) from partners) >= 1, 'finance sees partners';
+  assert (record_partner_payout(v_p, 5, 'BANK-1')->>'ok')::boolean, 'partial payout';
+  assert (select due from partner_balances(v_p)) = 2.50, 'due 7.50 - 5';
+  assert record_partner_payout(v_p, 10, 'BANK-2')->>'error' = 'more_than_due', 'cannot overpay';
+  assert record_partner_payout(v_p, 1, ' ')->>'error' = 'reference_required', 'reference needed';
+  assert (finance_summary(365)->>'partner_cuts')::numeric >= 7.50, 'summary shows partner cuts';
+  begin update partners set cut_value = 99 where id = v_p; exception when others then null; end;
+  assert (select cut_value from partners where id = v_p) = 3, 'finance cannot change the deal';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ begin
+  assert record_partner_payout(current_setting('test.partner')::uuid, 1, 'X')->>'error' = 'not_allowed', 'ops cannot pay';
+  update partners set notes = 'ops can edit deals' where id = current_setting('test.partner')::uuid;
+  assert (select notes from partners where id = current_setting('test.partner')::uuid) = 'ops can edit deals', 'ops edits partner';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e2', false);
+do $$ begin
+  assert (select count(*) from partners) = 0 and (select count(*) from partner_earnings) = 0, 'account manager sees no partners';
+  assert (select count(*) from partner_balances()) = 0, 'no balances for AM';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', false);
+do $$ begin
+  assert (select count(*) from partner_earnings) = 0 and (select count(*) from partner_payouts) = 0, 'merchant sees no partner money';
+  update merchants set partner_id = null where id = current_setting('test.costa_id')::uuid;
+  assert (select partner_id from merchants where id = current_setting('test.costa_id')::uuid) is not null, 'merchant cannot unlink partner';
+end $$;
+reset role;

@@ -283,3 +283,69 @@ export async function toggleQuest(fd: FormData) {
   await supabase.from("quests").update({ is_active: str(fd, "active") === "true" }).eq("id", str(fd, "id"));
   revalidatePath("/admin/quests");
 }
+
+// ───────── Partners ─────────
+function partnerRow(fd: FormData) {
+  const cut_type = str(fd, "cut_type") === "fixed" ? "fixed" : "percentage";
+  return {
+    name: str(fd, "name"),
+    contact_name: str(fd, "contact_name") || null,
+    contact_phone: str(fd, "contact_phone") || null,
+    contact_email: str(fd, "contact_email") || null,
+    cut_type,
+    cut_value: Number(str(fd, "cut_value") || 0),
+    status: str(fd, "status") === "paused" ? "paused" : "active",
+    notes: str(fd, "notes") || null,
+  };
+}
+function checkDeal(row: ReturnType<typeof partnerRow>) {
+  if (row.name.length < 2) return "Partner name is required.";
+  if (!(row.cut_value >= 0)) return "The cut must be 0 or more.";
+  if (row.cut_type === "percentage" && row.cut_value > 100) return "A percentage cut can't be more than 100%.";
+  return null;
+}
+
+export async function createPartner(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase, user } = await requireStaff("partners_manage");
+  const row = partnerRow(fd);
+  const bad = checkDeal(row);
+  if (bad) return { error: bad };
+  const { data, error } = await supabase.from("partners").insert({ ...row, created_by: user.id }).select("id").single();
+  if (error) return { error: error.message };
+  revalidatePath("/admin/partners");
+  redirect(`/admin/partners/${data.id}`);
+}
+
+export async function updatePartner(id: string, _: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireStaff("partners_manage");
+  const row = partnerRow(fd);
+  const bad = checkDeal(row);
+  if (bad) return { error: bad };
+  const { error } = await supabase.from("partners").update(row).eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/partners", "layout");
+  return { ok: "Saved. The new deal applies to new transactions." };
+}
+
+/** Link or unlink a merchant (partner_id empty = unlink) */
+export async function setMerchantPartner(fd: FormData) {
+  const { supabase } = await requireStaff("partners_manage");
+  const merchantId = str(fd, "merchant_id");
+  const partnerId = str(fd, "partner_id") || null;
+  await supabase.from("merchants").update({ partner_id: partnerId }).eq("id", merchantId);
+  revalidatePath("/admin/partners", "layout");
+  revalidatePath(`/admin/merchants/${merchantId}`);
+}
+
+export async function recordPartnerPayout(partnerId: string, _: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireStaff("partner_payouts");
+  const amount = str(fd, "amount");
+  const { data, error } = await supabase.rpc("record_partner_payout", {
+    p_partner_id: partnerId, p_amount: amount ? Number(amount) : null, p_reference: str(fd, "reference"), p_note: str(fd, "note") || null,
+  });
+  if (error) return { error: error.message };
+  const r = data as { ok: boolean; error?: string; due?: number };
+  if (!r.ok) return { error: r.error === "more_than_due" ? "That's more than the partner is owed." : r.error === "reference_required" ? "Add the bank reference." : r.error === "invalid_amount" ? "Nothing is owed to this partner." : "Not allowed." };
+  revalidatePath("/admin/partners", "layout");
+  return { ok: "Payment recorded." };
+}
