@@ -93,7 +93,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
             <Td><Link href={`/admin/explain?metric=net_to_settle&kind=in_app&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.due_to_merchant} /></Link></Td>
             <Td><Link href={`/admin/explain?metric=net_to_settle&kind=cashier&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.commission_owed} /></Link></Td>
             <Td><Link href={`/admin/explain?metric=net_to_settle&kind=cashier&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.vat} /></Link></Td>
-            <Td className="font-bold text-perk-purple"><Link href={`/admin/explain?metric=net_to_settle&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.net_to_settle} /></Link><div className="text-xs font-normal text-zinc-500">{Number(b.net_to_settle) > 0 ? t("Perkly pays merchant") : Number(b.net_to_settle) < 0 ? t("Merchant pays Perkly commission") : ""}</div></Td>
+            <Td phone="sum" className="font-bold text-perk-purple"><Link href={`/admin/explain?metric=net_to_settle&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.net_to_settle} /></Link><div className="text-xs font-normal text-zinc-500">{Number(b.net_to_settle) > 0 ? t("Perkly pays merchant") : Number(b.net_to_settle) < 0 ? t("Merchant pays Perkly commission") : ""}</div></Td>
             <Td><Link href={`/admin/explain?metric=open_settlements&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.pending_settlements} /></Link></Td>
             <Td className="text-xs">{b.bank_name ? <>{b.bank_name}<div className="font-mono text-zinc-500">{b.iban}</div></> : <span className="text-amber-600">{t("Missing")}</span>}</Td>
           </tr>
@@ -108,12 +108,12 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
         {(settlements ?? []).map((s) => (
           <tr key={s.id}>
             <Td>{date(s.created_at)}</Td>
-            <Td>{s.merchant.name}<div className="font-mono text-xs text-zinc-500">{s.merchant.merchant_code}</div></Td>
+            <Td phone="lead">{s.merchant.name}<div className="font-mono text-xs text-zinc-500">{s.merchant.merchant_code}</div></Td>
             <Td className="text-xs">{s.period_start} → {s.period_end}</Td>
             <Td><Link href={`/admin/explain?metric=settlement&id=${s.id}`} className="font-semibold text-perk-purple hover:underline">{s.lines}</Link></Td>
-            <Td className="font-bold"><Link href={`/admin/explain?metric=settlement&id=${s.id}`} className="hover:underline">{egp(Math.abs(s.amount))}</Link><div className="text-xs font-normal text-zinc-500">{s.amount >= 0 ? t("Perkly pays merchant") : t("Merchant pays Perkly commission")}</div><div className="text-xs font-normal text-zinc-500">{t("commission {c} + VAT {v}", { c: egp(s.commission), v: egp(s.vat) })}</div></Td>
+            <Td phone="sum" className="font-bold"><Link href={`/admin/explain?metric=settlement&id=${s.id}`} className="hover:underline">{egp(Math.abs(s.amount))}</Link><div className="text-xs font-normal text-zinc-500">{s.amount >= 0 ? t("Perkly pays merchant") : t("Merchant pays Perkly commission")}</div><div className="text-xs font-normal text-zinc-500">{t("commission {c} + VAT {v}", { c: egp(s.commission), v: egp(s.vat) })}</div></Td>
             <Td>{egp(s.paid_amount)}<div className="text-xs text-zinc-500">{t("{amount} remaining", { amount: egp(Math.abs(s.amount) - Number(s.paid_amount)) })}</div></Td>
-            <Td><Badge tone={s.status === "paid" ? "paid" : s.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(s.status))}</Badge>{s.reference && <div className="font-mono text-xs text-zinc-500">{s.reference}</div>}</Td>
+            <Td phone="sum"><Badge tone={s.status === "paid" ? "paid" : s.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(s.status))}</Badge>{s.reference && <div className="font-mono text-xs text-zinc-500">{s.reference}</div>}</Td>
             <Td>
               {s.status !== "paid" && (
                 <ActionForm action={markSettlementPaid} className="flex flex-wrap gap-2">

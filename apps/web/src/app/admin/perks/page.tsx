@@ -28,10 +28,10 @@ export default async function AdminPerksPage({ searchParams }: PageProps<"/admin
             <tr key={p.id}>
               <Td><Link href={`/admin/perks/${p.id}`} className="font-semibold hover:text-perk-purple">{p.is_flash && "⚡ "}{p.title}</Link></Td>
               <Td><Link href={`/admin/merchants/${p.merchant.id}`} className="hover:underline">{p.merchant.name}</Link></Td>
-              <Td>{discountLabel(p, t)} {tier && <span className={`ms-1 rounded-full px-2 py-0.5 text-xs font-bold ${tier.cls}`}>{t(tier.name)}</span>}</Td>
+              <Td phone="sum">{discountLabel(p, t)} {tier && <span className={`ms-1 rounded-full px-2 py-0.5 text-xs font-bold ${tier.cls}`}>{t(tier.name)}</span>}</Td>
               <Td className="text-xs text-zinc-500">{p.max_uses_per_user ?? "∞"}/{t("student")} · {p.daily_cap ?? "∞"}/{t("day")}</Td>
               <Td>{date(p.end_at)}</Td>
-              <Td><Badge tone={p.status}>{t(p.status)}</Badge></Td>
+              <Td phone="sum"><Badge tone={p.status}>{t(p.status)}</Badge></Td>
               <Td>
                 {p.status === "pending" && (
                   <div className="flex gap-2">

@@ -21,10 +21,10 @@ export default async function QuestsPage() {
             {(data ?? []).map((q) => (
               <tr key={q.id}>
                 <Td><span className="me-1">{q.emoji}</span><span className="font-semibold">{q.title}</span><div className="text-xs text-zinc-500">{q.description}</div></Td>
-                <Td>{t(q.quest_type)}</Td>
+                <Td phone="sum">{t(q.quest_type)}</Td>
                 <Td>{q.target} × {t(METRIC[q.metric])}</Td>
-                <Td>+{q.xp_reward}</Td>
-                <Td><Badge tone={q.is_active ? "active" : "paused"}>{q.is_active ? t("active") : t("off")}</Badge></Td>
+                <Td phone="sum">+{q.xp_reward} XP</Td>
+                <Td phone="sum"><Badge tone={q.is_active ? "active" : "paused"}>{q.is_active ? t("active") : t("off")}</Badge></Td>
                 <Td><form action={toggleQuest}><input type="hidden" name="id" value={q.id} /><input type="hidden" name="active" value={String(!q.is_active)} />
                   <button className="text-xs font-semibold text-perk-purple hover:underline">{q.is_active ? t("Turn off") : t("Turn on")}</button></form></Td>
               </tr>

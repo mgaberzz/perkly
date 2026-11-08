@@ -166,8 +166,8 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
             {(perks ?? []).map((p) => (
               <tr key={p.id}>
                 <Td>{can("perks") ? <Link href={`/admin/perks/${p.id}`} className="font-semibold hover:text-perk-purple">{p.is_flash && "⚡ "}{p.title}</Link> : p.title}</Td>
-                <Td>{discountLabel(p, t)}</Td>
-                <Td><Badge tone={p.status}>{t(p.status)}</Badge></Td>
+                <Td phone="sum">{discountLabel(p, t)}</Td>
+                <Td phone="sum"><Badge tone={p.status}>{t(p.status)}</Badge></Td>
               </tr>
             ))}
           </Table>

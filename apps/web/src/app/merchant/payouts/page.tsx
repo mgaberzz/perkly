@@ -40,9 +40,9 @@ export default async function PayoutsPage() {
                 <Td>{date(s.created_at)}</Td>
                 <Td className="text-xs">{s.period_start} → {s.period_end}</Td>
                 <Td><Link href={`/merchant/explain?metric=settlement&id=${s.id}`} className="font-semibold text-perk-purple hover:underline">{s.lines}</Link></Td>
-                <Td className="font-bold"><Link href={`/merchant/explain?metric=settlement&id=${s.id}`} className="hover:underline">{egp(Math.abs(s.amount))}</Link><div className="text-xs font-normal text-zinc-500">{s.amount >= 0 ? t("Perkly pays you") : t("You pay Perkly commission")}</div></Td>
+                <Td phone="sum" className="font-bold"><Link href={`/merchant/explain?metric=settlement&id=${s.id}`} className="hover:underline">{egp(Math.abs(s.amount))}</Link><div className="text-xs font-normal text-zinc-500">{s.amount >= 0 ? t("Perkly pays you") : t("You pay Perkly commission")}</div></Td>
                 <Td>{egp(s.paid_amount)}<div className="text-xs text-zinc-500">{t("{amount} remaining", { amount: egp(Math.abs(s.amount) - Number(s.paid_amount)) })}</div></Td>
-                <Td><Badge tone={s.status === "paid" ? "paid" : s.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(s.status))}</Badge>{s.reference && <div className="font-mono text-xs text-zinc-500">{s.reference}</div>}</Td>
+                <Td phone="sum"><Badge tone={s.status === "paid" ? "paid" : s.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(s.status))}</Badge>{s.reference && <div className="font-mono text-xs text-zinc-500">{s.reference}</div>}</Td>
               </tr>
             ))}
           </Table>

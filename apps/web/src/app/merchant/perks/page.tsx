@@ -24,11 +24,11 @@ export default async function PerksPage() {
           return (
             <tr key={p.id}>
               <Td><Link href={`/merchant/perks/${p.id}`} className="font-semibold hover:text-perk-purple">{p.is_flash && "⚡ "}{p.title}</Link></Td>
-              <Td>{discountLabel(p, t)}</Td>
+              <Td phone="sum">{discountLabel(p, t)}</Td>
               <Td>{tier && <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${tier.cls}`}>{t(tier.name)}</span>}</Td>
               <Td>{p.branch?.name ?? t("All branches")}</Td>
               <Td>{date(p.end_at)}</Td>
-              <Td><Badge tone={p.status}>{t(p.status)}</Badge>{p.status === "rejected" && p.review_note && <div className="mt-1 text-xs text-red-600">{p.review_note}</div>}</Td>
+              <Td phone="sum"><Badge tone={p.status}>{t(p.status)}</Badge>{p.status === "rejected" && p.review_note && <div className="mt-1 text-xs text-red-600">{p.review_note}</div>}</Td>
               <Td className="text-end">
                 {canManage && (p.status === "active" || p.status === "paused") && (
                   <form action={setPerkStatus}>

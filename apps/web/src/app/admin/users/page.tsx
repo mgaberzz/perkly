@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth";
-import { Badge, Button, Input, PageHeader, Select, Table, Td } from "@/components/ui";
+import { Badge, PageHeader, Table, Td } from "@/components/ui";
+import { FilterBar } from "@/components/filter-bar";
 import { date, egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { ROLE_LABEL } from "@/lib/labels";
@@ -33,16 +34,14 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
   return (
     <>
       <PageHeader title={t("Users & roles")} subtitle={t("Every person gets a User ID (USR-…); students also get a Student ID (STU-…). Merchants have Merchant IDs (MER-…).")} />
-      <form className="mb-4 flex flex-wrap gap-2">
-        <Input name="q" defaultValue={q} placeholder={t("Name, email, phone, USR-… or STU-…")} className="max-w-xs" />
-        <Select name="role" defaultValue={role} className="w-44"><option value="">{t("All roles")}</option>{ROLES.map((r) => <option key={r} value={r}>{t(ROLE_LABEL[r])}</option>)}</Select>
-        <Button variant="secondary">{t("Search")}</Button>
-      </form>
+      <FilterBar path="/admin/users" search={{ name: "q", value: q, placeholder: t("Name, email, phone, USR-… or STU-…") }} fields={[
+        { name: "role", label: t("Role"), type: "select", value: role, all: t("All roles"), options: ROLES.map((r) => ({ value: r, label: t(ROLE_LABEL[r]) })) },
+      ]} />
       <Table head={[t("User"), t("IDs"), t("Campus"), t("Level / XP"), t("Redemptions"), t("Saved"), t("Joined"), t("Role"), t("Status"), ""]} empty={t("No users.")}>
         {(data ?? []).map((u) => (
           <tr key={u.id}>
             <Td><div className="font-semibold">{u.full_name ?? "—"}</div><div className="text-xs text-zinc-500">{u.phone ?? u.email}</div></Td>
-            <Td className="font-mono text-xs">{u.user_code}{u.student_code && <div className="text-perk-purple">{u.student_code}</div>}</Td>
+            <Td phone="sum" className="font-mono text-xs">{u.user_code}{u.student_code && <div className="text-perk-purple">{u.student_code}</div>}</Td>
             <Td>{u.campus?.short_name ?? u.campus?.name ?? "—"}</Td>
             <Td>L{u.stats?.level ?? 1} · {u.stats?.total_xp ?? 0}</Td>
             <Td>{u.stats?.total_redemptions ?? 0}</Td>
@@ -59,7 +58,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
                 </form>
               )}
             </Td>
-            <Td><Badge tone={u.status}>{t(u.status)}</Badge></Td>
+            <Td phone="sum"><Badge tone={u.status}>{t(u.status)}</Badge></Td>
             <Td>
               {u.id !== user.id && (
                 <form action={setUserStatus}>

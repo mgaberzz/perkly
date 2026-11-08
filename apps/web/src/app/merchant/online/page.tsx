@@ -51,7 +51,7 @@ export default async function OnlinePage() {
           <h2 className="mb-3 font-bold">{t("Redeemed codes")}</h2>
           <Table head={[t("Code"), t("Perk"), t("Time")]} empty={t("No codes redeemed yet.")}>
             {(codes ?? []).map((c) => (
-              <tr key={c.id}><Td className="font-mono">{c.code}</Td><Td>{c.perk?.title}</Td><Td>{dateTime(c.created_at)}</Td></tr>
+              <tr key={c.id}><Td className="font-mono">{c.code}</Td><Td phone="sum">{c.perk?.title}</Td><Td>{dateTime(c.created_at)}</Td></tr>
             ))}
           </Table>
         </div>
@@ -59,7 +59,7 @@ export default async function OnlinePage() {
           <h2 className="mb-3 font-bold">{t("Tracked-link orders")}</h2>
           <Table head={[t("Order #"), t("Total"), t("Cashback"), t("Status")]} empty={t("No orders reported yet.")}>
             {(orders ?? []).map((o) => (
-              <tr key={o.id}><Td className="font-mono">{o.order_ref}</Td><Td>{egp(o.amount)}</Td><Td>{egp(o.cashback_amount)}</Td><Td><Badge tone={o.status}>{t(o.status)}</Badge></Td></tr>
+              <tr key={o.id}><Td className="font-mono">{o.order_ref}</Td><Td phone="sum">{egp(o.amount)}</Td><Td>{egp(o.cashback_amount)}</Td><Td phone="sum"><Badge tone={o.status}>{t(o.status)}</Badge></Td></tr>
             ))}
           </Table>
         </div>

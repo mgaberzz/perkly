@@ -160,7 +160,7 @@ export default async function MerchantExplainPage({ searchParams }: PageProps<"/
         <Table head={[t("Paid at"), t("Bank reference"), t("Amount"), ""]} empty={t("No payments yet.")}>
           {rows.map((p) => (
             <tr key={p.id}>
-              <Td>{dateTime(p.paid_at)}</Td><Td className="font-mono">{p.reference}</Td><Td className="font-semibold"><Amount v={p.amount} /></Td>
+              <Td>{dateTime(p.paid_at)}</Td><Td className="font-mono">{p.reference}</Td><Td phone="sum" className="font-semibold"><Amount v={p.amount} /></Td>
               <Td><Link href={`/merchant/explain?metric=settlement&id=${p.settlement?.id}`} className="text-sm font-semibold text-perk-purple hover:underline">{t("Settlement")} →</Link></Td>
             </tr>
           ))}
@@ -198,10 +198,10 @@ function TxTable({ rows, t, money }: { rows: Tx[]; t: (s: string, v?: Record<str
         <tr key={r.id}>
           <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
           <Td>{r.branch?.name ?? `🌐 ${t("Online")}`}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>
-          <Td>{r.perk?.title}</Td>
+          <Td phone="lead">{r.perk?.title}</Td>
           <Td>{r.first_time_at_merchant ? <Badge tone="live">{t("New customer")}</Badge> : <Badge tone="paused">{t("Recurring customer")}</Badge>}</Td>
-          <Td><Badge tone={r.payment_method === "in_app" ? "active" : "paused"}>{r.payment_method === "in_app" ? t("Paid in app") : t("Pay at cashier")}</Badge></Td>
-          <Td><Amount v={r.original_amount} /></Td>
+          <Td phone="sum"><Badge tone={r.payment_method === "in_app" ? "active" : "paused"}>{r.payment_method === "in_app" ? t("Paid in app") : t("Pay at cashier")}</Badge></Td>
+          <Td phone="sum"><Amount v={r.original_amount} /></Td>
           <Td><Amount v={r.discount_amount} /></Td>
           <Td><Amount v={r.final_amount} /></Td>
           {money && <>

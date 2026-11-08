@@ -5,6 +5,7 @@ import { LangSwitch } from "./lang-switch";
 import { Logo } from "./logo";
 import { NavLink } from "./nav-link";
 import { MobileMenu } from "./mobile-menu";
+import { TableToggle } from "./table-toggle";
 
 export type NavItem = { href: string; label: string; icon: string; exact?: boolean; count?: number };
 
@@ -44,6 +45,7 @@ export async function Shell({ nav, children, top, user, badge }: { nav: NavItem[
           </MobileMenu>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 p-4 md:p-8">{children}</main>
+        <TableToggle />
       </div>
     </div>
   );

@@ -142,10 +142,10 @@ export default async function InsightsPage({ searchParams }: PageProps<"/admin/i
             <Td>{short(r.students)}</Td>
             <Td><Amount v={r.gmv} /></Td>
             <Td><Amount v={r.paid} /></Td>
-            <Td className="font-semibold text-perk-purple"><Amount v={r.commission} /></Td>
+            <Td phone="sum" className="font-semibold text-perk-purple"><Amount v={r.commission} /></Td>
             <Td><Amount v={r.vat} /></Td>
             <Td>{r.margin_pct}%</Td>
-            <Td>{total ? `${Math.round((100 * Number(r.commission)) / total)}%` : "—"}</Td>
+            <Td phone="sum">{total ? `${Math.round((100 * Number(r.commission)) / total)}%` : "—"}</Td>
             <Td><Amount v={r.avg_ticket} /></Td>
           </tr>
         ))}

@@ -26,10 +26,10 @@ export default async function BranchesPage() {
             <tr key={b.id}>
               <Td><Link href={`/merchant/branches/${b.id}`} className="font-semibold hover:text-perk-purple">{b.name}</Link><div className="text-xs text-zinc-500">{b.address}</div></Td>
               <Td>{b.campus?.name ?? "—"}</Td>
-              <Td>{b.city ?? "—"}</Td>
+              <Td phone="sum">{b.city ?? "—"}</Td>
               <Td>{live} {pending > 0 && <Badge tone="pending" className="ms-1">{t("{n} pending", { n: pending })}</Badge>}</Td>
               <Td>{b.lat != null ? `✅ ${t("Set")}` : <span className="text-amber-600">{t("Missing")}</span>}</Td>
-              <Td><Badge tone={b.is_active ? "active" : "paused"}>{b.is_active ? t("open") : t("closed")}</Badge></Td>
+              <Td phone="sum"><Badge tone={b.is_active ? "active" : "paused"}>{b.is_active ? t("open") : t("closed")}</Badge></Td>
             </tr>
           );
         })}

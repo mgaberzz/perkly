@@ -145,9 +145,9 @@ export default async function ExplainPage({ searchParams }: PageProps<"/admin/ex
           {rows.map((p) => (
             <tr key={p.id}>
               <Td>{dateTime(p.paid_at)}</Td>
-              <Td>{p.settlement?.merchant?.name}<div className="font-mono text-xs text-zinc-500">{p.settlement?.merchant?.merchant_code}</div></Td>
+              <Td phone="lead">{p.settlement?.merchant?.name}<div className="font-mono text-xs text-zinc-500">{p.settlement?.merchant?.merchant_code}</div></Td>
               <Td className="font-mono">{p.reference}</Td>
-              <Td className="font-semibold"><Amount v={p.amount} /></Td>
+              <Td phone="sum" className="font-semibold"><Amount v={p.amount} /></Td>
               <Td><Link href={`/admin/explain?metric=settlement&id=${p.settlement?.id}`} className="text-sm font-semibold text-perk-purple hover:underline">{t("Settlement")} →</Link></Td>
             </tr>
           ))}
@@ -173,7 +173,7 @@ export default async function ExplainPage({ searchParams }: PageProps<"/admin/ex
               <Td><Link href={`/admin/merchants/${b.merchant_id}`} className="font-semibold hover:text-perk-purple">{b.merchant_name}</Link><div className="font-mono text-xs text-zinc-500">{b.merchant_code}</div></Td>
               <Td><Link href={`/admin/explain?metric=net_to_settle&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.net_to_settle} /></Link></Td>
               <Td><Link href={`/admin/explain?metric=open_settlements&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.pending_settlements} /></Link></Td>
-              <Td className="font-bold text-perk-purple"><Amount v={due(b)} /></Td>
+              <Td phone="sum" className="font-bold text-perk-purple"><Amount v={due(b)} /></Td>
               <Td><Link href={`/admin/explain?metric=net_to_settle&merchant=${b.merchant_id}`} className="text-sm font-semibold text-perk-purple hover:underline">{t("Why?")} →</Link></Td>
             </tr>
           ))}
@@ -238,7 +238,7 @@ function TxTable({ rows, t }: { rows: Tx[]; t: (s: string, v?: Record<string, st
       {rows.map((r) => (
         <tr key={r.id}>
           <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
-          <Td>{r.merchant && <Link href={`/admin/merchants/${r.merchant.id}`} className="hover:underline">{r.merchant.name}</Link>}</Td>
+          <Td phone="lead">{r.merchant && <Link href={`/admin/merchants/${r.merchant.id}`} className="hover:underline">{r.merchant.name}</Link>}</Td>
           <Td>{r.perk?.title}</Td>
           <Td><Badge tone={r.payment_method === "in_app" ? "active" : "paused"}>{r.payment_method === "in_app" ? t("In app") : t("Cashier")}</Badge></Td>
           <Td><Amount v={r.original_amount} /></Td>
@@ -246,8 +246,8 @@ function TxTable({ rows, t }: { rows: Tx[]; t: (s: string, v?: Record<string, st
           <Td><Amount v={r.commission_amount} /></Td>
           <Td><Amount v={r.vat_amount} /></Td>
           <Td><Amount v={r.merchant_net} /></Td>
-          <Td className={Number(r.settle_amount) < 0 ? "font-semibold text-amber-700" : "font-semibold text-perk-purple"}><Amount v={r.settle_amount} /></Td>
-          <Td>{r.settlement
+          <Td phone="sum" className={Number(r.settle_amount) < 0 ? "font-semibold text-amber-700" : "font-semibold text-perk-purple"}><Amount v={r.settle_amount} /></Td>
+          <Td phone="sum">{r.settlement
             ? <Link href={`/admin/explain?metric=settlement&id=${r.settlement.id}`} className="hover:underline"><Badge tone={r.settlement.status === "paid" ? "paid" : "pending"}>{t(settlementLabel(r.settlement.status))}</Badge></Link>
             : <Badge tone="paused">{t("Not settled yet")}</Badge>}</Td>
         </tr>
@@ -262,11 +262,11 @@ function SettlementTable({ rows, t }: { rows: Settlement[]; t: (s: string, v?: R
       {rows.map((s) => (
         <tr key={s.id}>
           <Td>{dateTime(s.created_at)}</Td>
-          <Td>{s.merchant?.name}<div className="font-mono text-xs text-zinc-500">{s.merchant?.merchant_code}</div></Td>
+          <Td phone="lead">{s.merchant?.name}<div className="font-mono text-xs text-zinc-500">{s.merchant?.merchant_code}</div></Td>
           <Td className="text-xs">{s.period_start} → {s.period_end}</Td>
-          <Td className="font-semibold"><Amount v={s.amount} /></Td>
+          <Td phone="sum" className="font-semibold"><Amount v={s.amount} /></Td>
           <Td><Amount v={s.paid_amount} /></Td>
-          <Td><Badge tone={s.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(s.status))}</Badge></Td>
+          <Td phone="sum"><Badge tone={s.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(s.status))}</Badge></Td>
           <Td><Link href={`/admin/explain?metric=settlement&id=${s.id}`} className="text-sm font-semibold text-perk-purple hover:underline">{t("Why?")} →</Link></Td>
         </tr>
       ))}

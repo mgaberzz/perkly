@@ -120,9 +120,12 @@ export function Table({ head, children, empty, className = "" }: { head: ReactNo
     </div>
   );
 }
-/** `phone="hide"` drops a secondary column from the phone card view (it stays on desktop). */
-export const Td = ({ children, className = "", phone }: { children?: ReactNode; className?: string; phone?: "hide" }) => (
-  <td className={`px-4 py-3 align-middle ${phone === "hide" ? "mt-hide" : ""} ${className}`}><div className="mt-v">{children}</div></td>
+/**
+ * Phone card roles: `lead` = card title (default: first cell), `sum` = shown on the closed card,
+ * `hide` = not shown on phones. Every other cell appears when the card is tapped open.
+ */
+export const Td = ({ children, className = "", phone }: { children?: ReactNode; className?: string; phone?: "lead" | "sum" | "hide" }) => (
+  <td className={`px-4 py-3 align-middle ${phone ? `mt-${phone}` : ""} ${className}`}><div className="mt-v">{children}</div></td>
 );
 
 export function Notice({ tone = "info", children }: { tone?: "info" | "error" | "success"; children: ReactNode }) {
