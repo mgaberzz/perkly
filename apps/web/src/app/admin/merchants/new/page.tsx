@@ -11,7 +11,7 @@ export default async function NewMerchantPage() {
   const t = await getT();
   return (
     <>
-      <PageHeader title={t("New merchant")} subtitle={t("Add the owner's email to send them a portal invite. A merchant ID (MER-…) is created automatically.")} />
+      <PageHeader title={t("New merchant")} subtitle={t("Add the owner's email to send them a portal invite. A Merchant ID (6 digits, starts with 3) is created automatically.")} />
       <Card><MerchantAdminForm action={createMerchant} withOwner commercial submitLabel={t("Create merchant")} /></Card>
     </>
   );

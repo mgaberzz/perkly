@@ -37,17 +37,21 @@ export default function Me() {
         <EditableAvatar size={96} />
         <T v="h2" style={{ textAlign: 'center' }}>{profile?.full_name ?? t('Student')}</T>
         <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'xp' } })}><T v="muted" style={{ textAlign: 'center' }}>🎓 {campus?.short_name ?? campus?.name ?? t('No campus')} · {t('Lv {n} · {name}', { n: cur.level, name: cur.name })}</T></Pressable>
-        <Pressable onPress={() => router.push('/edit-profile')}><T color={brand.pink} style={{ fontWeight: '900', fontSize: 16 }}>{t('Edit profile')}</T></Pressable>
       </View>
 
       {/* Student ID card */}
       <GradientCard style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <Text style={{ fontSize: 30 }}>🪪</Text>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: '#ffffffcc', fontWeight: '800', fontSize: 12, letterSpacing: 1 }}>{t('STUDENT ID')}</Text>
+          <Text style={{ color: '#ffffffcc', fontWeight: '800', fontSize: 12, letterSpacing: 1 }}>{profile?.student_code ? t('STUDENT ID') : t('USER ID')}</Text>
           <Text style={{ color: '#fff', fontWeight: '900', fontSize: 22, letterSpacing: 2, writingDirection: 'ltr' }}>{profile?.student_code ?? profile?.user_code ?? '—'}</Text>
         </View>
-        <Text style={{ color: '#ffffffcc', fontWeight: '700', fontSize: 12, writingDirection: 'ltr' }}>{profile?.user_code}</Text>
+        {profile?.student_code ? (
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={{ color: '#ffffffaa', fontWeight: '800', fontSize: 10, letterSpacing: 1 }}>{t('USER ID')}</Text>
+            <Text style={{ color: '#ffffffcc', fontWeight: '700', fontSize: 12, writingDirection: 'ltr' }}>{profile?.user_code}</Text>
+          </View>
+        ) : null}
       </GradientCard>
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>

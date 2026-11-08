@@ -57,7 +57,7 @@ export default function History() {
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: c.card, borderWidth: 1, borderColor: c.border, borderRadius: 14, paddingHorizontal: 12, height: 46 }}>
           <Text style={{ fontSize: 15, color: c.textMuted }}>🔍</Text>
-          <TextInput value={q} onChangeText={setQ} placeholder={t('Search TRX-…, place or perk')} placeholderTextColor={c.textMuted}
+          <TextInput value={q} onChangeText={setQ} placeholder={t('Search transaction ID, place or perk')} placeholderTextColor={c.textMuted}
             autoCapitalize="none" autoCorrect={false} returnKeyType="search" style={{ flex: 1, color: c.text, fontSize: 15 }} />
           {q ? <Pressable onPress={() => setQ('')} hitSlop={10}><Text style={{ color: c.textMuted, fontWeight: '800' }}>✕</Text></Pressable> : null}
         </View>

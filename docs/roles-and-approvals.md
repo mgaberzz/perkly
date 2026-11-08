@@ -51,4 +51,4 @@ Every request lands in **Admin portal → Notifications**, visible only to the r
 
 ## IDs
 
-Every person `USR-…` · students `STU-…` · merchants `MER-…` · brand types: Local, Chain, Mega account.
+IDs (numbers only, first digit = type): user `1xxxxxxx` · student `2xxxxxxx` · merchant `3xxxxx` · transaction `9xxxxxxxxx` · brand types: Local, Chain, Mega account.

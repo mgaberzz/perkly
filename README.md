@@ -68,7 +68,7 @@ daily/weekly/monthly quests, badges, referral +50 XP when the friend first redee
 | **Branch manager** | `/merchant` | Their branch only: insights, transactions, request cashier QR codes (pending until Perkly approves) |
 | **Cashier** | `/merchant` | Live transactions |
 
-IDs: every person gets `USR-…`, students also `STU-…`, merchants `MER-…`. Brand types: local · chain · mega account.
+IDs are numbers only, first digit = type: `1xxxxxxx` user (8 digits) · `2xxxxxxx` student (8) · `3xxxxx` merchant (6) · `9xxxxxxxxx` transaction (10). Brand types: local · chain · mega account.
 
 **Notification center** (`/admin/notifications`): cashier QR requests, high-tier perk approvals, online cashback — approve/reject in one place.
 

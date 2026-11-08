@@ -15,10 +15,10 @@ update profiles set role = 'merchant'        where id = '00000000-0000-0000-0000
 
 -- ── Unique IDs ──
 do $$ begin
-  assert (select bool_and(user_code ~ '^USR-[0-9]{6}$') from profiles), 'user codes';
+  assert (select bool_and(user_code ~ '^1[0-9]{7}$') from profiles), 'user codes';
   assert (select count(distinct user_code) = count(*) from profiles), 'user codes unique';
-  assert (select bool_and(student_code ~ '^STU-[0-9]{6}$') from profiles where role = 'student'), 'student codes';
-  assert (select bool_and(merchant_code ~ '^MER-[0-9]{5}$') from merchants), 'merchant codes';
+  assert (select bool_and(student_code ~ '^2[0-9]{7}$') from profiles where role = 'student'), 'student codes';
+  assert (select bool_and(merchant_code ~ '^3[0-9]{5}$') from merchants), 'merchant codes';
   assert (select count(distinct merchant_code) = count(*) from merchants), 'merchant codes unique';
   assert not exists (select 1 from merchants where brand_type not in ('local','chain','mega_account')), 'brand types';
 end $$;
@@ -387,10 +387,10 @@ reset role;
 
 -- Transaction IDs: every transaction has a unique TRX- ID that never changes
 do $$ declare v_id uuid; v_code text; begin
-  assert (select count(*) from redemptions where tx_code !~ '^TRX-[0-9]{7,}$') = 0, 'tx_code format';
+  assert (select count(*) from redemptions where tx_code !~ '^9[0-9]{9}$') = 0, 'tx_code format';
   assert (select count(distinct tx_code) from redemptions) = (select count(*) from redemptions), 'tx_code unique';
   select id, tx_code into v_id, v_code from redemptions order by created_at limit 1;
-  update redemptions set tx_code = 'TRX-1' where id = v_id;
+  update redemptions set tx_code = '9999999999' where id = v_id;
   assert (select tx_code from redemptions where id = v_id) = v_code, 'tx_code cannot be changed';
 end $$;
 
@@ -418,4 +418,17 @@ do $$ declare v uuid; ok boolean := false; begin
   begin update profiles set avatar_kind = 'gif' where id = v; exception when check_violation then ok := true; end;
   assert ok, 'unknown kind refused';
   update profiles set avatar_config = null, avatar_kind = null where id = v;
+end $$;
+
+-- Number-only IDs: first digit = type, no number shared between types
+do $$ begin
+  assert (select count(*) from (
+    select user_code c from profiles union all select student_code from profiles where student_code is not null
+    union all select merchant_code from merchants union all select tx_code from redemptions) x)
+    = (select count(distinct c) from (
+    select user_code c from profiles union all select student_code from profiles where student_code is not null
+    union all select merchant_code from merchants union all select tx_code from redemptions) x), 'every ID unique across all types';
+  assert id_kind('10000001') = 'user' and id_kind('20000001') = 'student' and id_kind('300001') = 'merchant' and id_kind('9000000001') = 'transaction', 'id_kind';
+  assert id_kind('12345') is null and id_kind('MER-10001') is null, 'unknown ids';
+  assert (select min(user_code) from profiles) = '10000001', 'first user keeps running number';
 end $$;

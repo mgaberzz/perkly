@@ -35,8 +35,8 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
   const { data } = await query.returns<Row[]>();
   return (
     <>
-      <PageHeader title={t("Users & roles")} subtitle={t("Every person gets a User ID (USR-…); students also get a Student ID (STU-…). Merchants have Merchant IDs (MER-…).")} />
-      <FilterBar path="/admin/users" search={{ name: "q", value: q, placeholder: t("Name, email, phone, USR-… or STU-…") }} fields={[
+      <PageHeader title={t("Users & roles")} subtitle={t("IDs are numbers only; the first digit tells you what it is: 1 = User ID (8 digits), 2 = Student ID (8 digits), 3 = Merchant ID (6 digits), 9 = Transaction ID (10 digits).")} />
+      <FilterBar path="/admin/users" search={{ name: "q", value: q, placeholder: t("Name, email, phone, User ID or Student ID") }} fields={[
         { name: "role", label: t("Role"), type: "select", value: role, all: t("All roles"), options: ROLES.map((r) => ({ value: r, label: t(ROLE_LABEL[r]) })) },
       ]} />
       <Table head={[t("User"), t("IDs"), t("Campus"), t("Level / XP"), t("Redemptions"), t("Saved"), t("Joined"), t("Role"), t("Status"), ""]} empty={t("No users.")}>

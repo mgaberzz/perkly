@@ -49,7 +49,7 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
     <>
       <PageHeader title={t("Transactions")} subtitle={t("Flagged = no location shared or scanned 300m+ from the branch. Review and reverse fraud.")}
         actions={<ExportButtons kind="transactions" params={f} />} />
-      <FilterBar path="/admin/redemptions" search={{ name: "q", value: f.q, placeholder: t("Search TRX-… or code") }}
+      <FilterBar path="/admin/redemptions" search={{ name: "q", value: f.q, placeholder: t("Search transaction ID or code") }}
         keep={Object.fromEntries(Object.entries(f).filter(([k]) => !["q", "merchant", "status", "channel", "payment", "from", "to"].includes(k))) as Record<string, string>}
         fields={[
           { name: "merchant", label: t("Merchant"), type: "select", value: f.merchant, all: t("All merchants"), options: (merchants ?? []).map((m) => ({ value: m.id, label: m.name })) },

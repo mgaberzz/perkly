@@ -521,7 +521,6 @@ export const AR: Record<string, string> = {
   "Where": "المكان",
   "Status": "الحالة",
   "In-store": "في المحل",
-  "Search TRX-…, place or perk": "ابحث برقم TRX-… أو المكان أو العرض",
   "Filters": "الفلاتر",
   "Show {n} results": "عرض {n} نتيجة",
   "{n} transactions · you saved {amount}": "{n} معاملة · وفّرت {amount}",
@@ -621,4 +620,8 @@ export const AR: Record<string, string> = {
   "Jacket": "جاكيت",
   "On": "تشغيل",
   "Off": "إيقاف",
+  "Search transaction ID, place or perk": "ابحث برقم المعاملة أو المكان أو العرض",
+  "Total paid": "الإجمالي المدفوع",
+  "USER ID": "رقم المستخدم",
+  "User ID": "رقم المستخدم",
 };

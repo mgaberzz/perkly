@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, Switch, View } from 'react-native';
 import { Card, Screen, T } from '@/components/ui';
+import { Avatar } from '@/components/avatar';
 import { biometricAvailable, biometricEnabled, faceIdLimitedHere, setBiometricEnabled } from '@/lib/biometric';
 import { fwdChevron, lang, setLanguage, t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
@@ -56,11 +57,20 @@ export default function Settings() {
 
   return (
     <Screen edges={[]}>
+      {/* Profile: picture, name, and the way into Edit profile */}
+      <Card onPress={() => router.push('/edit-profile')} style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+        <Avatar profile={profile} size={58} />
+        <View style={{ flex: 1 }}>
+          <T v="h3" numberOfLines={1}>{profile?.full_name ?? t('Student')}</T>
+          <T v="small" color={brand.purple} style={{ fontWeight: '800' }}>{t('Edit profile')} {fwdChevron()}</T>
+        </View>
+      </Card>
       <T v="label">{t('Account')}</T>
       <Card style={{ gap: 0, paddingVertical: 0 }}>
         <Row label={`👤 ${t('Edit profile & campus')}`} onPress={() => router.push('/edit-profile')} />
         <Row label={`🧾 ${t('Savings history')}`} onPress={() => router.push('/history')} />
-        <Row label={`🆔 ${t('Student ID')}`} right={<T v="small" style={{ writingDirection: 'ltr' }}>{profile?.student_code ?? profile?.user_code}</T>} />
+        {profile?.student_code ? <Row label={`🎓 ${t('Student ID')}`} right={<T v="small" style={{ writingDirection: 'ltr', fontWeight: '800' }}>{profile.student_code}</T>} /> : null}
+        <Row label={`🆔 ${t('User ID')}`} right={<T v="small" style={{ writingDirection: 'ltr', fontWeight: '800' }}>{profile?.user_code}</T>} />
         <Row label={`📱 ${t('Signed in as')}`} right={<T v="small" numberOfLines={1} style={{ maxWidth: 180 }}>{profile?.phone ?? profile?.email ?? session?.user.email}</T>} />
       </Card>
       <T v="label">{t('Security & language')}</T>
