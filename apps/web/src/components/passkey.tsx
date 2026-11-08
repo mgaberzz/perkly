@@ -9,12 +9,16 @@ const noop = () => () => {};
 /** false on the server, real answer in the browser (no hydration mismatch) */
 const useSupported = () => useSyncExternalStore(noop, supported, () => false);
 
-function message(t: (s: string) => string, e: { code?: string; message?: string } | null) {
+function message(t: (s: string) => string, e: { code?: string; message?: string; name?: string } | null, signIn = false) {
   const code = e?.code ?? "";
+  const text = `${code} ${e?.name ?? ""} ${e?.message ?? ""}`;
+  // Browser gives the same "timed out or not allowed" error when the user cancels AND when no passkey exists on this device
+  if (signIn && /NotAllowed|not allowed|timed out|abort|cancel/i.test(text))
+    return t("No Face ID / fingerprint found for Perkly on this device (or it was cancelled). First time? Sign in with your password, then open 🔐 Face ID / fingerprint in the menu and tap \"Set up\".");
   if (code === "passkey_disabled") return t("Face ID / fingerprint login isn't switched on for Perkly yet. Ask an admin.");
   if (code === "webauthn_credential_not_found") return t("This device has no Perkly passkey yet. Sign in with your password, then set it up under Security.");
   if (code === "webauthn_credential_exists") return t("This device is already set up.");
-  if (/abort|cancel|NotAllowed/i.test(`${code} ${e?.message ?? ""}`)) return t("Cancelled.");
+  if (/abort|cancel|NotAllowed|not allowed|timed out/i.test(text)) return t("Cancelled or timed out. Try again.");
   return e?.message ?? t("Something went wrong. Try again.");
 }
 
@@ -30,7 +34,7 @@ export function PasskeySignIn({ next }: { next?: string }) {
     setBusy(true); setError(null);
     const { error: e } = await createClient().auth.signInWithPasskey();
     setBusy(false);
-    if (e) return setError(message(t, e as { code?: string; message?: string }));
+    if (e) return setError(message(t, e as { code?: string; message?: string; name?: string }, true));
     router.replace(next && next.startsWith("/") && !next.startsWith("//") ? next : "/");
     router.refresh();
   }

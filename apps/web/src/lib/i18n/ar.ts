@@ -177,6 +177,8 @@ export const AR: Record<string, string> = {
   "This device has no Perkly passkey yet. Sign in with your password, then set it up under Security.": "هذا الجهاز ليس عليه مفتاح دخول Perkly بعد. سجّل الدخول بكلمة المرور ثم فعّله من صفحة الأمان.",
   "This device is already set up.": "هذا الجهاز مفعّل بالفعل.",
   "Cancelled.": "تم الإلغاء.",
+  "Cancelled or timed out. Try again.": "تم الإلغاء أو انتهت المهلة. حاول مرة أخرى.",
+  "No Face ID / fingerprint found for Perkly on this device (or it was cancelled). First time? Sign in with your password, then open 🔐 Face ID / fingerprint in the menu and tap \"Set up\".": "لا يوجد بصمة وجه / إصبع لـ Perkly على هذا الجهاز (أو تم الإلغاء). أول مرة؟ سجّل الدخول بكلمة المرور، ثم افتح 🔐 بصمة الوجه / الإصبع من القائمة واضغط \"إعداد\".",
   "Something went wrong. Try again.": "حدث خطأ. حاول مرة أخرى.",
   "Waiting for your device…": "في انتظار جهازك…",
   "Sign in with Face ID / fingerprint": "الدخول بـ Face ID / البصمة",
