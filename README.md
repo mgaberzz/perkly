@@ -81,6 +81,11 @@ and tracked links (`?perkly_ref=PKR…`) — the shop reports orders, finance ap
 
 **Student app**: Face ID / fingerprint lock (Settings), Student ID card on *Me*, Arabic with right-to-left layout (Settings → Language, or on the welcome screen).
 
+## Live portal
+
+**https://perkly-five.vercel.app** — merchant portal (`/merchant`) and Perkly team portal (`/admin`), deployed on Vercel from `apps/web`.
+Every push to `main` redeploys it automatically.
+
 ## Live backend
 
 The Supabase project **Perkly** (`qnvzkjojuumtzpkvjlja`, eu-west-1) has all 8 migrations and the demo seed applied:
