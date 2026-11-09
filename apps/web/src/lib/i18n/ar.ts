@@ -1,5 +1,17 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Partner ID": "رقم الشريك",
+  "Partner deal": "اتفاق الشريك",
+  "Partner cut (EGP)": "نصيب الشريك (ج.م)",
+  "Perkly commission after partner (EGP)": "عمولة Perkly بعد الشريك (ج.م)",
+  "Perkly commission from their merchants (EGP)": "عمولة Perkly من تجّاره (ج.م)",
+  "Partner cut earned (EGP)": "نصيب الشريك المستحق (ج.م)",
+  "Paid to partner (EGP)": "المدفوع للشريك (ج.م)",
+  "Due to partner (EGP)": "المتبقي للشريك (ج.م)",
+  "Amount (EGP)": "المبلغ (ج.م)",
+  "Recorded by": "سجّله",
+  "Payout ID": "رقم الدفعة",
+  "Balances": "الأرصدة",
   "Send test error": "إرسال خطأ تجريبي",
   "Sent. It appears in Sentry → perkly-portal → Issues within a minute.": "تم الإرسال. يظهر في Sentry ← perkly-portal ← Issues خلال دقيقة.",
   "Error reporting (Sentry)": "تقارير الأخطاء (Sentry)",

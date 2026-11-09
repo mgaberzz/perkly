@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
 import { Amount, Badge, Card, Field, Input, PageHeader, Select, Stat, Table, Td } from "@/components/ui";
+import { ExportButtons } from "@/components/export-buttons";
 import { ActionForm, ConfirmButton, SubmitButton } from "@/components/action-form";
 import { PartnerForm, dealLabel } from "@/components/partner-form";
 import { getT } from "@/lib/i18n/server";
@@ -43,7 +44,7 @@ export default async function PartnerPage({ params }: PageProps<"/admin/partners
   return (
     <>
       <PageHeader title={partner.name} subtitle={<><span className="font-mono">{partner.partner_code}</span> · {dealLabel(partner, t)} · <Badge tone={partner.status}>{t(partner.status)}</Badge></>}
-        actions={<Link href="/admin/partners" className="text-sm font-semibold text-zinc-500 hover:text-perk-purple">← {t("All partners")}</Link>} />
+        actions={<div className="flex flex-wrap items-center gap-3"><span className="text-xs font-semibold text-zinc-500">{t("Transactions")}:</span><ExportButtons kind="transactions" params={{ partner: partner.id }} /><Link href="/admin/partners" className="text-sm font-semibold text-zinc-500 hover:text-perk-purple">← {t("All partners")}</Link></div>} />
 
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat accent label={t("Due to partner")} value={<Amount v={b?.due ?? 0} />} hint={t("Earned minus paid")} />
@@ -126,7 +127,7 @@ export default async function PartnerPage({ params }: PageProps<"/admin/partners
         </div>
       </div>
 
-      <h2 className="mb-3 font-bold">{t("Payments to partner")}</h2>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 className="font-bold">{t("Payments to partner")}</h2><ExportButtons kind="partner_payouts" params={{ partner: partner.id }} /></div>
       <div className="mb-6">
         <Table head={[t("Paid at"), t("Bank reference"), t("Note"), t("Amount")]} empty={t("No payments yet.")}>
           {(payouts ?? []).map((p) => (

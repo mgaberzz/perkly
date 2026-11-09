@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import { getT } from "@/lib/i18n/server";
 
 /** "Export: Excel · CSV" links for a /export/<kind> route, keeping the current filters. */
@@ -11,8 +12,8 @@ export async function ExportButtons({ kind, params = {} }: { kind: string; param
   const cls = "inline-flex items-center gap-1.5 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-zinc-50";
   return (
     <div className="flex gap-2">
-      <a href={qs("xlsx")} className={cls}>⬇ {t("Excel")}</a>
-      <a href={qs("csv")} className={cls}>⬇ CSV</a>
+      <a href={qs("xlsx")} className={cls}><Icon name="download" size={16} />{t("Excel")}</a>
+      <a href={qs("csv")} className={cls}><Icon name="download" size={16} />CSV</a>
     </div>
   );
 }

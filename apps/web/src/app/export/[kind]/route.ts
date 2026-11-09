@@ -3,7 +3,7 @@ import { getSession, isStaffRole, can, requireMerchant } from "@/lib/auth";
 import { cairo, fileResponse, type Column } from "@/lib/export";
 import { applyTxFilters, readTxFilters, txSelect } from "@/lib/tx-filters";
 import { getLang, getT } from "@/lib/i18n/server";
-import { settlementLabel, type Balance, type Settlement } from "@/lib/types";
+import { settlementLabel, type Balance, type PartnerBalance, type Settlement } from "@/lib/types";
 
 type Tx = {
   id: string; created_at: string; verification_code: string; tx_code: string; status: string; flag_reason: string | null; first_time_at_merchant: boolean;
@@ -14,6 +14,7 @@ type Tx = {
   merchant: { merchant_code: string; name: string } | null; branch: { name: string } | null;
   qr: { label: string; cashier_name: string | null } | null; perk: { title: string } | null;
   student?: { student_code: string | null; user_code: string } | null;
+  partner_earning?: { cut: number; cut_type: string; cut_value: number; partner: { partner_code: string; name: string } | null } | null;
 };
 
 const TX_SELECT = "id, created_at, verification_code, tx_code, status, flag_reason, first_time_at_merchant, channel, payment_method, payment_status, payment_ref, original_amount, discount_amount, final_amount, commission_amount, vat_amount, merchant_net, settle_amount, settlement_id, xp_awarded, settlement:settlements(status, paid_at, reference), merchant:merchants(merchant_code, name), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), perk:perks(title)";
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
   const rtl = (await getLang()) === "ar";
 
   // ── Who is asking, and which data they may export ──
-  let supabase, merchantId: string | null = sp.get("merchant") || null, branchScope: string | null = null, staff = false;
+  let supabase, merchantId: string | null = sp.get("merchant") || null, branchScope: string | null = null, staff = false, partnerData = false;
   if (scope === "merchant") {
     const m = await requireMerchant();
     supabase = m.supabase;
@@ -39,8 +40,9 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
   } else {
     const s = await getSession();
     if (!s.user || !isStaffRole(s.profile?.role) || s.profile.status !== "active") return forbidden();
-    const need = kind === "transactions" ? "redemptions_view" : "finance";
+    const need = kind === "transactions" ? "redemptions_view" : kind === "partners" || kind === "partner_payouts" ? "partners_view" : "finance";
     if (!can(s.profile.role, need)) return forbidden();
+    partnerData = can(s.profile.role, "partners_view");
     supabase = s.supabase;
     staff = true;
   }
@@ -50,8 +52,12 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
     for (let page = 0; page < 50; page++) {
       const f = readTxFilters((k) => sp.get(k));
       const branch = branchScope ?? sp.get("branch");
-      let q = applyTxFilters(supabase.from("redemptions").select(txSelect(staff ? `${TX_SELECT}, student:profiles(student_code, user_code)` : TX_SELECT, f))
+      // Partner cut per transaction (staff who may see partners); ?partner=<id> keeps only that partner's transactions
+      const partnerFilter = partnerData ? sp.get("partner") : null;
+      const pe = partnerData ? `, partner_earning:partner_earnings${partnerFilter ? "!inner" : ""}(cut, cut_type, cut_value, partner_id, partner:partners(partner_code, name))` : "";
+      let q = applyTxFilters(supabase.from("redemptions").select(txSelect(staff ? `${TX_SELECT}, student:profiles(student_code, user_code)${pe}` : TX_SELECT, f))
         .order("created_at", { ascending: false }).range(page * 1000, page * 1000 + 999), f);
+      if (partnerFilter) q = q.eq("partner_earning.partner_id", partnerFilter);
       if (merchantId) q = q.eq("merchant_id", merchantId);
       if (branchScope) q = q.eq("branch_id", branchScope);
       else if (branch && !f.branch) q = q.eq("branch_id", branch);
@@ -79,6 +85,13 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
       { header: t("Paid (EGP)"), value: (r) => r.final_amount, money: true },
       { header: t("Perkly commission (EGP)"), value: (r) => r.commission_amount, money: true },
       { header: t("VAT on commission (EGP)"), value: (r) => r.vat_amount, money: true, width: 18 },
+      ...(partnerData ? [
+        { header: t("Partner ID"), value: (r: Tx) => r.partner_earning?.partner?.partner_code ?? "" },
+        { header: t("Partner"), value: (r: Tx) => r.partner_earning?.partner?.name ?? "", width: 20 },
+        { header: t("Partner deal"), value: (r: Tx) => (r.partner_earning ? (r.partner_earning.cut_type === "fixed" ? t("{amount} EGP per transaction", { amount: Number(r.partner_earning.cut_value) }) : t("{pct}% of commission", { pct: Number(r.partner_earning.cut_value) })) : ""), width: 20 },
+        { header: t("Partner cut (EGP)"), value: (r: Tx) => (r.status === "reversed" ? 0 : r.partner_earning?.cut ?? null), money: true },
+        { header: t("Perkly commission after partner (EGP)"), value: (r: Tx) => (r.commission_amount == null ? null : Number(r.commission_amount) - (r.status === "reversed" ? 0 : Number(r.partner_earning?.cut ?? 0))), money: true, width: 20 },
+      ] : []),
       { header: t("Settlement amount (EGP)"), value: (r) => r.merchant_net ?? (r.final_amount == null ? t("No bill entered") : null), money: true, width: 18 },
       { header: t("Collected by"), value: (r) => (r.payment_method === "in_app" ? t("Perkly (in app)") : t("Merchant (cashier)")), width: 18 },
       { header: t("Amount to settle (EGP)"), value: (r) => (r.status === "reversed" ? 0 : r.settle_amount), money: true, width: 18 },
@@ -146,6 +159,49 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
       { header: t("Paid at"), value: (r) => cairo(r.paid_at) },
     ];
     return fileResponse(data ?? [], cols, "perkly-settlements", format, rtl);
+  }
+
+  if (kind === "partners") {
+    if (!staff) return forbidden();
+    const { data, error } = await supabase.rpc("partner_balances", { p_partner_id: sp.get("partner") || null });
+    if (error) return new Response(error.message, { status: 400 });
+    const cols: Column<PartnerBalance>[] = [
+      { header: t("Partner ID"), value: (r) => r.partner_code },
+      { header: t("Partner"), value: (r) => r.name, width: 24 },
+      { header: t("Deal"), value: (r) => (r.cut_type === "fixed" ? t("{amount} EGP per transaction", { amount: Number(r.cut_value) }) : t("{pct}% of commission", { pct: Number(r.cut_value) })), width: 22 },
+      { header: t("Status"), value: (r) => t(r.status) },
+      { header: t("Merchants"), value: (r) => Number(r.merchants) },
+      { header: t("Transactions"), value: (r) => Number(r.transactions) },
+      { header: t("Total GMV (EGP)"), value: (r) => r.gmv, money: true },
+      { header: t("Perkly commission from their merchants (EGP)"), value: (r) => r.commission, money: true, width: 22 },
+      { header: t("Partner cut earned (EGP)"), value: (r) => r.earned, money: true },
+      { header: t("Perkly commission after partner (EGP)"), value: (r) => Number(r.commission) - Number(r.earned), money: true, width: 20 },
+      { header: t("Paid to partner (EGP)"), value: (r) => r.paid, money: true },
+      { header: t("Due to partner (EGP)"), value: (r) => r.due, money: true },
+      { header: t("Last paid"), value: (r) => cairo(r.last_paid_at) },
+    ];
+    return fileResponse((data ?? []) as PartnerBalance[], cols, "perkly-partner-balances", format, rtl);
+  }
+
+  if (kind === "partner_payouts") {
+    if (!staff) return forbidden();
+    let q = supabase.from("partner_payouts").select("id, amount, reference, note, paid_at, partner:partners(partner_code, name), payer:profiles(full_name)")
+      .order("paid_at", { ascending: false }).limit(5000);
+    if (sp.get("partner")) q = q.eq("partner_id", sp.get("partner")!);
+    type P = { id: string; amount: number; reference: string; note: string | null; paid_at: string; partner: { partner_code: string; name: string } | null; payer: { full_name: string | null } | null };
+    const { data, error } = await q.returns<P[]>();
+    if (error) return new Response(error.message, { status: 400 });
+    const cols: Column<P>[] = [
+      { header: t("Paid at"), value: (r) => cairo(r.paid_at), width: 18 },
+      { header: t("Partner ID"), value: (r) => r.partner?.partner_code },
+      { header: t("Partner"), value: (r) => r.partner?.name, width: 24 },
+      { header: t("Amount (EGP)"), value: (r) => r.amount, money: true },
+      { header: t("Bank reference"), value: (r) => r.reference, width: 20 },
+      { header: t("Note"), value: (r) => r.note, width: 24 },
+      { header: t("Recorded by"), value: (r) => r.payer?.full_name ?? "", width: 20 },
+      { header: t("Payout ID"), value: (r) => r.id, width: 38 },
+    ];
+    return fileResponse(data ?? [], cols, "perkly-partner-payouts", format, rtl);
   }
 
   return new Response("Unknown export", { status: 404 });
