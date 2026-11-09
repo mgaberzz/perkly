@@ -3,8 +3,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
-const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+// Public values (safe to ship in the app). A .env file can point the app at another project;
+// placeholders or a missing .env fall back to Perkly's live project so `npx expo start` just works.
+const LIVE_URL = 'https://qnvzkjojuumtzpkvjlja.supabase.co';
+const LIVE_KEY = 'sb_publishable_acSp196d89a1J3Thuoutng_RDfhfQ4u';
+const envUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+const envKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+const real = (v: string) => Boolean(v) && !/YOUR-PROJECT|your-anon-key/.test(v);
+const url = real(envUrl) ? envUrl : LIVE_URL;
+const anonKey = real(envKey) ? envKey : LIVE_KEY;
 
 export const supabaseConfigured = Boolean(url && anonKey);
 
