@@ -787,3 +787,4 @@ do $$ begin
   assert (set_receipt_ref(current_setting('test.rx')::uuid, null)->>'ok')::boolean, 'operations can clear it';
 end $$;
 reset role;
+

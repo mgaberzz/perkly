@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
 import { Amount, Badge, Button, Card, Field, Input, Notice, PageHeader, Select, Stat, Table, Td } from "@/components/ui";
-import { ActionForm, SubmitButton } from "@/components/action-form";
+import { ActionForm, ConfirmButton, SubmitButton } from "@/components/action-form";
 import { PageTabs } from "@/components/page-tabs";
 import { merchantTabs } from "@/lib/merchant-tabs";
 import { resolvePeriod } from "@/lib/periods";
@@ -14,7 +14,7 @@ import { getT } from "@/lib/i18n/server";
 import { dealLabel } from "@/components/partner-form";
 import { BRAND_TYPE_LABEL, CHANNEL_LABEL } from "@/lib/labels";
 import type { Balance, Merchant, Perk, QrCode } from "@/lib/types";
-import { adminCreateBranch, adminCreateQr, adminToggleQr, resolveRequest } from "../../actions";
+import { adminCreateBranch, adminCreateQr, adminReopenBranch, adminRemoveBranch, adminToggleQr, resolveRequest } from "../../actions";
 
 export const metadata = { title: "Merchant" };
 
@@ -127,6 +127,21 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
                     </li>
                   ))}
                 </ul>
+                {editable && (
+                  <div className="mt-3 flex items-center justify-end gap-3 border-t border-zinc-100 pt-3 text-xs font-semibold">
+                    {b.is_active ? (
+                      <form action={adminRemoveBranch}>
+                        <input type="hidden" name="id" value={b.id} /><input type="hidden" name="merchant_id" value={id} />
+                        <ConfirmButton message={t("Remove this branch? If it has transactions it will be closed instead, and its QR codes switched off.")} className="text-red-600 hover:underline">{t("Remove branch")}</ConfirmButton>
+                      </form>
+                    ) : (
+                      <form action={adminReopenBranch}>
+                        <input type="hidden" name="id" value={b.id} /><input type="hidden" name="merchant_id" value={id} />
+                        <button className="text-emerald-700 hover:underline">{t("Reopen branch")}</button>
+                      </form>
+                    )}
+                  </div>
+                )}
                 {editable && (
                   <form action={adminCreateQr} className="mt-3 flex gap-2">
                     <input type="hidden" name="branch_id" value={b.id} /><input type="hidden" name="merchant_id" value={id} />
