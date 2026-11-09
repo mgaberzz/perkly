@@ -1,5 +1,10 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Send test error": "إرسال خطأ تجريبي",
+  "Sent. It appears in Sentry → perkly-portal → Issues within a minute.": "تم الإرسال. يظهر في Sentry ← perkly-portal ← Issues خلال دقيقة.",
+  "Error reporting (Sentry)": "تقارير الأخطاء (Sentry)",
+  "Crashes and errors from the portals and the student app are reported to Sentry automatically, without names or contact details.": "تُرسل الأعطال والأخطاء من البوابات وتطبيق الطلاب إلى Sentry تلقائيًا، دون أسماء أو بيانات تواصل.",
+  "Something went wrong": "حدث خطأ ما",
   "Push notifications": "الإشعارات الفورية",
   "Message": "الرسالة",
   "e.g. Flash deal at Costa 🔥": "مثال: عرض سريع في كوستا 🔥",

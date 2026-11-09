@@ -14,7 +14,8 @@
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_acSp196d89a1J3Thuoutng_RDfhfQ4u",
         "EXPO_PUBLIC_WEB_URL": "https://perkly-five.vercel.app",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
-        "EXPO_PUBLIC_APP_ENV": "preview"
+        "EXPO_PUBLIC_APP_ENV": "preview",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://cb1d448a4e9fab8184e415d15b76f37c@o4512400955146240.ingest.de.sentry.io/4512400968646736"
       },
       "environment": "preview"
     },
@@ -25,7 +26,8 @@
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_acSp196d89a1J3Thuoutng_RDfhfQ4u",
         "EXPO_PUBLIC_WEB_URL": "https://perkly-five.vercel.app",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
-        "EXPO_PUBLIC_APP_ENV": "production"
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://cb1d448a4e9fab8184e415d15b76f37c@o4512400955146240.ingest.de.sentry.io/4512400968646736"
       },
       "environment": "production"
     }

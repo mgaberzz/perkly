@@ -2,6 +2,7 @@ import { requireStaff } from "@/lib/auth";
 import { Badge, Card, Input, PageHeader } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/action-form";
 import { AccountSettings } from "@/components/account-settings";
+import { SentryTest } from "@/components/sentry-test";
 import { getT } from "@/lib/i18n/server";
 import { setPaymentsMode, setRedemptionRules, setVatRate, setVerificationRules } from "../actions";
 
@@ -50,6 +51,10 @@ export default async function SettingsPage() {
                 <Input name="max_per_day" type="number" min="1" max="50" defaultValue={limit} className="w-28" /><span className="text-sm text-zinc-500">{t("per merchant per day")}</span>
                 <SubmitButton variant="secondary">{t("Save")}</SubmitButton>
               </ActionForm>
+            </Card>
+            <Card title={t("Error reporting (Sentry)")}>
+              <p className="mb-3 text-xs text-zinc-500">{t("Crashes and errors from the portals and the student app are reported to Sentry automatically, without names or contact details.")}</p>
+              <SentryTest />
             </Card>
             <Card title={t("Student verification")}>
               <p className="mb-3 text-xs text-zinc-500">{t("When required, students must have their student ID approved before they can redeem. Turn it on when you launch; keep it off while testing.")}</p>
