@@ -8,7 +8,7 @@ import { sendBroadcast } from "../actions";
 export const metadata = { title: "Push notifications" };
 
 type Sent = {
-  id: string; title: string; body: string; recipients: number; created_at: string;
+  id: string; title: string; body: string; recipients: number; created_at: string; campus_ids: string[] | null;
   campus: { name: string } | null; perk: { title: string } | null; sender: { full_name: string | null } | null;
 };
 
@@ -20,9 +20,10 @@ export default async function BroadcastsPage() {
     supabase.from("perks").select("id, title, merchant:merchants!inner(name, status)").eq("status", "active").eq("merchant.status", "live").order("created_at", { ascending: false }).limit(200)
       .returns<{ id: string; title: string; merchant: { name: string } }[]>(),
     supabase.rpc("broadcast_audience"),
-    supabase.from("broadcasts").select("id, title, body, recipients, created_at, campus:campuses(name), perk:perks(title), sender:profiles!broadcasts_sent_by_fkey(full_name)")
+    supabase.from("broadcasts").select("id, title, body, recipients, created_at, campus_ids, campus:campuses(name), perk:perks(title), sender:profiles!broadcasts_sent_by_fkey(full_name)")
       .order("created_at", { ascending: false }).limit(30).returns<Sent[]>(),
   ]);
+  const campusName = new Map((campuses ?? []).map((c) => [c.id, c.name]));
   const counts = await Promise.all((campuses ?? []).map((c) => supabase.rpc("broadcast_audience", { p_campus_id: c.id })));
 
   return (
@@ -39,7 +40,7 @@ export default async function BroadcastsPage() {
         {(sent ?? []).map((b) => (
           <tr key={b.id}>
             <Td phone="lead"><div className="font-semibold">{b.title}</div><div className="max-w-md text-xs font-normal text-zinc-500">{b.body}</div></Td>
-            <Td>{b.campus?.name ?? t("All campuses")}</Td>
+            <Td>{b.campus_ids && b.campus_ids.length > 1 ? b.campus_ids.map((id) => campusName.get(id) ?? "—").join(", ") : b.campus?.name ?? t("All campuses")}</Td>
             <Td phone="hide">{b.perk?.title ?? t("Inbox")}</Td>
             <Td phone="sum">{b.recipients}</Td>
             <Td>{b.sender?.full_name ?? "—"}</Td>

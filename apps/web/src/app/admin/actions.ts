@@ -156,9 +156,10 @@ const BROADCAST_ERRORS: Record<string, string> = {
 };
 export async function sendBroadcast(_: ActionState, fd: FormData): Promise<ActionState> {
   const { supabase } = await requireStaff("broadcasts");
-  const { data, error } = await supabase.rpc("send_broadcast", {
+  const campusIds = [...new Set(fd.getAll("campus_id").map(String).filter(Boolean))];
+  const { data, error } = await supabase.rpc("send_broadcast_campuses", {
     p_title: str(fd, "title"), p_body: str(fd, "body"), p_title_ar: str(fd, "title_ar") || null, p_body_ar: str(fd, "body_ar") || null,
-    p_campus_id: str(fd, "campus_id") || null, p_perk_id: str(fd, "perk_id") || null,
+    p_campus_ids: campusIds.length ? campusIds : null, p_perk_id: str(fd, "perk_id") || null,
   });
   const res = data as { ok: boolean; error?: string; recipients?: number } | null;
   if (error || !res?.ok) return { error: error?.message ?? BROADCAST_ERRORS[res?.error ?? ""] ?? "Could not send." };
@@ -222,12 +223,24 @@ export async function setUserRole(fd: FormData) {
 // ───────── Team: account manager assignments ─────────
 export async function addAssignment(_: ActionState, fd: FormData): Promise<ActionState> {
   const { supabase } = await requireAdmin();
-  const user_id = str(fd, "user_id"), merchant_id = str(fd, "merchant_id") || null, campus_id = str(fd, "campus_id") || null;
-  if (!user_id || (!merchant_id && !campus_id)) return { error: "Pick a merchant or a campus." };
-  const { error } = await supabase.from("staff_assignments").insert({ user_id, merchant_id, campus_id });
-  if (error) return { error: error.code === "23505" ? "Already assigned." : error.message };
+  const user_id = str(fd, "user_id");
+  const merchants = [...new Set(fd.getAll("merchant_id").map(String).filter(Boolean))];
+  const campuses = [...new Set(fd.getAll("campus_id").map(String).filter(Boolean))];
+  if (!user_id || (merchants.length === 0 && campuses.length === 0)) return { error: "Pick at least one merchant or campus." };
+  // Skip what this account manager already has, then add the rest in one go
+  const { data: existing } = await supabase.from("staff_assignments").select("merchant_id, campus_id").eq("user_id", user_id);
+  const hasM = new Set((existing ?? []).map((e) => e.merchant_id).filter(Boolean));
+  const hasC = new Set((existing ?? []).map((e) => e.campus_id).filter(Boolean));
+  const rows = [
+    ...merchants.filter((m) => !hasM.has(m)).map((merchant_id) => ({ user_id, merchant_id, campus_id: null })),
+    ...campuses.filter((c) => !hasC.has(c)).map((campus_id) => ({ user_id, merchant_id: null, campus_id })),
+  ];
+  const skipped = merchants.length + campuses.length - rows.length;
+  if (rows.length === 0) return { error: "All of these are already assigned." };
+  const { error } = await supabase.from("staff_assignments").insert(rows);
+  if (error) return { error: error.message };
   revalidatePath("/admin/team", "layout");
-  return { ok: "Assigned. Add another or go back to Team." };
+  return { ok: skipped ? "Assigned. Some were already assigned and were skipped." : "Assigned." };
 }
 
 export async function removeAssignment(fd: FormData) {

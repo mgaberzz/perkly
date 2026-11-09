@@ -727,3 +727,38 @@ do $$ declare p perks; begin
   values ('00000000-0000-0000-0000-0000000000d2', p.id, p.merchant_id, 'PAY1', 'success', 'in_app', 'paid', 123.5);
   assert (select body from notifications where user_id = '00000000-0000-0000-0000-0000000000d2' and kind = 'payment') like 'You paid EGP 123.50 at %', 'payment receipt';
 end $$;
+
+-- ── Insights for any range with filters; broadcasts to several campuses ──
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ declare s jsonb; c uuid; begin
+  s := insights_range_summary(cairo_today() - 400, cairo_today());
+  assert (s->>'transactions')::int = (select count(*) from redemptions where status <> 'reversed'), 'range summary = all transactions';
+  assert (s->>'gmv')::numeric = (select coalesce(sum(original_amount), 0) from redemptions where status <> 'reversed'), 'range gmv';
+  assert (select sum(transactions) from insights_range('sector', cairo_today() - 400, cairo_today())) = (s->>'transactions')::int, 'dimension rows add up';
+  assert (select sum(transactions) from insights_range_series('merchant', cairo_today() - 400, cairo_today())) = (s->>'transactions')::int, 'series adds up';
+  assert (insights_range_summary(cairo_today() - 400, cairo_today(), p_payment => 'in_app')->>'transactions')::int
+       = (select count(*) from redemptions where status <> 'reversed' and payment_method = 'in_app'), 'payment filter';
+  assert (insights_range_summary(cairo_today() + 1, cairo_today() + 5)->>'transactions')::int = 0, 'future empty';
+  assert (insights_range_summary(cairo_today() + 6, cairo_today() + 10)->'prev'->>'transactions')::int = 0, 'prev period';
+  -- multi-campus broadcast
+  select campus_id into c from profiles where id = '00000000-0000-0000-0000-0000000000d1';
+  if c is null then select id into c from campuses limit 1; end if;
+end $$;
+reset role;
+update profiles set campus_id = (select id from campuses order by name limit 1) where id = '00000000-0000-0000-0000-0000000000d1';
+update broadcasts set created_at = created_at - interval '1 hour';
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ declare c1 uuid := (select id from campuses order by name limit 1); c2 uuid := (select id from campuses order by name offset 1 limit 1); r jsonb; begin
+  assert broadcast_audience_campuses(array[c1, c2]) >= 1, 'audience across campuses';
+  assert broadcast_audience_campuses(null) >= broadcast_audience_campuses(array[c1]), 'all >= one campus';
+  r := send_broadcast_campuses('Two campuses', 'Hello', null, null, array[c1, c2]);
+  assert (r->>'ok')::boolean and (r->>'recipients')::int = broadcast_audience_campuses(array[c1, c2]), r::text;
+  assert (select campus_ids from broadcasts order by created_at desc limit 1) = array[c1, c2], 'campuses stored';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e2', false);
+do $$ begin
+  assert send_broadcast_campuses('x', 'y')->>'error' = 'not_allowed', 'AM cannot broadcast';
+end $$;
+reset role;

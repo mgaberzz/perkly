@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { ActionForm, SubmitButton } from "./action-form";
 import { useT } from "./i18n";
-import { SearchSelect, type SearchOption } from "./search-select";
+import { MultiSelect } from "./multi-select";
+import type { SearchOption } from "./search-select";
 import { Field, Select } from "./ui";
 import type { ActionState } from "@/lib/types";
 
@@ -27,12 +28,12 @@ export function AssignForm({ action, managers, merchants, campuses, defaultManag
         </div>
       </div>
       {what === "merchant" ? (
-        <Field label={t("Merchant")}>
-          <SearchSelect name="merchant_id" options={merchants} placeholder={t("Search by merchant name or ID")} />
+        <Field label={t("Merchants")} hint={t("Tick as many as you need.")}>
+          <MultiSelect name="merchant_id" options={merchants} placeholder={t("Search by merchant name or ID")} />
         </Field>
       ) : (
-        <Field label={t("Campus")} hint={t("They get every merchant with a branch at this campus, including new ones.")}>
-          <Select name="campus_id" defaultValue=""><option value="">{t("Choose a campus")}</option>{campuses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select>
+        <Field label={t("Campuses")} hint={t("They get every merchant with a branch at these campuses, including new ones.")}>
+          <MultiSelect name="campus_id" options={campuses.map((c) => ({ value: c.id, label: c.name }))} placeholder={t("Search campuses")} />
         </Field>
       )}
       <SubmitButton className="w-full">{t("Assign")}</SubmitButton>

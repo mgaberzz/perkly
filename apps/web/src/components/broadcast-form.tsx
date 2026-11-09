@@ -2,7 +2,9 @@
 import { useState } from "react";
 import { ActionForm } from "./action-form";
 import { useT } from "./i18n";
-import { Field, Input, Select, Textarea } from "./ui";
+import { Field, Input, Textarea } from "./ui";
+import { MultiSelect } from "./multi-select";
+import { SearchSelect } from "./search-select";
 import type { ActionState } from "@/lib/types";
 
 type Opt = { id: string; label: string };
@@ -14,8 +16,9 @@ export function BroadcastForm({ action, campuses, perks, audience }: {
   const t = useT();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [campus, setCampus] = useState("");
-  const reach = campus ? campuses.find((c) => c.id === campus)?.count ?? 0 : audience;
+  const [chosen, setChosen] = useState<string[]>([]);
+  // Each student has one campus, so the reach of several campuses is the sum of their counts
+  const reach = chosen.length ? chosen.reduce((a, id) => a + (campuses.find((c) => c.id === id)?.count ?? 0), 0) : audience;
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <ActionForm action={action} resetOnSuccess className="space-y-4">
@@ -31,16 +34,11 @@ export function BroadcastForm({ action, campuses, perks, audience }: {
         </details>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t("Who gets it")}>
-            <Select name="campus_id" value={campus} onChange={(e) => setCampus(e.target.value)}>
-              <option value="">{t("All campuses")}</option>
-              {campuses.map((c) => <option key={c.id} value={c.id}>{c.label}{c.count != null ? ` (${c.count})` : ""}</option>)}
-            </Select>
+            <MultiSelect name="campus_id" onChange={setChosen} placeholder={t("Search campuses")} allLabel={t("All campuses")}
+              options={campuses.map((c) => ({ value: c.id, label: c.label, hint: c.count != null ? String(c.count) : undefined }))} />
           </Field>
-          <Field label={t("Opens when tapped")}>
-            <Select name="perk_id" defaultValue="">
-              <option value="">{t("Notifications inbox")}</option>
-              {perks.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-            </Select>
+          <Field label={t("Opens when tapped")} hint={t("Leave empty to open the notifications inbox.")}>
+            <SearchSelect name="perk_id" placeholder={t("Search perks or merchants")} options={perks.map((p) => ({ value: p.id, label: p.label }))} />
           </Field>
         </div>
         <p className="text-sm text-zinc-600">{t("Reaches {n} students who turned on perk drops.", { n: reach })}</p>

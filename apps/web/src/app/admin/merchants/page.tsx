@@ -1,11 +1,11 @@
 import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { inScope, requireStaff } from "@/lib/auth";
-import { Amount, Badge, PageHeader, Table, Td } from "@/components/ui";
+import { Amount, Badge, PageHeader } from "@/components/ui";
 import { getT } from "@/lib/i18n/server";
 import { FilterBar } from "@/components/filter-bar";
 import { PageTabs } from "@/components/page-tabs";
-import { Avatar, DetailRow, ExpandItem, ExpandList } from "@/components/expand-list";
+import { Avatar } from "@/components/expand-list";
 import { short } from "@/lib/format";
 import { BRAND_TYPE_LABEL, CHANNEL_LABEL } from "@/lib/labels";
 import { BRAND_TYPES, CATEGORIES, type Balance, type Merchant } from "@/lib/types";
@@ -14,7 +14,7 @@ export const metadata = { title: "Merchants" };
 
 const STATUSES = ["live", "pending", "paused", "churned"] as const;
 const SORTS = { name: "Name (A–Z)", newest: "Newest first", active: "Most transactions (30 days)", gmv: "Highest GMV (30 days)", dues: "Highest dues" } as const;
-const PAGE = 50;
+const PAGE = 48;
 type Row = Merchant & { partner_id?: string | null; created_at: string; branches: { count: number }[]; perks: { count: number }[] };
 type Act = { key: string; transactions: number; gmv: number };
 
@@ -68,15 +68,16 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
     const u = new URLSearchParams(Object.entries({ ...params, ...over }).filter(([, v]) => v));
     return `/admin/merchants${u.toString() ? `?${u}` : ""}`;
   };
-  const pill = (on: boolean) => `whitespace-nowrap rounded-full capitalize px-3.5 py-1.5 text-sm font-semibold transition ${on ? "bg-zinc-900 text-white" : "bg-white text-zinc-600 ring-1 ring-zinc-200 hover:bg-zinc-50"}`;
-
   return (
     <>
-      <PageHeader title={role === "account_manager" ? t("My merchants") : t("Merchants")} subtitle={t("{n} merchants", { n: base.length })} />
+      <PageHeader title={role === "account_manager" ? t("My merchants") : t("Merchants")} subtitle={t("{n} merchants", { n: rows.length })} />
       {can("merchants_create") && <PageTabs tabs={[{ href: "/admin/merchants", label: t("All merchants") }, { href: "/admin/merchants/new", label: t("New merchant") }]} />}
 
-      <FilterBar path="/admin/merchants" keep={Object.fromEntries(Object.entries({ status, sort: params.sort }).filter(([, v]) => v))}
-        search={{ name: "q", value: q, placeholder: t("Search name or Merchant ID") }} fields={[
+      <FilterBar path="/admin/merchants" search={{ name: "q", value: q, placeholder: t("Search name or Merchant ID") }} fields={[
+        { name: "status", label: t("Status"), type: "select", value: status, all: t("All statuses ({n})", { n: base.length }),
+          options: STATUSES.map((st) => ({ value: st, label: `${t(st)} (${counts[st]})` })) },
+        { name: "sort", label: t("Sort"), type: "select", value: params.sort, all: t(SORTS.name),
+          options: (Object.keys(SORTS) as (keyof typeof SORTS)[]).filter((k) => k !== "name").map((k) => ({ value: k, label: t(SORTS[k]) })) },
         { name: "category", label: t("Category"), type: "select", value: category, all: t("All categories"), options: CATEGORIES.map((c) => ({ value: c, label: t(c) })) },
         { name: "brand", label: t("Brand type"), type: "select", value: brand, all: t("All brand types"), options: BRAND_TYPES.map((b) => ({ value: b, label: t(BRAND_TYPE_LABEL[b]) })) },
         { name: "channel", label: t("Channel"), type: "select", value: channel, all: t("All channels"), options: Object.entries(CHANNEL_LABEL).map(([k, v]) => ({ value: k, label: t(v) })) },
@@ -84,95 +85,40 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
           options: [{ value: "none", label: t("No partner (Perkly)") }, ...partners.map((p) => ({ value: p.id, label: p.name }))] }] : []),
         { name: "due", label: t("With amounts due"), type: "toggle", value: due },
       ]} />
-
-      {/* Status tabs with counts + sort */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-          <Link href={href({ status: "", page: "" })} className={pill(!status)}>{t("All")} <span className="opacity-60">{base.length}</span></Link>
-          {STATUSES.map((st) => (
-            <Link key={st} href={href({ status: st, page: "" })} className={pill(status === st)}>{t(st)} <span className="opacity-60">{counts[st]}</span></Link>
-          ))}
-        </div>
-        <div className="-mx-1 flex w-full items-center gap-1 overflow-x-auto px-1 text-sm sm:w-auto">
-          <span className="shrink-0 text-zinc-500">{t("Sort")}:</span>
-          <div className="flex gap-1">
-            {(Object.keys(SORTS) as (keyof typeof SORTS)[]).map((k) => (
-              <Link key={k} href={href({ sort: k === "name" ? "" : k, page: "" })}
-                className={`whitespace-nowrap rounded-lg px-2 py-1 text-xs font-semibold ${sort === k ? "bg-perk-purple/10 text-perk-purple" : "text-zinc-500 hover:bg-zinc-100"}`}>{t(SORTS[k])}</Link>
-            ))}
-          </div>
-        </div>
-      </div>
       {due && <p className="mb-4 text-sm text-zinc-600">{t("To be paid to these merchants")}: <Link href="/admin/explain?metric=to_be_paid" className="font-bold hover:underline"><Amount v={totalOwedTo} /></Link></p>}
 
-      {/* Phone: tap-to-open cards */}
-      <ExpandList empty={t("No merchants match these filters.")}>
-        {shown.map((m) => {
-          const to = owedTo(m.id), by = owedBy(m.id), paid = Number(balances.get(m.id)?.paid_out ?? 0);
-          return (
-            <ExpandItem key={m.id} accent={to > 0 ? "purple" : by > 0 ? "amber" : undefined} summary={
-              <div className="flex items-center gap-3">
-                <Avatar name={m.name} src={m.logo_url} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2"><span className="truncate font-bold">{m.name}</span><Badge tone={m.status} className="shrink-0 !px-2 !text-[10px]">{t(m.status)}</Badge></div>
-                  <div className="truncate text-xs text-zinc-500">{t(m.category)} · <span className="font-mono">{m.merchant_code}</span>{m.partner_id && partnerName.get(m.partner_id) ? <> · <Icon name="handshake" size={12} className="me-1 inline-block align-[-2px]" />{partnerName.get(m.partner_id)}</> : ""}</div>
-                  <div className="mt-1 flex gap-3 text-xs">
-                    <span className="text-zinc-600"><b>{short(tx(m.id))}</b> {t("tx")} · <b><Amount v={gmv(m.id)} /></b> <span className="text-zinc-400">{t("30d")}</span></span>
-                    {to > 0 ? <span className="font-bold text-perk-purple">{t("Due")} <Amount v={to} /></span> : by > 0 ? <span className="font-bold text-amber-700">{t("Owes")} <Amount v={by} /></span> : null}
+      {shown.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-10 text-center text-sm text-zinc-500">{t("No merchants match these filters.")}</div>
+      ) : (
+        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {shown.map((m) => {
+            const to = owedTo(m.id), by = owedBy(m.id), pName = m.partner_id ? partnerName.get(m.partner_id) : null;
+            return (
+              <li key={m.id}>
+                <Link href={`/admin/merchants/${m.id}`}
+                  className={`flex h-full flex-col rounded-2xl border bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${to > 0 ? "border-perk-purple/40" : by > 0 ? "border-amber-300" : "border-zinc-200"}`}>
+                  <div className="flex items-center gap-3">
+                    <Avatar name={m.name} src={m.logo_url} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2"><span className="truncate font-bold">{m.name}</span><Badge tone={m.status} className="shrink-0 !px-2 !text-[10px]">{t(m.status)}</Badge></div>
+                      <div className="truncate text-xs text-zinc-500">{t(m.category)} · <span className="font-mono">{m.merchant_code}</span></div>
+                      {pName && <div className="truncate text-xs text-zinc-500"><Icon name="handshake" size={12} className="me-1 inline-block align-[-2px]" />{pName}</div>}
+                    </div>
                   </div>
-                </div>
-              </div>}>
-              <DetailRow label={t("Brand type")}>{t(BRAND_TYPE_LABEL[m.brand_type] ?? m.brand_type)}</DetailRow>
-              <DetailRow label={t("Channel")}>{t(CHANNEL_LABEL[m.channel])}</DetailRow>
-              <DetailRow label={t("Branches / perks")}>{m.branches[0]?.count ?? 0} / {m.perks[0]?.count ?? 0}</DetailRow>
-              <DetailRow label={t("Commission")}>{m.commission_pct}%</DetailRow>
-              <DetailRow label={t("To be paid to merchant")}>{to > 0 ? <Link href={`/admin/explain?metric=net_to_settle&merchant=${m.id}`} className="text-perk-purple underline"><Amount v={to} /></Link> : "—"}</DetailRow>
-              <DetailRow label={t("Owed to Perkly")}>{by > 0 ? <Link href={`/admin/explain?metric=net_to_settle&merchant=${m.id}`} className="text-amber-700 underline"><Amount v={by} /></Link> : "—"}</DetailRow>
-              <DetailRow label={t("Paid to merchant")}>{paid > 0 ? <Link href={`/admin/explain?metric=paid_to_merchants&merchant=${m.id}`} className="underline"><Amount v={paid} /></Link> : "—"}</DetailRow>
-              <Link href={`/admin/merchants/${m.id}`} className="perk-gradient my-2 flex items-center justify-center rounded-xl py-2.5 text-sm font-semibold text-white">{t("Open merchant")} →</Link>
-            </ExpandItem>
-          );
-        })}
-      </ExpandList>
-
-      {/* Desktop table */}
-      <Table className="hidden sm:block" head={[t("Merchant"), t("Status"), t("Partner"), t("Last 30 days"), t("Commission"), t("Dues"), t("Branches / perks")]} empty={t("No merchants match these filters.")}>
-        {shown.map((m) => {
-          const to = owedTo(m.id), by = owedBy(m.id);
-          return (
-            <tr key={m.id} className="hover:bg-zinc-50">
-              <Td>
-                <Link href={`/admin/merchants/${m.id}`} className="group flex items-center gap-3">
-                  <Avatar name={m.name} src={m.logo_url} />
-                  <span className="min-w-0">
-                    <span className="block truncate font-semibold group-hover:text-perk-purple">{m.name}</span>
-                    <span className="block truncate text-xs text-zinc-500">{t(m.category)} · {t(BRAND_TYPE_LABEL[m.brand_type] ?? m.brand_type)} · <span className="font-mono">{m.merchant_code}</span></span>
-                  </span>
+                  <div className="mt-3 flex items-end justify-between gap-3 border-t border-zinc-100 pt-3 text-xs">
+                    <div>
+                      <div className="text-zinc-400">{t("Last 30 days")}</div>
+                      {tx(m.id) > 0 ? <div className="text-zinc-700"><b><Amount v={gmv(m.id)} /></b> · {t("{n} transactions", { n: short(tx(m.id)) })}</div> : <div className="text-zinc-400">{t("No activity")}</div>}
+                    </div>
+                    {to > 0 ? <div className="text-end"><div className="text-zinc-400">{t("to be paid")}</div><b className="text-perk-purple"><Amount v={to} /></b></div>
+                      : by > 0 ? <div className="text-end"><div className="text-zinc-400">{t("owed to Perkly")}</div><b className="text-amber-700"><Amount v={by} /></b></div> : null}
+                  </div>
                 </Link>
-              </Td>
-              <Td><Badge tone={m.status}>{t(m.status)}</Badge></Td>
-              <Td className="text-sm">{m.partner_id && partnerName.get(m.partner_id)
-                ? <Link href={`/admin/partners/${m.partner_id}`} className="hover:text-perk-purple hover:underline">{partnerName.get(m.partner_id)}</Link>
-                : <span className="text-zinc-400">—</span>}</Td>
-              <Td>
-                {tx(m.id) > 0 ? (
-                  <Link href={`/admin/redemptions?merchant=${m.id}`} className="hover:underline">
-                    <span className="font-semibold"><Amount v={gmv(m.id)} /></span>
-                    <span className="block text-xs text-zinc-500">{t("{n} transactions", { n: short(tx(m.id)) })}</span>
-                  </Link>
-                ) : <span className="text-xs text-zinc-400">{t("No activity")}</span>}
-              </Td>
-              <Td>{m.commission_pct}%</Td>
-              <Td>
-                {to > 0 ? <Link href={`/admin/explain?metric=net_to_settle&merchant=${m.id}`} className="font-bold text-perk-purple hover:underline"><Amount v={to} /><span className="block text-xs font-normal text-zinc-500">{t("to be paid")}</span></Link>
-                  : by > 0 ? <Link href={`/admin/explain?metric=net_to_settle&merchant=${m.id}`} className="font-semibold text-amber-700 hover:underline"><Amount v={by} /><span className="block text-xs font-normal text-zinc-500">{t("owed to Perkly")}</span></Link>
-                  : <span className="text-zinc-400">—</span>}
-              </Td>
-              <Td className="text-sm text-zinc-600">{m.branches[0]?.count ?? 0} / {m.perks[0]?.count ?? 0}</Td>
-            </tr>
-          );
-        })}
-      </Table>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       {/* Pages */}
       {rows.length > PAGE && (
