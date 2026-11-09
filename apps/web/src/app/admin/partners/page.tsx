@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { Amount, Badge, PageHeader, Stat, Table, Td } from "@/components/ui";
-import { ExportButtons } from "@/components/export-buttons";
+import { ExportMenu } from "@/components/export-menu";
 import { dealLabel } from "@/components/partner-form";
 import { PageTabs } from "@/components/page-tabs";
 import { getT } from "@/lib/i18n/server";
@@ -20,10 +20,7 @@ export default async function PartnersPage() {
   return (
     <>
       <PageHeader title={t("Partners")} subtitle={t("Partners onboard merchants for Perkly and earn a cut of Perkly's commission on every transaction at their merchants.")}
-        actions={<div className="flex flex-wrap items-center gap-3">
-          <span className="text-xs font-semibold text-zinc-500">{t("Balances")}:</span><ExportButtons kind="partners" />
-          <span className="text-xs font-semibold text-zinc-500">{t("Payments")}:</span><ExportButtons kind="partner_payouts" />
-        </div>} />
+        actions={<ExportMenu items={[{ label: t("Partner balances"), kind: "partners" }, { label: t("Partner payments"), kind: "partner_payouts" }, { label: t("Transactions"), kind: "transactions" }]} />} />
       {manage && <PageTabs tabs={[{ href: "/admin/partners", label: t("All partners") }, { href: "/admin/partners/new", label: t("New partner") }]} />}
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat accent label={t("Owed to partners")} value={<Amount v={sum("due")} />} hint={t("Earned minus paid")} />

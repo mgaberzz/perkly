@@ -1,19 +1,9 @@
-import { Icon } from "@/components/icons";
+import { ExportMenu } from "./export-menu";
 import { getT } from "@/lib/i18n/server";
 
-/** "Export: Excel · CSV" links for a /export/<kind> route, keeping the current filters. */
-export async function ExportButtons({ kind, params = {} }: { kind: string; params?: Record<string, string | undefined> }) {
+/** One download (kept for existing pages): an Export dropdown with Excel / CSV. */
+export async function ExportButtons({ kind, params = {}, label }: { kind: string; params?: Record<string, string | undefined>; label?: string }) {
   const t = await getT();
-  const qs = (format: string) => {
-    const p = new URLSearchParams({ format });
-    for (const [k, v] of Object.entries(params)) if (v) p.set(k, v);
-    return `/export/${kind}?${p}`;
-  };
-  const cls = "inline-flex items-center gap-1.5 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-zinc-50";
-  return (
-    <div className="flex gap-2">
-      <a href={qs("xlsx")} className={cls}><Icon name="download" size={16} />{t("Excel")}</a>
-      <a href={qs("csv")} className={cls}><Icon name="download" size={16} />CSV</a>
-    </div>
-  );
+  const LABEL: Record<string, string> = { transactions: "Transactions", balances: "Merchant balances", settlements: "Settlements", partners: "Partner balances", partner_payouts: "Partner payments" };
+  return <ExportMenu items={[{ label: label ?? t(LABEL[kind] ?? "Download"), kind, params }]} />;
 }

@@ -53,14 +53,15 @@ export async function Shell({ nav, children, top, user, badge }: { nav: NavItem[
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="no-print sticky top-0 z-30 flex items-center justify-between border-b border-zinc-200 bg-white/90 px-4 py-2.5 backdrop-blur md:hidden">
-          <Link href="/" aria-label={t("Home")} className="rounded-xl active:opacity-70"><Logo /></Link>
+        {/* Menu button first: on the left in English, on the right in Arabic */}
+        <header className="no-print sticky top-0 z-30 flex items-center gap-3 border-b border-zinc-200 bg-white/90 px-4 py-2.5 backdrop-blur md:hidden">
           <MobileMenu quick={quick}>
             {top}
             <nav className="flex flex-col gap-0.5"><NavList nav={nav} /></nav>
             <div className="mx-3 my-2 border-t border-zinc-200" />
             <div className="truncate px-3 py-1 text-xs text-zinc-500">{user}</div>
           </MobileMenu>
+          <Link href="/" aria-label={t("Home")} className="rounded-xl active:opacity-70"><Logo /></Link>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 p-4 md:p-8">{children}</main>
         <TableToggle />

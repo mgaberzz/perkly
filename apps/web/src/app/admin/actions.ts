@@ -226,8 +226,8 @@ export async function addAssignment(_: ActionState, fd: FormData): Promise<Actio
   if (!user_id || (!merchant_id && !campus_id)) return { error: "Pick a merchant or a campus." };
   const { error } = await supabase.from("staff_assignments").insert({ user_id, merchant_id, campus_id });
   if (error) return { error: error.code === "23505" ? "Already assigned." : error.message };
-  revalidatePath("/admin/team");
-  return { ok: "Assigned." };
+  revalidatePath("/admin/team", "layout");
+  return { ok: "Assigned. Add another or go back to Team." };
 }
 
 export async function removeAssignment(fd: FormData) {

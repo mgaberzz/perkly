@@ -152,7 +152,7 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
       </div>
       <p className="mt-6 text-sm text-zinc-500">
         {t("More detail:")} <Link href="/admin/insights" className="font-semibold text-perk-purple hover:underline">{t("Insights")}</Link>
-        {can("finance") && <> · <Link href="/admin/finance" className="font-semibold text-perk-purple hover:underline">{t("Finance & settlements")}</Link></>}
+        {can("finance") && <> · <Link href="/admin/finance" className="font-semibold text-perk-purple hover:underline">{t("Finance")}</Link></>}
       </p>
     </>
   );
