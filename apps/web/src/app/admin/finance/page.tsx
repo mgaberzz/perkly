@@ -6,6 +6,7 @@ import { ActionForm, SubmitButton } from "@/components/action-form";
 import { ExportMenu } from "@/components/export-menu";
 import { date, egp, short } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
+import { PERIOD_LABEL, PERIODS, resolvePeriod } from "@/lib/periods";
 import { BRAND_TYPE_LABEL } from "@/lib/labels";
 import { settlementLabel, type Balance, type PartnerBalance, type Settlement } from "@/lib/types";
 import { createSettlements, markSettlementPaid } from "../actions";
@@ -40,17 +41,24 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
   const tab = TABS.find((x) => x.key === sp.tab)?.key ?? "overview";
   const view = sp.view === "all" ? "all" : "due";
   const q = typeof sp.q === "string" ? sp.q.trim() : "";
-  const days = [7, 30, 90, 365].includes(Number(sp.days)) ? Number(sp.days) : 30;
-  const [{ data: balances }, { data: settlements }, { data: setting }, { data: tax }, { data: partnerBal }, { data: summary }] = await Promise.all([
+  const g = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : "");
+  const { period, from, to } = resolvePeriod(g("period") || (g("from") ? "custom" : ""), g("from"), g("to"));
+  const periodQs = new URLSearchParams(Object.entries({ from, to }));
+  const [{ data: balances }, { data: settlements }, { data: setting }, { data: tax }, { data: partnerBal }, { data: summary }, { data: periodSum }] = await Promise.all([
     supabase.rpc("merchant_balances"),
     supabase.from("settlements").select("*, merchant:merchants(id, name, merchant_code)").order("created_at", { ascending: false }).limit(100)
       .returns<(Settlement & { merchant: { id: string; name: string; merchant_code: string } })[]>(),
     supabase.from("app_settings").select("value").eq("key", "payments").maybeSingle<{ value: { mode: string; provider: string | null } }>(),
     supabase.from("app_settings").select("value").eq("key", "tax").maybeSingle<{ value: { vat_pct: number } }>(),
     supabase.rpc("partner_balances"),
-    supabase.rpc("finance_summary", { p_days: days }),
+    supabase.rpc("finance_summary", { p_days: 30 }),
+    supabase.rpc("insights_range_summary", { p_from: from, p_to: to }),
   ]);
   const s = (summary ?? {}) as Summary;
+  // Period numbers (default: this month) come from the same function as Insights
+  const ps = (periodSum ?? {}) as { transactions: number; gmv: number; net_revenue: number; vat: number; partner_cuts: number };
+  const fmtDate = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const range = from === to ? fmtDate(to) : `${fmtDate(from)} – ${fmtDate(to)}`;
   const partners = (partnerBal ?? []) as PartnerBalance[];
   const pSum = (k: keyof PartnerBalance) => partners.reduce((a, p) => a + Number(p[k] ?? 0), 0);
   const all = (balances ?? []) as Balance[];
@@ -87,17 +95,19 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
       {tab === "overview" && (
         <>
           <FilterBar path="/admin/finance" fields={[
-            { name: "days", label: t("Period"), type: "select", value: days === 30 ? undefined : String(days), all: t("Last 30 days"),
-              options: [{ value: "7", label: t("Last 7 days") }, { value: "90", label: t("Last 90 days") }, { value: "365", label: t("Last 12 months") }] },
+            { name: "period", label: t("Period"), type: "select", value: period === "mtd" ? "" : period, all: t("This month (MTD)"),
+              options: PERIODS.filter((p) => p !== "mtd").map((p) => ({ value: p, label: t(PERIOD_LABEL[p]) })) },
+            { name: "from", label: t("From (custom)"), type: "date", value: period === "custom" ? from : undefined },
+            { name: "to", label: t("To (custom)"), type: "date", value: period === "custom" ? to : undefined },
           ]} />
 
           <section className="mb-4 rounded-2xl border border-zinc-200 bg-white p-4">
-            <h2 className="mb-3 text-sm font-bold">{t("Last {days} days", { days })}</h2>
+            <h2 className="mb-3 text-sm font-bold">{t(PERIOD_LABEL[period])} <span className="font-normal text-zinc-500">· {range}</span></h2>
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Metric strong label={t("Total volume (GMV)")} value={<Amount v={s.gmv} />} hint={t("{n} transactions", { n: short(s.transactions) })} href={`/admin/explain?metric=gmv&days=${days}`} />
-              <Metric label={t("Net revenue")} value={<Amount v={s.net_revenue} />} hint={t("Perkly commission, excl. VAT {vat}", { vat: short(s.vat) })} href={`/admin/explain?metric=net_revenue&days=${days}`} />
-              <Metric label={t("Partner cuts")} value={<Amount v={s.partner_cuts ?? 0} />} hint={t("Share of commission earned by partners")} href="/admin/partners" />
-              <Metric label={t("Perkly keeps")} value={<Amount v={Number(s.net_revenue ?? 0) - Number(s.partner_cuts ?? 0)} />} hint={t("Net revenue after partner cuts")} />
+              <Metric strong label={t("Total volume (GMV)")} value={<Amount v={ps.gmv} />} hint={t("{n} transactions", { n: short(ps.transactions) })} href={`/admin/redemptions?${periodQs}`} />
+              <Metric label={t("Net revenue")} value={<Amount v={ps.net_revenue} />} hint={t("Perkly commission, excl. VAT {vat}", { vat: short(ps.vat) })} href={`/admin/insights?${new URLSearchParams(period === "mtd" ? {} : period === "custom" ? { period, from, to } : { period })}`} />
+              <Metric label={t("Partner cuts")} value={<Amount v={ps.partner_cuts ?? 0} />} hint={t("Share of commission earned by partners")} href={`/admin/redemptions?${periodQs}&partner=any`} />
+              <Metric label={t("Perkly keeps")} value={<Amount v={Number(ps.net_revenue ?? 0) - Number(ps.partner_cuts ?? 0)} />} hint={t("Net revenue after partner cuts")} href={`/admin/insights?${new URLSearchParams(period === "mtd" ? {} : period === "custom" ? { period, from, to } : { period })}`} />
             </div>
           </section>
 
@@ -170,10 +180,10 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
               <SubmitButton>{t("Create settlements")}</SubmitButton>
             </ActionForm>
           </Card>
-      <Table head={[t("Created"), t("Merchant"), t("Period"), t("Transactions"), t("Net amount"), t("Paid"), t("Status"), ""]} empty={t("No settlements yet.")}>
+      <Table head={[t("Settlement ID"), t("Merchant"), t("Period"), t("Transactions"), t("Net amount"), t("Paid"), t("Status"), ""]} empty={t("No settlements yet.")}>
         {(settlements ?? []).map((s) => (
           <tr key={s.id}>
-            <Td>{date(s.created_at)}</Td>
+            <Td><Link href={`/admin/explain?metric=settlement&id=${s.id}`} className="font-mono font-semibold text-perk-purple hover:underline">{s.settlement_code}</Link><div className="text-xs text-zinc-500">{date(s.created_at)}</div></Td>
             <Td phone="lead">{s.merchant.name}<div className="font-mono text-xs text-zinc-500">{s.merchant.merchant_code}</div></Td>
             <Td className="text-xs">{s.period_start} → {s.period_end}</Td>
             <Td><Link href={`/admin/explain?metric=settlement&id=${s.id}`} className="font-semibold text-perk-purple hover:underline">{s.lines}</Link></Td>

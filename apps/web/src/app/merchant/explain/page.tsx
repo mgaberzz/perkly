@@ -18,7 +18,7 @@ type Tx = {
   perk: { title: string } | null; branch: { name: string } | null; qr: { label: string; cashier_name: string | null } | null;
   settlement: { id: string; status: string } | null;
 };
-type Settlement = { id: string; period_start: string | null; period_end: string; amount: number; paid_amount: number; status: string };
+type Settlement = { id: string; settlement_code: string; period_start: string | null; period_end: string; amount: number; paid_amount: number; status: string };
 type Payment = { id: string; amount: number; reference: string; paid_at: string; settlement: { id: string; amount: number } | null };
 
 const SELECT = "id, created_at, verification_code, tx_code, payment_method, first_time_at_merchant, original_amount, discount_amount, final_amount, commission_amount, vat_amount, merchant_net, settle_amount, perk:perks(title), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), settlement:settlements(id, status)";
@@ -92,7 +92,7 @@ export default async function MerchantExplainPage({ searchParams }: PageProps<"/
   // ── What will be settled to you (unsettled transactions, netted) ──
   if (metric === "to_settle") {
     const kind = g("kind");
-    const { data: open } = await supabase.from("settlements").select("id, period_start, period_end, amount, paid_amount, status")
+    const { data: open } = await supabase.from("settlements").select("id, settlement_code, period_start, period_end, amount, paid_amount, status")
       .eq("merchant_id", merchant.id).neq("status", "paid").returns<Settlement[]>();
     const { data } = await supabase.from("redemptions").select(SELECT).eq("merchant_id", merchant.id).is("settlement_id", null)
       .neq("status", "reversed").or("payment_method.eq.merchant,payment_status.eq.paid").order("created_at", { ascending: false }).limit(1000).returns<Tx[]>();
@@ -121,7 +121,7 @@ export default async function MerchantExplainPage({ searchParams }: PageProps<"/
   if (metric === "settlement") {
     const id = g("id");
     const [{ data: s }, { data: tx }, { data: pays }] = await Promise.all([
-      supabase.from("settlements").select("id, period_start, period_end, amount, paid_amount, status").eq("id", id).eq("merchant_id", merchant.id).maybeSingle<Settlement>(),
+      supabase.from("settlements").select("id, settlement_code, period_start, period_end, amount, paid_amount, status").eq("id", id).eq("merchant_id", merchant.id).maybeSingle<Settlement>(),
       supabase.from("redemptions").select(SELECT).eq("settlement_id", id).eq("merchant_id", merchant.id).order("created_at").limit(2000).returns<Tx[]>(),
       supabase.from("settlement_payments").select("id, amount, reference, paid_at").eq("settlement_id", id).order("paid_at").returns<Payment[]>(),
     ]);
@@ -129,7 +129,7 @@ export default async function MerchantExplainPage({ searchParams }: PageProps<"/
     const rows = tx ?? [];
     const inApp = rows.filter((r) => r.payment_method === "in_app"), cashier = rows.filter((r) => r.payment_method !== "in_app");
     return (
-      <Explained title={t("Settlement")} value={<Amount v={s.amount} />} subtitle={`${s.period_start ?? ""} → ${s.period_end} · ${t(settlementLabel(s.status))}`}
+      <Explained title={`${t("Settlement")} ${s.settlement_code}`} value={<Amount v={s.amount} />} subtitle={`${s.period_start ?? ""} → ${s.period_end} · ${t(settlementLabel(s.status))}`}
         formula={<>
           <Line sign="+" label={t("Paid in the Perkly app: paid − commission − VAT")} value={sum(inApp, (r) => r.settle_amount)} />
           <Line sign="−" label={t("Commission + VAT on cashier sales")} value={-sum(cashier, (r) => r.settle_amount)} />

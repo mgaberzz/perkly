@@ -47,10 +47,10 @@ export default async function PartnerPage({ params }: PageProps<"/admin/partners
         actions={<div className="flex flex-wrap items-center gap-3"><ExportMenu items={[{ label: t("Transactions"), kind: "transactions", params: { partner: partner.id } }, { label: t("Payments to partner"), kind: "partner_payouts", params: { partner: partner.id } }, { label: t("Balance"), kind: "partners", params: { partner: partner.id } }]} /><Link href="/admin/partners" className="text-sm font-semibold text-zinc-500 hover:text-perk-purple">← {t("All partners")}</Link></div>} />
 
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat accent label={t("Due to partner")} value={<Amount v={b?.due ?? 0} />} hint={t("Earned minus paid")} />
-        <Stat label={t("Earned")} value={<Amount v={b?.earned ?? 0} />} hint={t("{n} transactions", { n: short(b?.transactions ?? 0) })} />
-        <Stat label={t("Paid")} value={<Amount v={b?.paid ?? 0} />} hint={b?.last_paid_at ? t("Last paid {date}", { date: date(b.last_paid_at) }) : t("Nothing paid yet")} />
-        <Stat label={t("Commission from their merchants")} value={<Amount v={b?.commission ?? 0} />} hint={t("Total GMV {amount}", { amount: `${short(b?.gmv ?? 0)} EGP` })} />
+        <Stat accent label={t("Due to partner")} value={<Amount v={b?.due ?? 0} />} hint={t("Earned minus paid")} href="#payments" />
+        <Stat label={t("Earned")} value={<Amount v={b?.earned ?? 0} />} hint={t("{n} transactions", { n: short(b?.transactions ?? 0) })} href={`/admin/redemptions?partner=${id}`} />
+        <Stat label={t("Paid")} value={<Amount v={b?.paid ?? 0} />} hint={b?.last_paid_at ? t("Last paid {date}", { date: date(b.last_paid_at) }) : t("Nothing paid yet")} href="#payments" />
+        <Stat label={t("Commission from their merchants")} value={<Amount v={b?.commission ?? 0} />} hint={t("Total GMV {amount}", { amount: `${short(b?.gmv ?? 0)} EGP` })} href={`/admin/redemptions?partner=${id}`} />
       </div>
 
       <div className="mb-6 grid gap-6 lg:grid-cols-3">
@@ -127,7 +127,7 @@ export default async function PartnerPage({ params }: PageProps<"/admin/partners
         </div>
       </div>
 
-      <h2 className="mb-3 font-bold">{t("Payments to partner")}</h2>
+      <h2 id="payments" className="mb-3 scroll-mt-20 font-bold">{t("Payments to partner")}</h2>
       <div className="mb-6">
         <Table head={[t("Paid at"), t("Bank reference"), t("Note"), t("Amount")]} empty={t("No payments yet.")}>
           {(payouts ?? []).map((p) => (

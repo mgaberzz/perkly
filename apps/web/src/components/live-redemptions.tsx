@@ -1,4 +1,5 @@
 "use client";
+import { ReceiptRefForm } from "./receipt-ref-form";
 import { Icon } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -8,13 +9,14 @@ import { dateTime, egp, shortDateTime } from "@/lib/format";
 import { DetailRow, ExpandItem, ExpandList } from "./expand-list";
 
 export type FeedRow = {
+  receipt_ref?: string | null;
   id: string; created_at: string; verification_code: string; tx_code: string; branch_id: string | null;
   original_amount: number | null; discount_amount: number | null; final_amount: number | null;
   status: string; first_time_at_merchant: boolean; channel: string; payment_method: string;
   perk: { title: string } | null; branch: { name: string } | null; qr: { label: string; cashier_name: string | null } | null;
 };
 
-export const FEED_SELECT = "id, created_at, verification_code, tx_code, branch_id, original_amount, discount_amount, final_amount, status, first_time_at_merchant, channel, payment_method, perk:perks(title), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name)";
+export const FEED_SELECT = "id, created_at, verification_code, tx_code, receipt_ref, branch_id, original_amount, discount_amount, final_amount, status, first_time_at_merchant, channel, payment_method, perk:perks(title), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name)";
 
 export function LiveRedemptions({ merchantId, branchId, initial }: { merchantId: string; branchId: string | null; initial: FeedRow[] }) {
   const t = useT();
@@ -68,6 +70,7 @@ export function LiveRedemptions({ merchantId, branchId, initial }: { merchantId:
             </div>}>
             <DetailRow label={t("Transaction ID")}><span className="font-mono text-perk-purple">{r.tx_code}</span></DetailRow>
             <DetailRow label={t("Time")}>{dateTime(r.created_at)}</DetailRow>
+            <DetailRow label={t("Shop receipt / order no.")}><ReceiptRefForm id={r.id} value={r.receipt_ref ?? null} /></DetailRow>
             <DetailRow label={t("Branch / cashier")}>{r.branch?.name ?? <><Icon name="globe" size={14} className="me-1 inline-block align-[-2px]" />{t("Online")}</>}{(r.qr?.cashier_name ?? r.qr?.label) && <span className="block text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</span>}</DetailRow>
             <DetailRow label={t("Bill")}>{egp(r.original_amount)}</DetailRow>
             <DetailRow label={t("Discount")}>{egp(r.discount_amount)}</DetailRow>

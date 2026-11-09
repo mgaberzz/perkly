@@ -762,3 +762,28 @@ do $$ begin
   assert send_broadcast_campuses('x', 'y')->>'error' = 'not_allowed', 'AM cannot broadcast';
 end $$;
 reset role;
+
+-- ── Settlement IDs, online order IDs, shop receipt numbers ──
+do $$ begin
+  assert (select bool_and(settlement_code ~ '^5[0-9]{7}$') from settlements), 'settlement codes';
+  assert (select count(distinct settlement_code) = count(*) from settlements), 'settlement codes unique';
+  assert (select bool_and(order_code ~ '^6[0-9]{9}$') from online_orders), 'order codes';
+  assert id_kind('50000001') = 'settlement' and id_kind('6000000001') = 'order' and id_kind('400001') = 'partner', 'id kinds';
+end $$;
+select set_config('test.rx', (select id::text from redemptions where user_id = '00000000-0000-0000-0000-0000000000d2' limit 1), false);
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000d2', false);
+do $$ declare rid uuid := current_setting('test.rx')::uuid; begin
+  assert (set_receipt_ref(rid, ' INV-2026/0042 ')->>'ok')::boolean, 'student sets own receipt no.';
+  assert (select receipt_ref from my_redemptions where id = rid) = 'INV-2026/0042', 'trimmed and visible in history';
+  assert set_receipt_ref(rid, 'bad<script>')->>'error' = 'bad_ref', 'format checked';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000d1', false);
+do $$ begin
+  assert set_receipt_ref(current_setting('test.rx')::uuid, 'X1')->>'error' = 'not_allowed', 'other students cannot';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ begin
+  assert (set_receipt_ref(current_setting('test.rx')::uuid, null)->>'ok')::boolean, 'operations can clear it';
+end $$;
+reset role;

@@ -23,12 +23,12 @@ export default async function PartnersPage() {
         actions={<ExportMenu items={[{ label: t("Partner balances"), kind: "partners" }, { label: t("Partner payments"), kind: "partner_payouts" }, { label: t("Transactions"), kind: "transactions" }]} />} />
       {manage && <PageTabs tabs={[{ href: "/admin/partners", label: t("All partners") }, { href: "/admin/partners/new", label: t("New partner") }]} />}
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat accent label={t("Owed to partners")} value={<Amount v={sum("due")} />} hint={t("Earned minus paid")} />
-        <Stat label={t("Partner cuts")} value={<Amount v={sum("earned")} />} hint={t("All time, from {n} transactions", { n: short(sum("transactions")) })} />
-        <Stat label={t("Paid to partners")} value={<Amount v={sum("paid")} />} hint={t("All time")} />
-        <Stat label={t("Merchants via partners")} value={short(sum("merchants"))} hint={t("{n} partners", { n: rows.length })} />
+        <Stat accent label={t("Owed to partners")} value={<Amount v={sum("due")} />} hint={t("Earned minus paid")} href="#partners" />
+        <Stat label={t("Partner cuts")} value={<Amount v={sum("earned")} />} hint={t("All time, from {n} transactions", { n: short(sum("transactions")) })} href="/admin/redemptions?partner=any" />
+        <Stat label={t("Paid to partners")} value={<Amount v={sum("paid")} />} hint={t("All time")} href="#partners" />
+        <Stat label={t("Merchants via partners")} value={short(sum("merchants"))} hint={t("{n} partners", { n: rows.length })} href="/admin/merchants?partner=any" />
       </div>
-      <div>
+      <div id="partners" className="scroll-mt-20">
         <div>
           <Table head={[t("Partner"), t("Deal"), t("Merchants"), t("Transactions"), t("Commission from their merchants"), t("Earned"), t("Paid"), t("Due"), t("Status")]}
             empty={manage ? t("No partners yet. Add the first one under New partner.") : t("No partners yet.")}>

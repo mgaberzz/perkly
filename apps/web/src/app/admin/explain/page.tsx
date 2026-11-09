@@ -17,7 +17,7 @@ type Tx = {
   merchant: { id: string; name: string; merchant_code: string } | null; perk: { title: string } | null;
   settlement: { id: string; status: string } | null;
 };
-type Settlement = { id: string; created_at: string; period_start: string | null; period_end: string; amount: number; paid_amount: number;
+type Settlement = { id: string; settlement_code: string; created_at: string; period_start: string | null; period_end: string; amount: number; paid_amount: number;
   gross_amount: number; commission: number; vat: number; lines: number; status: string; reference: string | null;
   merchant: { id: string; name: string; merchant_code: string } | null };
 type Payment = { id: string; amount: number; reference: string; paid_at: string;
@@ -87,7 +87,7 @@ export default async function ExplainPage({ searchParams }: PageProps<"/admin/ex
     const rows = tx ?? [];
     const inApp = rows.filter((r) => r.payment_method === "in_app"), cashier = rows.filter((r) => r.payment_method !== "in_app");
     return (
-      <Explained title={`${t("Settlement")} · ${s.merchant?.name ?? ""}`} value={s.amount}
+      <Explained title={`${t("Settlement")} ${s.settlement_code} · ${s.merchant?.name ?? ""}`} value={s.amount}
         subtitle={`${s.period_start ?? ""} → ${s.period_end} · ${t(settlementLabel(s.status))}`}
         formula={<>
           <Line sign="+" label={t("In-app payments to the merchant: paid − commission − VAT")} value={sum(inApp, (r) => r.settle_amount)} />

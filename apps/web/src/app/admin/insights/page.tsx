@@ -90,13 +90,13 @@ export default async function InsightsPage({ searchParams }: PageProps<"/admin/i
 
   const fmtDate = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   const range = from === to ? fmtDate(to) : `${fmtDate(from)} – ${fmtDate(to)}`;
-  const kpis = [
+  const kpis: { label: string; value: React.ReactNode; now: number; before: number; href?: string; strong?: boolean; hint?: string }[] = [
     { label: t("Total GMV"), value: <Amount v={s.gmv} />, now: Number(s.gmv), before: Number(s.prev?.gmv), href: `/admin/redemptions?${new URLSearchParams(txFilters)}`, strong: true },
-    { label: t("Net revenue"), value: <Amount v={s.net_revenue} />, now: Number(s.net_revenue), before: Number(s.prev?.net_revenue), hint: t("Excl. VAT {vat}", { vat: short(s.vat) }) },
-    { label: t("Transactions"), value: short(s.transactions), now: Number(s.transactions), before: Number(s.prev?.transactions) },
-    { label: t("Students"), value: short(s.students), now: Number(s.students), before: Number(s.prev?.students), hint: t("{n} new", { n: short(s.new_students) }) },
-    { label: t("Avg. GMV per transaction"), value: <Amount v={s.avg_ticket} />, now: Number(s.avg_ticket), before: Number(s.prev?.avg_ticket) },
-    { label: t("Active merchants"), value: short(s.active_merchants), now: Number(s.active_merchants), before: Number(s.prev?.active_merchants) },
+    { label: t("Net revenue"), value: <Amount v={s.net_revenue} />, now: Number(s.net_revenue), before: Number(s.prev?.net_revenue), hint: t("Excl. VAT {vat}", { vat: short(s.vat) }), href: `/admin/insights?${qs({ dim: "merchant" })}#details` },
+    { label: t("Transactions"), value: short(s.transactions), now: Number(s.transactions), before: Number(s.prev?.transactions), href: `/admin/redemptions?${new URLSearchParams(txFilters)}` },
+    { label: t("Students"), value: short(s.students), now: Number(s.students), before: Number(s.prev?.students), hint: t("{n} new", { n: short(s.new_students) }), href: `/admin/insights?${qs({ dim: "campus" })}#details` },
+    { label: t("Avg. GMV per transaction"), value: <Amount v={s.avg_ticket} />, now: Number(s.avg_ticket), before: Number(s.prev?.avg_ticket), href: `/admin/insights?${qs({ dim: "sector" })}#details` },
+    { label: t("Active merchants"), value: short(s.active_merchants), now: Number(s.active_merchants), before: Number(s.prev?.active_merchants), href: `/admin/insights?${qs({ dim: "merchant" })}#details` },
   ];
 
   return (
@@ -165,7 +165,7 @@ export default async function InsightsPage({ searchParams }: PageProps<"/admin/i
         </Card>
       )}
 
-      <h2 className="mb-3 font-bold">{t("Details by {dim}", { dim: t(dim.label.toLowerCase()) })}</h2>
+      <h2 id="details" className="mb-3 scroll-mt-20 font-bold">{t("Details by {dim}", { dim: t(dim.label.toLowerCase()) })}</h2>
       <Table head={[t(dim.label), t("Transactions"), t("Students"), t("Total GMV"), t("Net revenue"), t("Margin"), t("Share of revenue"), t("Avg. GMV")]} empty={t("No data yet")}>
         {rows.map((r) => (
           <tr key={r.key} className="hover:bg-zinc-50">

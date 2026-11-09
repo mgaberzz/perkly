@@ -1,5 +1,10 @@
 // Arabic translations for the student app. Keys are the English text used in the code (see lib/i18n.ts).
 export const AR: Record<string, string> = {
+  "Shop receipt / order no. (optional)": "رقم إيصال أو طلب المتجر (اختياري)",
+  "Shop receipt / order no.": "رقم إيصال أو طلب المتجر",
+  "e.g. INV-0042": "مثال: INV-0042",
+  "Receipt no. saved: {ref}": "تم حفظ رقم الإيصال: {ref}",
+  "Use up to 40 letters, numbers, spaces or # / . _ -": "استخدم حتى 40 حرفًا أو رقمًا أو مسافة أو # / . _ -",
   "Notifications on this phone": "الإشعارات على هذا الهاتف",
   "On ✓": "مفعّلة ✓",
   "Off · tap to allow": "متوقفة · اضغط للسماح",

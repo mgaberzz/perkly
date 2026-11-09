@@ -78,7 +78,7 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Link href={tx()} className="block transition hover:-translate-y-0.5"><Stat accent label={t("Redemptions")} value={s.redemptions ?? 0} hint={t("{n} flagged for review", { n: s.flagged ?? 0 })} /></Link>
         <Link href={tx()} className="block transition hover:-translate-y-0.5"><Stat label={t("Unique students")} value={s.unique_students ?? 0} hint={t("{a} new · {b} recurring", { a: s.new_students ?? 0, b: s.recurring_students ?? 0 })} /></Link>
-        <Stat label={t("New vs recurring customers")} value={<><Link href={tx("&customer=new")} className="hover:underline">{s.new_customer_pct ?? 0}%</Link> / <Link href={tx("&customer=recurring")} className="hover:underline">{s.recurring_customer_pct ?? 0}%</Link></>} hint={t("Click a % to see those customers")} />
+        <Stat label={t("New vs recurring customers")} value={`${s.new_customer_pct ?? 0}% / ${s.recurring_customer_pct ?? 0}%`} hint={t("Opens new customers")} href={tx("&customer=new")} />
         <Link href={tx()} className="block transition hover:-translate-y-0.5"><Stat label={t("Revenue after discount")} value={<Amount v={s.revenue_after_discount} />} hint={t("Discount given {amount}", { amount: egp(s.discount_given) })} /></Link>
       </div>
 

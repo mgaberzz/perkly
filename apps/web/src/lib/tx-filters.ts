@@ -6,10 +6,11 @@ export type TxFilters = {
   status?: string; channel?: string; payment?: string; from?: string; to?: string;
   merchant?: string; category?: string; city?: string; campus?: string; age?: string;
   /** "1" = not yet in a settlement (and not reversed) */ unsettled?: string; settlement?: string;
-  /** search: transaction ID (9…, 10 digits) or 4-char code */ q?: string;
+  /** search: transaction ID (9…, 10 digits), 4-char code or shop receipt / order no. */ q?: string;
+  /** "any" or a partner id: only transactions that earned a partner a cut */ partner?: string;
   /** "new" | "recurring" */ customer?: string; /** perk title */ perk?: string; qr?: string; branch?: string;
 };
-export const TX_FILTER_KEYS = ["q", "status", "channel", "payment", "from", "to", "merchant", "category", "city", "campus", "age", "unsettled", "settlement", "customer", "perk", "qr", "branch"] as const;
+export const TX_FILTER_KEYS = ["q", "status", "channel", "payment", "from", "to", "merchant", "category", "city", "campus", "age", "unsettled", "settlement", "customer", "perk", "qr", "branch", "partner"] as const;
 
 export function readTxFilters(get: (k: string) => string | null | undefined): TxFilters {
   const f: TxFilters = {};
@@ -36,6 +37,7 @@ export function txSelect(select: string, f: TxFilters) {
   if ((f.city && f.city !== "online") || (f.campus && f.campus !== "none")) s = s.replace(/branch:merchant_branches\(/, "branch:merchant_branches!inner(city, campus_id, ");
   if (f.age) s = s.replace(/student:profiles\(/, "student:profiles!inner(birth_date, ");
   if (f.perk) s = s.replace(/perk:perks\(/, "perk:perks!inner(");
+  if (f.partner) s += ", pe:partner_earnings!inner(partner_id)";
   return s;
 }
 
@@ -44,7 +46,8 @@ export function applyTxFilters<Q extends Record<string, any>>(q: Q, f: TxFilters
   let x = q;
   if (f.q) {
     const c = f.q.trim().toUpperCase().replace(/[^A-Z0-9-]/g, "");
-    if (c) x = x.or(`tx_code.ilike.%${c}%,verification_code.eq.${c}`);
+    const raw = f.q.trim().replace(/[^A-Za-z0-9#/._ -]/g, "");
+    if (c) x = x.or(`tx_code.ilike.%${c}%,verification_code.eq.${c}${raw ? `,receipt_ref.ilike.%${raw}%` : ""}`);
   }
   if (f.status) x = x.eq("status", f.status);
   if (f.channel) x = x.eq("channel", f.channel);
@@ -57,6 +60,7 @@ export function applyTxFilters<Q extends Record<string, any>>(q: Q, f: TxFilters
   if (f.perk) x = x.eq("perk.title", f.perk);
   if (f.qr) x = x.eq("qr_code_id", f.qr);
   if (f.branch) x = x.eq("branch_id", f.branch);
+  if (f.partner && f.partner !== "any") x = x.eq("pe.partner_id", f.partner);
   if (f.from) x = x.gte("created_at", `${f.from}T00:00:00+02:00`);
   if (f.to) x = x.lte("created_at", `${f.to}T23:59:59+02:00`);
   if (f.category) x = x.eq("merchant.category", f.category);

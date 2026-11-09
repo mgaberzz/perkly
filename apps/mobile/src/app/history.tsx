@@ -12,7 +12,7 @@ import { brand, useTheme } from '@/lib/theme';
 type Row = {
   id: string; created_at: string; merchant_name: string; logo_url: string | null; branch_name: string; perk_title: string;
   original_amount: number | null; discount_amount: number | null; final_amount: number | null; xp_awarded: number; status: string;
-  channel: string; payment_method: string; verification_code: string; tx_code: string | null;
+  channel: string; payment_method: string; verification_code: string; tx_code: string | null; receipt_ref?: string | null;
 };
 type Filters = { period: string; payment: string; channel: string; status: string };
 const NONE: Filters = { period: '', payment: '', channel: '', status: '' };
@@ -43,7 +43,7 @@ export default function History() {
     const s = q.trim().toLowerCase();
     const since = f.period ? Date.now() - Number(f.period) * 86400000 : 0;
     return (rows ?? []).filter((r) =>
-      (!s || [r.tx_code, r.verification_code, r.merchant_name, r.perk_title].some((x) => x?.toLowerCase().includes(s))) &&
+      (!s || [r.tx_code, r.verification_code, r.receipt_ref, r.merchant_name, r.perk_title].some((x) => x?.toLowerCase().includes(s))) &&
       (!since || new Date(r.created_at).getTime() >= since) &&
       (!f.payment || r.payment_method === f.payment) && (!f.channel || r.channel === f.channel) && (!f.status || r.status === f.status));
   }, [rows, q, f]);
@@ -130,6 +130,7 @@ export default function History() {
         const rowsOf: [string, string][] = [
           [t('Transaction ID'), r.tx_code ?? '—'],
           [t('Code'), r.verification_code],
+          ...(r.receipt_ref ? [[t('Shop receipt / order no.'), r.receipt_ref] as [string, string]] : []),
           [t('Date'), new Date(r.created_at).toLocaleString(locale(), { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })],
           [t('Branch'), r.branch_name === 'Online' ? t('Online') : r.branch_name],
           [t('Bill'), egp(r.original_amount)],

@@ -34,6 +34,7 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
   if (brand) query = query.eq("brand_type", brand);
   if (channel) query = query.eq("channel", channel);
   if (partner === "none") query = query.is("partner_id", null);
+  else if (partner === "any") query = query.not("partner_id", "is", null);
   else if (partner) query = query.eq("partner_id", partner);
   const [{ data: list }, { data: bal }, { data: act }, { data: partners }] = await Promise.all([
     query.returns<Row[]>(),
@@ -81,8 +82,8 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
         { name: "category", label: t("Category"), type: "select", value: category, all: t("All categories"), options: CATEGORIES.map((c) => ({ value: c, label: t(c) })) },
         { name: "brand", label: t("Brand type"), type: "select", value: brand, all: t("All brand types"), options: BRAND_TYPES.map((b) => ({ value: b, label: t(BRAND_TYPE_LABEL[b]) })) },
         { name: "channel", label: t("Channel"), type: "select", value: channel, all: t("All channels"), options: Object.entries(CHANNEL_LABEL).map(([k, v]) => ({ value: k, label: t(v) })) },
-        ...(partners ? [{ name: "partner", label: t("Partner"), type: "select" as const, value: partner, all: t("Any partner"),
-          options: [{ value: "none", label: t("No partner (Perkly)") }, ...partners.map((p) => ({ value: p.id, label: p.name }))] }] : []),
+        ...(partners ? [{ name: "partner", label: t("Partner"), type: "select" as const, value: partner, all: t("All merchants"),
+          options: [{ value: "any", label: t("Any partner") }, { value: "none", label: t("No partner (Perkly)") }, ...partners.map((p) => ({ value: p.id, label: p.name }))] }] : []),
         { name: "due", label: t("With amounts due"), type: "toggle", value: due },
       ]} />
       {due && <p className="mb-4 text-sm text-zinc-600">{t("To be paid to these merchants")}: <Link href="/admin/explain?metric=to_be_paid" className="font-bold hover:underline"><Amount v={totalOwedTo} /></Link></p>}

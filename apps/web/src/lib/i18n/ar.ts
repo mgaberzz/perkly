@@ -1,5 +1,12 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Opens new customers": "يفتح العملاء الجدد",
+  "Order ID": "رقم الطلب",
+  "Shop receipt / order no.": "رقم إيصال أو طلب المتجر",
+  "Who can log in": "من يمكنه الدخول",
+  "e.g. INV-0042": "مثال: INV-0042",
+  "Use up to 40 letters, numbers, spaces or # / . _ -": "استخدم حتى 40 حرفًا أو رقمًا أو مسافة أو # / . _ -",
+  "You can't change this transaction.": "لا يمكنك تعديل هذه المعاملة.",
   "All of these are already assigned.": "كل هذه مسندة بالفعل.",
   "All statuses ({n})": "كل الحالات ({n})",
   "Avg. GMV per transaction": "متوسط قيمة المعاملة",

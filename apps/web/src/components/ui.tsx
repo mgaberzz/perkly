@@ -28,7 +28,8 @@ export function Card({ children, className = "", title, actions }: { children: R
   );
 }
 
-export function Stat({ label, value, hint, accent = false }: { label: string; value: ReactNode; hint?: ReactNode; accent?: boolean }) {
+export function Stat({ label, value, hint, accent = false, href }: { label: string; value: ReactNode; hint?: ReactNode; accent?: boolean; href?: string }) {
+  if (href) return <Link href={href} className="block min-w-0 transition hover:-translate-y-0.5"><Stat label={label} value={value} hint={hint} accent={accent} /></Link>;
   return (
     <div className={`min-w-0 rounded-2xl p-4 shadow-sm sm:p-5 ${accent ? "perk-gradient text-white" : "border border-zinc-200 bg-white"}`}>
       <div className={`text-xs font-semibold uppercase tracking-wide ${accent ? "text-white/80" : "text-zinc-500"}`}>{label}</div>

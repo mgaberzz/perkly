@@ -34,10 +34,10 @@ export default async function PayoutsPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <h2 className="mb-3 font-bold">{t("Settlements")}</h2>
-          <Table head={[t("Created"), t("Period"), t("Transactions"), t("Net amount"), t("Paid"), t("Status")]} empty={t("No payouts yet. They appear here once students pay in the app.")}>
+          <Table head={[t("Settlement ID"), t("Period"), t("Transactions"), t("Net amount"), t("Paid"), t("Status")]} empty={t("No payouts yet. They appear here once students pay in the app.")}>
             {(settlements ?? []).map((s) => (
               <tr key={s.id}>
-                <Td>{date(s.created_at)}</Td>
+                <Td><Link href={`/merchant/explain?metric=settlement&id=${s.id}`} className="font-mono font-semibold text-perk-purple hover:underline">{s.settlement_code}</Link><div className="text-xs text-zinc-500">{date(s.created_at)}</div></Td>
                 <Td className="text-xs">{s.period_start} → {s.period_end}</Td>
                 <Td><Link href={`/merchant/explain?metric=settlement&id=${s.id}`} className="font-semibold text-perk-purple hover:underline">{s.lines}</Link></Td>
                 <Td phone="sum" className="font-bold"><Link href={`/merchant/explain?metric=settlement&id=${s.id}`} className="hover:underline">{egp(Math.abs(s.amount))}</Link><div className="text-xs font-normal text-zinc-500">{s.amount >= 0 ? t("Perkly pays you") : t("You pay Perkly commission")}</div></Td>

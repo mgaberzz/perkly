@@ -6,6 +6,7 @@ import { Text } from '@/components/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui';
 import { ShareReceiptButton } from '@/components/share-receipt';
+import { ReceiptRefInput } from '@/components/receipt-ref-input';
 import { discountLabel, egp } from '@/lib/format';
 import { getLastRedemption } from '@/lib/redemption-store';
 import { supabase } from '@/lib/supabase';
@@ -154,6 +155,7 @@ export default function Success() {
           </Animated.View>
 
           <View style={{ alignSelf: 'stretch', marginTop: 8, gap: 10 }}>
+            <ReceiptRefInput redemptionId={r.redemption_id} />
             <ShareReceiptButton variant="light" data={{ ...r, tx_code: txCode }} />
             <Button variant="white" title={t('Done')} onPress={() => router.replace('/')} />
           </View>

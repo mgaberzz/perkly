@@ -8,7 +8,7 @@ import { confirmOnlineCode, reportOnlineOrder } from "../actions";
 
 export const metadata = { title: "Online orders" };
 
-type Order = { id: string; order_ref: string; amount: number; cashback_amount: number; status: string; created_at: string };
+type Order = { id: string; order_code: string; order_ref: string; amount: number; cashback_amount: number; status: string; created_at: string };
 type Code = { id: string; code: string; status: string; created_at: string; perk: { title: string } | null };
 
 export default async function OnlinePage() {
@@ -16,7 +16,7 @@ export default async function OnlinePage() {
   if (merchant.channel === "in_store") redirect("/merchant");
   const t = await getT();
   const [{ data: orders }, { data: codes }] = await Promise.all([
-    supabase.from("online_orders").select("id, order_ref, amount, cashback_amount, status, created_at").eq("merchant_id", merchant.id).order("created_at", { ascending: false }).limit(50).returns<Order[]>(),
+    supabase.from("online_orders").select("id, order_code, order_ref, amount, cashback_amount, status, created_at").eq("merchant_id", merchant.id).order("created_at", { ascending: false }).limit(50).returns<Order[]>(),
     supabase.from("online_codes").select("id, code, status, created_at, perk:perks(title)").eq("merchant_id", merchant.id).eq("status", "used").order("created_at", { ascending: false }).limit(50).returns<Code[]>(),
   ]);
   const link = merchant.affiliate_url ?? merchant.website_url;
@@ -57,9 +57,9 @@ export default async function OnlinePage() {
         </div>
         <div>
           <h2 className="mb-3 font-bold">{t("Tracked-link orders")}</h2>
-          <Table head={[t("Order #"), t("Total"), t("Cashback"), t("Status")]} empty={t("No orders reported yet.")}>
+          <Table head={[t("Order ID"), t("Total"), t("Cashback"), t("Status")]} empty={t("No orders reported yet.")}>
             {(orders ?? []).map((o) => (
-              <tr key={o.id}><Td className="font-mono">{o.order_ref}</Td><Td phone="sum">{egp(o.amount)}</Td><Td>{egp(o.cashback_amount)}</Td><Td phone="sum"><Badge tone={o.status}>{t(o.status)}</Badge></Td></tr>
+              <tr key={o.id}><Td className="font-mono"><span className="font-semibold text-perk-purple">{o.order_code}</span><div className="text-xs text-zinc-500">{t("Your order #")} {o.order_ref}</div></Td><Td phone="sum">{egp(o.amount)}</Td><Td>{egp(o.cashback_amount)}</Td><Td phone="sum"><Badge tone={o.status}>{t(o.status)}</Badge></Td></tr>
             ))}
           </Table>
         </div>

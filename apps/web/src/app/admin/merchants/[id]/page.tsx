@@ -2,17 +2,18 @@ import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { Amount, Badge, Button, Card, Field, Input, Notice, PageHeader, Select, Stat, Table, Td } from "@/components/ui";
-import { ActionForm, ConfirmButton, SubmitButton } from "@/components/action-form";
+import { ActionForm, SubmitButton } from "@/components/action-form";
 import { PageTabs } from "@/components/page-tabs";
+import { merchantTabs } from "@/lib/merchant-tabs";
+import { resolvePeriod } from "@/lib/periods";
 import { QrImage } from "@/components/qr-image";
 import { discountLabel } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { dealLabel } from "@/components/partner-form";
-import { BRAND_TYPE_LABEL, CHANNEL_LABEL, MEMBER_ROLE_LABEL } from "@/lib/labels";
+import { BRAND_TYPE_LABEL, CHANNEL_LABEL } from "@/lib/labels";
 import type { Balance, Merchant, Perk, QrCode } from "@/lib/types";
-import { adminAddMember, adminCreateBranch, adminCreateQr, adminRemoveMember, adminToggleQr, resolveRequest } from "../../actions";
+import { adminCreateBranch, adminCreateQr, adminToggleQr, resolveRequest } from "../../actions";
 
 export const metadata = { title: "Merchant" };
 
@@ -33,29 +34,24 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
     : { data: null };
   const partner = (partnerList ?? []).find((p) => p.id === partnerId);
 
-  const [{ data: branches }, { data: perks }, { data: members }, { data: campuses }, { data: stats }, { data: balance }, { data: requests }] = await Promise.all([
+  const [{ data: branches }, { data: perks }, { data: campuses }, { data: stats }, { data: balance }, { data: requests }] = await Promise.all([
     supabase.from("merchant_branches").select("id, name, address, is_active, lat, qr:branch_qr_codes(*)").eq("merchant_id", id).order("name").returns<BranchRow[]>(),
     supabase.from("perks").select("*").eq("merchant_id", id).order("created_at", { ascending: false }).returns<Perk[]>(),
-    supabase.from("merchant_members").select("user_id, member_role, branch_id").eq("merchant_id", id),
     supabase.from("campuses").select("id, name").order("name"),
     supabase.rpc("merchant_stats", { p_merchant_id: id, p_days: 30 }),
     supabase.rpc("merchant_balances", { p_merchant_id: id }).maybeSingle<Balance>(),
     supabase.from("admin_requests").select("id, ref_id").eq("merchant_id", id).eq("kind", "qr_code").eq("status", "pending"),
   ]);
   const requestFor = new Map((requests ?? []).map((r) => [r.ref_id, r.id]));
-  const ids = (members ?? []).map((m) => m.user_id);
-  const { data: people } = ids.length && process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? await createAdminClient().from("profiles").select("id, full_name, email, user_code").in("id", ids)
-    : { data: [] as { id: string; full_name: string | null; email: string | null; user_code: string }[] };
-  const byId = new Map((people ?? []).map((p) => [p.id, p]));
-  const branchName = new Map((branches ?? []).map((b) => [b.id, b.name]));
+  const from30 = resolvePeriod("30d").from;
+  const tx30 = `/admin/redemptions?merchant=${id}&from=${from30}`;
   const s = (stats ?? {}) as { redemptions?: number; unique_students?: number; new_customer_pct?: number; recurring_customer_pct?: number; revenue_after_discount?: number };
 
   return (
     <>
       <PageHeader title={merchant.name}
         subtitle={<span className="flex flex-wrap items-center gap-2"><span className="font-mono">{merchant.merchant_code}</span> · {t(merchant.category)} · {t(BRAND_TYPE_LABEL[merchant.brand_type])} · {t(CHANNEL_LABEL[merchant.channel])} <Badge tone={merchant.status}>{t(merchant.status)}</Badge></span>} />
-      <PageTabs tabs={[{ href: `/admin/merchants/${id}`, label: t("Overview") }, ...(editable ? [{ href: `/admin/merchants/${id}/edit`, label: t("Edit") }] : [])]} />
+      <PageTabs tabs={merchantTabs(id, editable, t)} />
       {typeof invite_error === "string" && <div className="mb-4"><Notice tone="error">{t("Merchant created, but the owner invite failed:")} {invite_error}</Notice></div>}
 
       {partnerList && (
@@ -69,15 +65,15 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
       )}
 
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <Stat accent label={t("Redemptions (30d)")} value={s.redemptions ?? 0} />
-        <Stat label={t("Unique students")} value={s.unique_students ?? 0} />
-        <Stat label={t("New vs recurring")} value={`${s.new_customer_pct ?? 0}% / ${s.recurring_customer_pct ?? 0}%`} />
-        <Stat label={t("Revenue after discount")} value={<Amount v={s.revenue_after_discount} />} />
+        <Stat accent label={t("Redemptions (30d)")} value={s.redemptions ?? 0} href={tx30} />
+        <Stat label={t("Unique students")} value={s.unique_students ?? 0} href={tx30} />
+        <Stat label={t("New vs recurring")} value={`${s.new_customer_pct ?? 0}% / ${s.recurring_customer_pct ?? 0}%`} href={`${tx30}&customer=new`} hint={t("Opens new customers")} />
+        <Stat label={t("Revenue after discount")} value={<Amount v={s.revenue_after_discount} />} href={tx30} />
         <Link href={`/admin/explain?metric=net_to_settle&merchant=${id}`} className="block"><Stat label={t("Net to settle")} value={<Amount v={balance?.net_to_settle ?? 0} />} hint={Number(balance?.net_to_settle ?? 0) >= 0 ? t("Perkly pays merchant") : t("Merchant pays Perkly commission")} /></Link>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card title={t("Details")} className="lg:col-span-2"
+        <Card title={t("Details")} className="lg:col-span-3"
           actions={editable && <Link href={`/admin/merchants/${id}/edit`} className="rounded-xl border border-zinc-200 px-3 py-1.5 text-sm font-semibold hover:bg-zinc-50">{t("Edit")}</Link>}>
           <dl className="grid gap-x-8 text-sm sm:grid-cols-2">
             {([
@@ -99,46 +95,6 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
             ))}
           </dl>
           {merchant.description && <p className="mt-4 text-sm text-zinc-600">{merchant.description}</p>}
-        </Card>
-
-        <Card title={t("Portal access")}>
-          <ul className="mb-4 space-y-2">
-            {(members ?? []).map((m) => {
-              const p = byId.get(m.user_id);
-              return (
-                <li key={m.user_id} className="flex items-center justify-between gap-2 text-sm">
-                  <div className="min-w-0">
-                    <div className="truncate font-semibold">{p?.full_name ?? p?.email ?? t("Invited")}</div>
-                    <div className="truncate text-xs text-zinc-500">{p?.email} {p?.user_code && `· ${p.user_code}`}</div>
-                    {m.branch_id && <div className="text-xs text-zinc-500"><Icon name="pin" size={12} className="me-1 inline-block align-[-2px]" />{branchName.get(m.branch_id)}</div>}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge tone={m.member_role}>{t(MEMBER_ROLE_LABEL[m.member_role])}</Badge>
-                    {editable && (
-                      <form action={adminRemoveMember}>
-                        <input type="hidden" name="merchant_id" value={id} /><input type="hidden" name="user_id" value={m.user_id} />
-                        <ConfirmButton message={t("Remove portal access?")} className="text-xs text-red-600 hover:underline"><Icon name="x" size={14} /></ConfirmButton>
-                      </form>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-            {(members ?? []).length === 0 && <li className="text-sm text-zinc-500">{t("No one can log in for this merchant yet.")}</li>}
-          </ul>
-          {editable && (
-            <ActionForm action={adminAddMember.bind(null, id)} className="space-y-3" resetOnSuccess>
-              <Input name="email" type="email" placeholder="email@business.com" required />
-              <Select name="member_role" defaultValue="owner">
-                {Object.entries(MEMBER_ROLE_LABEL).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}
-              </Select>
-              <Select name="branch_id" defaultValue="">
-                <option value="">{t("Branch (for branch managers)")}</option>
-                {(branches ?? []).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </Select>
-              <SubmitButton variant="secondary" className="w-full">{t("Invite / add")}</SubmitButton>
-            </ActionForm>
-          )}
         </Card>
 
         <Card title={t("Branches & cashier QR codes")} className="lg:col-span-3">

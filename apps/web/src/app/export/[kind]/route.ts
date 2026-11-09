@@ -10,14 +10,14 @@ type Tx = {
   channel: string; payment_method: string; payment_status: string; payment_ref: string | null;
   original_amount: number | null; discount_amount: number | null; final_amount: number | null;
   commission_amount: number | null; vat_amount: number | null; merchant_net: number | null; settle_amount: number | null; settlement_id: string | null; xp_awarded: number;
-  settlement: { status: string; paid_at: string | null; reference: string | null } | null;
+  settlement: { status: string; paid_at: string | null; reference: string | null; settlement_code: string } | null; receipt_ref: string | null;
   merchant: { merchant_code: string; name: string } | null; branch: { name: string } | null;
   qr: { label: string; cashier_name: string | null } | null; perk: { title: string } | null;
   student?: { student_code: string | null; user_code: string } | null;
   partner_earning?: { cut: number; cut_type: string; cut_value: number; partner: { partner_code: string; name: string } | null } | null;
 };
 
-const TX_SELECT = "id, created_at, verification_code, tx_code, status, flag_reason, first_time_at_merchant, channel, payment_method, payment_status, payment_ref, original_amount, discount_amount, final_amount, commission_amount, vat_amount, merchant_net, settle_amount, settlement_id, xp_awarded, settlement:settlements(status, paid_at, reference), merchant:merchants(merchant_code, name), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), perk:perks(title)";
+const TX_SELECT = "id, created_at, verification_code, tx_code, status, flag_reason, first_time_at_merchant, channel, payment_method, payment_status, payment_ref, original_amount, discount_amount, final_amount, commission_amount, vat_amount, merchant_net, settle_amount, settlement_id, xp_awarded, receipt_ref, settlement:settlements(status, paid_at, reference, settlement_code), merchant:merchants(merchant_code, name), branch:merchant_branches(name), qr:branch_qr_codes(label, cashier_name), perk:perks(title)";
 
 const forbidden = () => new Response("Not allowed", { status: 403 });
 
@@ -70,6 +70,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
       { header: t("Transaction ID"), value: (r) => r.tx_code, width: 14 },
       { header: t("Date (Cairo)"), value: (r) => cairo(r.created_at), width: 18 },
       { header: t("Code"), value: (r) => r.verification_code },
+      { header: t("Shop receipt / order no."), value: (r) => r.receipt_ref ?? "", width: 18 },
       { header: t("Merchant ID"), value: (r) => r.merchant?.merchant_code },
       { header: t("Merchant"), value: (r) => r.merchant?.name, width: 22 },
       { header: t("Branch"), value: (r) => r.branch?.name ?? t("Online"), width: 20 },
@@ -97,7 +98,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
       { header: t("Amount to settle (EGP)"), value: (r) => (r.status === "reversed" ? 0 : r.settle_amount), money: true, width: 18 },
       { header: t("Settlement direction"), value: (r) => (r.status === "reversed" ? t("Reversed — nothing to settle") : Number(r.settle_amount ?? 0) > 0 ? t("Perkly pays merchant") : Number(r.settle_amount ?? 0) < 0 ? t("Merchant pays Perkly commission") : t("Nothing to settle")), width: 26 },
       { header: t("Settlement status"), value: (r) => (r.status === "reversed" ? "—" : t(settlementLabel(r.settlement?.status))), width: 18 },
-      { header: t("Settlement ID"), value: (r) => r.settlement_id, width: 38 },
+      { header: t("Settlement ID"), value: (r) => r.settlement?.settlement_code ?? "", width: 14 },
       { header: t("Settled on"), value: (r) => (r.settlement?.status === "paid" ? cairo(r.settlement.paid_at) : "") },
       { header: t("Bank reference"), value: (r) => r.settlement?.reference ?? "" , width: 18 },
       { header: t("Status"), value: (r) => t(r.status) },
@@ -141,7 +142,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
     if (error) return new Response(error.message, { status: 400 });
     type S = NonNullable<typeof data>[number];
     const cols: Column<S>[] = [
-      { header: t("Settlement ID"), value: (r) => r.id, width: 38 },
+      { header: t("Settlement ID"), value: (r) => r.settlement_code, width: 14 },
       { header: t("Merchant ID"), value: (r) => r.merchant?.merchant_code },
       { header: t("Merchant"), value: (r) => r.merchant?.name, width: 24 },
       { header: t("From"), value: (r) => r.period_start },
