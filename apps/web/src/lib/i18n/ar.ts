@@ -1,5 +1,6 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "These transactions ({n})": "هذه المعاملات ({n})",
   "Could not load the transactions.": "تعذّر تحميل المعاملات.",
   "In settlement": "ضمن تسوية",
   "Showing the latest {n} of {total}": "عرض آخر {n} من {total}",

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useT } from "./i18n";
 import { Icon } from "./icons";
+import { ExportMenu } from "./export-menu";
 
 type Row = {
   id: string; created_at: string; tx_code: string; verification_code: string; receipt_ref: string | null; status: string; payment_method: string;
@@ -73,10 +74,13 @@ export function TxPeek({ params, moreHref, merchantColumn = true }: { params: Re
           ))}
         </ul>
       )}
-      {data && moreHref && (
-        <div className="flex items-center justify-between gap-3 border-t border-zinc-100 px-1 pt-2.5 text-xs text-zinc-500">
+      {data && (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-100 px-1 pt-2.5 text-xs text-zinc-500">
           <span>{data.count > data.rows.length ? t("Showing the latest {n} of {total}", { n: data.rows.length, total: data.count }) : t("{n} transactions", { n: data.count })}</span>
-          <Link href={moreHref} className="font-semibold text-perk-purple hover:underline">{t("Open all in Transactions")} →</Link>
+          <span className="flex flex-wrap items-center gap-3">
+            {data.count > 0 && <ExportMenu items={[{ label: t("These transactions ({n})", { n: data.count }), kind: "transactions", params }]} />}
+            {moreHref && <Link href={moreHref} className="font-semibold text-perk-purple hover:underline">{t("Open all in Transactions")} →</Link>}
+          </span>
         </div>
       )}
     </div>
