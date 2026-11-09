@@ -19,7 +19,9 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const { data } = await supabase.auth.getUser();
+  // Verifies the login token locally (and refreshes it when it's about to expire)
+  const { data: claims } = await supabase.auth.getClaims();
+  const data = { user: claims?.claims?.sub ? { id: claims.claims.sub } : null };
   const path = request.nextUrl.pathname;
   if (!data.user && (path.startsWith("/admin") || path.startsWith("/merchant") || path.startsWith("/partner") || path.startsWith("/account"))) {
     const url = request.nextUrl.clone();
