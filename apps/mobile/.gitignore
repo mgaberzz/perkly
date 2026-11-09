@@ -41,3 +41,7 @@ example
 # generated native folders
 /ios
 /android
+
+# Firebase (Android push) — kept as an EAS secret file, never committed
+google-services.json
+*-firebase-adminsdk-*.json
