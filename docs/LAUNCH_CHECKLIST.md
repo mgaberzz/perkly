@@ -29,8 +29,10 @@ Ask Claude: **"launch checklist"** to walk through it.
 - [ ] Resolve the Sentry test issue(s) so only real errors remain
 
 ## Database & data
-- [ ] Supabase security & performance advisors checked and fixed; backups (PITR) confirmed on
-- [ ] Remove test & demo data (Claude prepares one SQL script with a dry-run count first):
+- [x] Supabase security & performance advisors reviewed and fixed (Nov 2026, migration 031). Re-run before launch.
+- [ ] Supabase → Authentication → **Leaked password protection** ON (Pro plan)
+- [ ] Supabase plan **Pro** with daily backups; consider the PITR add-on once real money flows
+- [ ] Remove test & demo data with `supabase/scripts/launch_cleanup.sql` (dry run first; ready, not run):
   - 89 demo merchants and their perks/branches
   - "ZZ Test Partner (delete me)" (400001) and the test café link
   - Demo logins: ops / finance / am / partner `.demo@perkly.app`
