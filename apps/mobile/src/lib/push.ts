@@ -5,6 +5,7 @@ import * as Notifications from 'expo-notifications';
 import { router, type Href } from 'expo-router';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
+import { Sentry } from './sentry';
 import { supabase } from './supabase';
 
 const TOKEN_KEY = 'perkly.pushToken';
@@ -16,7 +17,10 @@ if (Platform.OS !== 'web') {
   });
 }
 
-export type PushResult = 'ok' | 'denied' | 'unsupported' | 'no_project' | 'error';
+export type PushResult = 'ok' | 'denied' | 'blocked' | 'unsupported' | 'no_project' | 'error';
+
+/** Why the last registration failed (shown in Settings, also sent to Sentry). */
+export let lastPushError: string | null = null;
 
 /**
  * Gets this phone's Expo push token and saves it on the signed-in account.
@@ -24,6 +28,7 @@ export type PushResult = 'ok' | 'denied' | 'unsupported' | 'no_project' | 'error
  * Needs an EAS project ID in app.json (run `npx eas-cli init` once) and a real phone.
  */
 export async function registerPush(ask: boolean): Promise<PushResult> {
+  lastPushError = null;
   try {
     if (Platform.OS === 'web' || !Device.isDevice) return 'unsupported';
     if (Platform.OS === 'android') {
@@ -31,15 +36,21 @@ export async function registerPush(ask: boolean): Promise<PushResult> {
     }
     let perm = await Notifications.getPermissionsAsync();
     if (!perm.granted && ask && perm.canAskAgain) perm = await Notifications.requestPermissionsAsync();
-    if (!perm.granted) return 'denied';
+    if (!perm.granted) return perm.canAskAgain ? 'denied' : 'blocked';
     const projectId = (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas?.projectId ?? Constants.easConfig?.projectId;
     if (!projectId) return 'no_project';
     const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-    const { data } = await supabase.rpc('register_push_token', { p_token: token, p_platform: Platform.OS });
-    if (!(data as { ok?: boolean } | null)?.ok) return 'error';
+    const { data, error } = await supabase.rpc('register_push_token', { p_token: token, p_platform: Platform.OS });
+    if (error || !(data as { ok?: boolean } | null)?.ok) {
+      lastPushError = error?.message ?? (data as { error?: string } | null)?.error ?? 'save_failed';
+      Sentry.captureMessage(`Push token not saved: ${lastPushError}`);
+      return 'error';
+    }
     await AsyncStorage.setItem(TOKEN_KEY, token);
     return 'ok';
-  } catch {
+  } catch (e) {
+    lastPushError = e instanceof Error ? e.message : String(e);
+    Sentry.captureException(e);
     return 'error';
   }
 }

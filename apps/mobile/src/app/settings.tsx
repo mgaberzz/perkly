@@ -7,7 +7,7 @@ import { deleteMyAccount } from '@/lib/account';
 import { biometricAvailable, biometricEnabled, faceIdLimitedHere, setBiometricEnabled } from '@/lib/biometric';
 import { fwdChevron, lang, setLanguage, t } from '@/lib/i18n';
 import { legalUrl } from '@/lib/links';
-import { registerPush } from '@/lib/push';
+import { lastPushError, registerPush, type PushResult } from '@/lib/push';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { brand, useTheme } from '@/lib/theme';
@@ -19,6 +19,8 @@ export default function Settings() {
   const { session, profile, refreshProfile, signOut } = useSession();
   const [drops, setDrops] = useState(profile?.marketing_opt_in ?? false);
   const [deleting, setDeleting] = useState(false);
+  const [push, setPush] = useState<PushResult | 'checking'>('checking');
+  useEffect(() => { registerPush(false).then(setPush); }, []);
   const [bio, setBio] = useState<{ ok: boolean; label: string; on: boolean }>({ ok: false, label: '', on: false });
 
   useEffect(() => {
@@ -28,7 +30,9 @@ export default function Settings() {
   async function toggleDrops(v: boolean) {
     setDrops(v);
     if (session) await supabase.from('profiles').update({ marketing_opt_in: v }).eq('id', session.user.id);
-    if (v && (await registerPush(true)) === 'denied' && Platform.OS !== 'web') {
+    const r = v ? await registerPush(true) : null;
+    if (r) setPush(r);
+    if (r === 'blocked' && Platform.OS !== 'web') {
       Alert.alert(t('Notifications are off'), t('Turn on notifications for Perkly in your phone settings to get perk drops.'), [
         { text: t('Not now'), style: 'cancel' }, { text: t('Open Settings'), onPress: () => Linking.openSettings() },
       ]);
@@ -82,6 +86,26 @@ export default function Settings() {
     ]);
   }
 
+  async function fixPush() {
+    if (push === 'blocked') return Linking.openSettings();
+    if (push === 'unsupported') {
+      return Alert.alert(t('Notifications'), t('Notifications only work in the installed Perkly app on a real phone, not in Expo Go or a browser.'));
+    }
+    setPush('checking');
+    const r = await registerPush(true);
+    setPush(r);
+    if (r === 'error') Alert.alert(t('Notifications'), `${t('Could not turn on notifications. Check your connection and try again.')}\n\n${lastPushError ?? ''}`);
+  }
+  const PUSH_LABEL: Record<PushResult | 'checking', { text: string; color: string }> = {
+    checking: { text: t('Checking…'), color: c.textMuted },
+    ok: { text: t('On ✓'), color: brand.success },
+    denied: { text: t('Off · tap to allow'), color: brand.purple },
+    blocked: { text: t('Off · open settings'), color: brand.danger },
+    unsupported: { text: t('Installed app only'), color: c.textMuted },
+    no_project: { text: t('Not set up in this build'), color: brand.danger },
+    error: { text: t('Error · tap to retry'), color: brand.danger },
+  };
+
   const Row = ({ label, onPress, right }: { label: string; onPress?: () => void; right?: React.ReactNode }) => (
     <Pressable onPress={onPress} disabled={!onPress} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: c.border }}>
       <T style={{ flex: 1 }}>{label}</T>{right ?? (onPress ? <T v="muted">{fwdChevron()}</T> : null)}
@@ -119,8 +143,10 @@ export default function Settings() {
       <T v="label">{t('Notifications')}</T>
       <Card style={{ gap: 0, paddingVertical: 0 }}>
         <Row label={`🔥 ${t('Perk drops & flash deals')}`} right={<Switch value={drops} onValueChange={toggleDrops} trackColor={{ true: brand.purple }} />} />
+        <Row label={`🔔 ${t('Notifications on this phone')}`} onPress={push === 'ok' || push === 'checking' ? undefined : fixPush}
+          right={<T v="small" color={PUSH_LABEL[push].color}>{PUSH_LABEL[push].text}</T>} />
         <Row label={`📬 ${t('Notifications')}`} onPress={() => router.push('/notifications')} />
-        <Row label={`🔔 ${t('Phone permissions')}`} onPress={() => Linking.openSettings()} />
+        <Row label={`⚙️ ${t('Phone permissions')}`} onPress={() => Linking.openSettings()} />
       </Card>
       <T v="label">{t('Help')}</T>
       <Card style={{ gap: 0, paddingVertical: 0 }}>

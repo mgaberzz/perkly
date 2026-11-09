@@ -1,5 +1,14 @@
 // Arabic translations for the student app. Keys are the English text used in the code (see lib/i18n.ts).
 export const AR: Record<string, string> = {
+  "Notifications on this phone": "الإشعارات على هذا الهاتف",
+  "On ✓": "مفعّلة ✓",
+  "Off · tap to allow": "متوقفة · اضغط للسماح",
+  "Off · open settings": "متوقفة · افتح الإعدادات",
+  "Installed app only": "في التطبيق المثبّت فقط",
+  "Not set up in this build": "غير مُعدّة في هذا الإصدار",
+  "Error · tap to retry": "خطأ · اضغط لإعادة المحاولة",
+  "Notifications only work in the installed Perkly app on a real phone, not in Expo Go or a browser.": "تعمل الإشعارات فقط في تطبيق Perkly المثبّت على هاتف حقيقي، وليس في Expo Go أو المتصفح.",
+  "Could not turn on notifications. Check your connection and try again.": "تعذّر تفعيل الإشعارات. تحقق من اتصالك وحاول مرة أخرى.",
   "No notifications yet": "لا توجد إشعارات بعد",
   "Perk drops, payment receipts and your student verification result show up here.": "تظهر هنا العروض الجديدة وإيصالات الدفع ونتيجة توثيق الطالب.",
   "now": "الآن",
