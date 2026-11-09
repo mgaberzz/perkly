@@ -111,30 +111,6 @@ export async function adminCreateQr(fd: FormData) {
   revalidatePath(`/admin/merchants/${str(fd, "merchant_id")}`);
 }
 
-/** Remove a branch: deleted if it never had a transaction, otherwise closed (hidden from students, QR codes off, history kept). */
-export async function adminRemoveBranch(fd: FormData) {
-  const { supabase } = await requireStaff("merchants_edit");
-  const id = str(fd, "id"), merchantId = str(fd, "merchant_id");
-  const { count } = await supabase.from("redemptions").select("id", { count: "exact", head: true }).eq("branch_id", id);
-  let removed = false;
-  if (!count) {
-    const { error, count: deleted } = await supabase.from("merchant_branches").delete({ count: "exact" }).eq("id", id).eq("merchant_id", merchantId);
-    removed = !error && (deleted ?? 0) > 0;
-  }
-  if (!removed) {
-    await supabase.from("merchant_branches").update({ is_active: false }).eq("id", id).eq("merchant_id", merchantId);
-    await supabase.from("branch_qr_codes").update({ is_active: false }).eq("branch_id", id);
-  }
-  revalidatePath(`/admin/merchants/${merchantId}`);
-}
-
-export async function adminReopenBranch(fd: FormData) {
-  const { supabase } = await requireStaff("merchants_edit");
-  const merchantId = str(fd, "merchant_id");
-  await supabase.from("merchant_branches").update({ is_active: true }).eq("id", str(fd, "id")).eq("merchant_id", merchantId);
-  revalidatePath(`/admin/merchants/${merchantId}`);
-}
-
 export async function adminToggleQr(fd: FormData) {
   const { supabase } = await requireStaff("merchants_edit");
   await supabase.from("branch_qr_codes").update({ is_active: str(fd, "active") === "true" }).eq("id", str(fd, "id"));

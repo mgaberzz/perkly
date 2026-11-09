@@ -141,19 +141,18 @@ export async function removeQr(fd: FormData) {
 export async function removeBranch(fd: FormData) {
   const { supabase, merchant, memberRole } = await requireMerchant();
   if (memberRole !== "owner") return;
-  const id = str(fd, "id");
-  const { count } = await supabase.from("redemptions").select("id", { count: "exact", head: true }).eq("branch_id", id);
-  let removed = false;
-  if (!count) {
-    const { error } = await supabase.from("merchant_branches").delete().eq("id", id).eq("merchant_id", merchant.id);
-    removed = !error;
-  }
-  if (!removed) {
-    await supabase.from("merchant_branches").update({ is_active: false }).eq("id", id).eq("merchant_id", merchant.id);
-    await supabase.from("branch_qr_codes").update({ is_active: false }).eq("branch_id", id);
-  }
+  // The branch is closed, never deleted: students stop seeing it and can't redeem there,
+  // while its cashier QR codes and all history stay exactly as they are.
+  await supabase.from("merchant_branches").update({ is_active: false }).eq("id", str(fd, "id")).eq("merchant_id", merchant.id);
   revalidatePath("/merchant/branches", "layout");
   redirect("/merchant/branches");
+}
+
+export async function reopenBranch(fd: FormData) {
+  const { supabase, merchant, memberRole } = await requireMerchant();
+  if (memberRole !== "owner") return;
+  await supabase.from("merchant_branches").update({ is_active: true }).eq("id", str(fd, "id")).eq("merchant_id", merchant.id);
+  revalidatePath("/merchant/branches", "layout");
 }
 
 // ───────── Payouts ─────────

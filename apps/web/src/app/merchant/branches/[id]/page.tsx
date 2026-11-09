@@ -7,7 +7,7 @@ import { BranchForm } from "@/components/branch-form";
 import { QrImage } from "@/components/qr-image";
 import { getT } from "@/lib/i18n/server";
 import type { Branch, QrCode } from "@/lib/types";
-import { createQr, removeBranch, removeQr, toggleQr, updateBranch } from "../../actions";
+import { createQr, removeBranch, removeQr, toggleQr, updateBranch, reopenBranch } from "../../actions";
 
 export const metadata = { title: "Branch" };
 
@@ -75,12 +75,18 @@ export default async function BranchPage({ params }: PageProps<"/merchant/branch
         </Card>
         <Card title={t("Branch details")} className="lg:col-span-2">
           {canManage ? <BranchForm action={updateBranch.bind(null, id)} branch={branch} campuses={campuses ?? []} /> : <p className="text-sm text-zinc-500">{t("Only owners and managers can edit branches.")}</p>}
-          {memberRole === "owner" && (
+          {memberRole === "owner" && (branch.is_active ? (
             <form action={removeBranch} className="mt-6 border-t border-zinc-100 pt-4">
               <input type="hidden" name="id" value={id} />
-              <ConfirmButton message={t("Remove this branch? If it has transactions it will be closed instead, and its QR codes switched off.")} className="text-sm font-semibold text-red-600 hover:underline">{t("Remove branch")}</ConfirmButton>
+              <ConfirmButton message={t("Remove this branch? Students will no longer see it or be able to use Perkly there. Its QR codes and history are kept, and you can reopen it later.")} className="text-sm font-semibold text-red-600 hover:underline">{t("Remove branch")}</ConfirmButton>
             </form>
-          )}
+          ) : (
+            <form action={reopenBranch} className="mt-6 flex flex-wrap items-center gap-3 border-t border-zinc-100 pt-4">
+              <input type="hidden" name="id" value={id} />
+              <span className="text-sm text-zinc-500">{t("This branch is removed: students can't see it.")}</span>
+              <button className="text-sm font-semibold text-emerald-700 hover:underline">{t("Reopen branch")}</button>
+            </form>
+          ))}
         </Card>
       </div>
     </>

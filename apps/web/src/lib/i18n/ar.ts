@@ -1,5 +1,7 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Remove this branch? Students will no longer see it or be able to use Perkly there. Its QR codes and history are kept, and you can reopen it later.": "إزالة هذا الفرع؟ لن يراه الطلاب ولن يتمكنوا من استخدام Perkly فيه. تبقى رموز QR والسجل كما هي، ويمكنك إعادة فتحه لاحقًا.",
+  "This branch is removed: students can't see it.": "تمت إزالة هذا الفرع: لا يراه الطلاب.",
   "Reopen branch": "إعادة فتح الفرع",
   "These transactions ({n})": "هذه المعاملات ({n})",
   "Could not load the transactions.": "تعذّر تحميل المعاملات.",
