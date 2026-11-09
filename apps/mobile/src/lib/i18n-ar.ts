@@ -524,6 +524,7 @@ export const AR: Record<string, string> = {
   "Want a heads-up when new perks, flash deals and Boost Weeks drop on your campus? Tick the box below. You can switch it off any time in Settings.": "عايز نبلغك لما تنزل عروض جديدة وعروض سريعة وأسابيع التعزيز في جامعتك؟ علّم على الخانة تحت. تقدر تقفلها في أي وقت من الإعدادات.",
   "Want us to add some? Tell your ambassador 👇": "عايزنا نضيف؟ قول لسفير جامعتك 👇",
   "We couldn’t send a code to that number. Try again or use email.": "مقدرناش نبعت كود للرقم ده. جرّب تاني أو استخدم الإيميل.",
+  "We couldn’t send a code to that email. Try again in a few minutes or use another way to sign in.": "مقدرناش نبعت كود للإيميل ده. جرّب تاني بعد شوية أو سجّل دخول بطريقة تانية.",
   "We're adding merchants around your campus.": "بنضيف تجار حوالين جامعتك.",
   "Wed": "الأربعاء",
   "Weekend plans": "خطط الويك إند",

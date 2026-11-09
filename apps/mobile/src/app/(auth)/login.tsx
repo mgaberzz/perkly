@@ -107,7 +107,7 @@ export default function Login() {
       ? await supabase.auth.signInWithOtp({ phone: target })
       : await supabase.auth.signInWithOtp({ email: target, options: { shouldCreateUser: true } });
     setLoading(null);
-    if (err) return setError(err.message.toLowerCase().includes('rate') ? t('Too many tries. Wait a minute and try again.') : t('We couldn’t send a code to that number. Try again or use email.'));
+    if (err) return setError(err.message.toLowerCase().includes('rate') ? t('Too many tries. Wait a minute and try again.') : (mode === 'phone' ? t('We couldn’t send a code to that number. Try again or use email.') : t('We couldn’t send a code to that email. Try again in a few minutes or use another way to sign in.')));
     router.push({ pathname: '/verify', params: { mode, target } });
   }
 
