@@ -1,5 +1,8 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "View transactions": "عرض المعاملات",
+  "Hide transactions": "إخفاء المعاملات",
+  "Open settlement": "فتح التسوية",
   "Opens new customers": "يفتح العملاء الجدد",
   "Order ID": "رقم الطلب",
   "Shop receipt / order no.": "رقم إيصال أو طلب المتجر",

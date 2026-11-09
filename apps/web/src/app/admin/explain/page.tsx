@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { inScope, requireStaff } from "@/lib/auth";
 import { Amount, Badge, Card, LinkButton, PageHeader, Table, Td } from "@/components/ui";
 import { ExportButtons } from "@/components/export-buttons";
+import { ExpandRow } from "@/components/expand-row";
 import { dateTime, periodStart } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { settlementLabel, type Balance } from "@/lib/types";
@@ -116,6 +117,9 @@ export default async function ExplainPage({ searchParams }: PageProps<"/admin/ex
     const { data } = await q.returns<Settlement[]>();
     const rows = data ?? [];
     const remaining = (s: Settlement) => Math.sign(s.amount) * (Math.abs(s.amount) - Number(s.paid_amount));
+    const { data: lines } = rows.length
+      ? await supabase.from("redemptions").select(`${TX_SELECT}, settlement_id`).in("settlement_id", rows.map((x) => x.id)).order("created_at", { ascending: false }).limit(3000).returns<(Tx & { settlement_id: string })[]>()
+      : { data: [] as (Tx & { settlement_id: string })[] };
     return (
       <Explained title={t("Open settlements") + scopeNote} value={sum(rows, remaining)}
         subtitle={t("Settlements created but not fully paid. Positive = still to pay merchants; negative = still to collect from merchants.")}
@@ -124,7 +128,7 @@ export default async function ExplainPage({ searchParams }: PageProps<"/admin/ex
           <Line sign="−" label={t("Still to collect from merchants")} value={-sum(rows.filter((s) => s.amount < 0), remaining)} />
           <Line sign="=" strong label={t("Open settlements")} value={sum(rows, remaining)} />
         </>}>
-        <SettlementTable rows={rows} t={t} />
+        <SettlementTable rows={rows} t={t} lines={lines ?? []} />
       </Explained>
     );
   }
@@ -164,21 +168,33 @@ export default async function ExplainPage({ searchParams }: PageProps<"/admin/ex
       ? Math.max(Number(b.net_to_settle), 0) + Math.max(Number(b.pending_settlements), 0)
       : -Math.min(Number(b.net_to_settle), 0) - Math.min(Number(b.pending_settlements), 0));
     const rows = ((data ?? []) as Balance[]).filter((b) => due(b) > 0 && (!merchantScope || merchantScope.includes(b.merchant_id))).sort((a, b) => due(b) - due(a));
+    const { data: open } = rows.length
+      ? await supabase.from("redemptions").select(TX_SELECT).in("merchant_id", rows.map((b) => b.merchant_id)).is("settlement_id", null).neq("status", "reversed")
+          .or("payment_method.eq.merchant,payment_status.eq.paid").order("created_at", { ascending: false }).limit(2000).returns<Tx[]>()
+      : { data: [] as Tx[] };
+    const txOf = (id: string) => (open ?? []).filter((r) => r.merchant?.id === id);
     return (
       <Explained title={metric === "to_be_paid" ? t("To be paid to merchants") : t("Merchants owe Perkly")} value={sum(rows, due)}
         subtitle={metric === "to_be_paid" ? t("Per merchant: unsettled in-app money owed to them plus open settlements in their favour.") : t("Per merchant: unsettled commission + VAT from cashier sales plus open settlements in Perkly's favour.")}
         formula={<Line sign="=" strong label={t("{n} merchant(s)", { n: rows.length })} value={sum(rows, due)} />}>
-        <Table head={[t("Merchant"), t("Net to settle"), t("Open settlements"), t("Total"), ""]} empty={t("Nothing due")}>
-          {rows.map((b) => (
-            <tr key={b.merchant_id}>
-              <Td><Link href={`/admin/merchants/${b.merchant_id}`} className="font-semibold hover:text-perk-purple">{b.merchant_name}</Link><div className="font-mono text-xs text-zinc-500">{b.merchant_code}</div></Td>
-              <Td><Link href={`/admin/explain?metric=net_to_settle&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.net_to_settle} /></Link></Td>
-              <Td><Link href={`/admin/explain?metric=open_settlements&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.pending_settlements} /></Link></Td>
-              <Td phone="sum" className="font-bold text-perk-purple"><Amount v={due(b)} /></Td>
-              <Td><Link href={`/admin/explain?metric=net_to_settle&merchant=${b.merchant_id}`} className="text-sm font-semibold text-perk-purple hover:underline">{t("Why?")} →</Link></Td>
-            </tr>
-          ))}
-        </Table>
+        {rows.length === 0 ? <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-10 text-center text-sm text-zinc-500">{t("Nothing due")}</div> : (
+          <div className="space-y-3">
+            {rows.map((b) => (
+              <ExpandRow key={b.merchant_id} openLabel={t("View transactions")} closeLabel={t("Hide transactions")} summary={<>
+                <div className="min-w-0 basis-48"><div className="truncate font-semibold">{b.merchant_name}</div><div className="font-mono text-xs text-zinc-500">{b.merchant_code}</div></div>
+                <div className="text-sm"><div className="text-xs text-zinc-500">{t("Net to settle")}</div><Amount v={b.net_to_settle} /></div>
+                <div className="text-sm"><div className="text-xs text-zinc-500">{t("Open settlements")}</div><Amount v={b.pending_settlements} /></div>
+                <div className="text-sm"><div className="text-xs text-zinc-500">{t("Total")}</div><b><Amount v={due(b)} /></b></div>
+              </>}>
+                <TxTable rows={txOf(b.merchant_id)} t={t} />
+                <div className="mt-3 flex flex-wrap gap-4 px-1 text-sm">
+                  <Link href={`/admin/merchants/${b.merchant_id}`} className="font-semibold text-perk-purple hover:underline">{t("Open merchant")} →</Link>
+                  {Number(b.pending_settlements) !== 0 && <Link href={`/admin/explain?metric=open_settlements&merchant=${b.merchant_id}`} className="font-semibold text-perk-purple hover:underline">{t("Open settlements")} →</Link>}
+                </div>
+              </ExpandRow>
+            ))}
+          </div>
+        )}
       </Explained>
     );
   }
@@ -238,7 +254,7 @@ function TxTable({ rows, t }: { rows: Tx[]; t: (s: string, v?: Record<string, st
     <Table head={[t("Time"), t("Merchant"), t("Perk"), t("Payment"), t("Total GMV"), t("Paid"), t("Commission"), t("VAT"), t("Settlement amount"), t("To settle"), t("Status")]} empty={t("No transactions.")}>
       {rows.map((r) => (
         <tr key={r.id}>
-          <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-perk-purple">{r.tx_code}</div><div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
+          <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-zinc-600">{r.tx_code}</div><div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
           <Td phone="lead">{r.merchant && <Link href={`/admin/merchants/${r.merchant.id}`} className="hover:underline">{r.merchant.name}</Link>}</Td>
           <Td>{r.perk?.title}</Td>
           <Td><Badge tone={r.payment_method === "in_app" ? "active" : "paused"}>{r.payment_method === "in_app" ? t("In app") : t("Cashier")}</Badge></Td>
@@ -248,29 +264,30 @@ function TxTable({ rows, t }: { rows: Tx[]; t: (s: string, v?: Record<string, st
           <Td><Amount v={r.vat_amount} /></Td>
           <Td><Amount v={r.merchant_net} /></Td>
           <Td phone="sum" className={Number(r.settle_amount) < 0 ? "font-semibold text-amber-700" : "font-semibold text-perk-purple"}><Amount v={r.settle_amount} /></Td>
-          <Td phone="sum">{r.settlement
-            ? <Link href={`/admin/explain?metric=settlement&id=${r.settlement.id}`} className="hover:underline"><Badge tone={r.settlement.status === "paid" ? "paid" : "pending"}>{t(settlementLabel(r.settlement.status))}</Badge></Link>
-            : <Badge tone="paused">{t("Not settled yet")}</Badge>}</Td>
+          <Td phone="sum" className="whitespace-nowrap text-xs font-semibold">{r.settlement
+            ? <Link href={`/admin/explain?metric=settlement&id=${r.settlement.id}`} className={`hover:underline ${r.settlement.status === "paid" ? "text-emerald-700" : "text-amber-700"}`}>{t(settlementLabel(r.settlement.status))}</Link>
+            : <span className="text-zinc-500">{t("Not settled yet")}</span>}</Td>
         </tr>
       ))}
     </Table>
   );
 }
 
-function SettlementTable({ rows, t }: { rows: Settlement[]; t: (s: string, v?: Record<string, string | number>) => string }) {
+function SettlementTable({ rows, t, lines }: { rows: Settlement[]; t: (s: string, v?: Record<string, string | number>) => string; lines: (Tx & { settlement_id: string })[] }) {
+  if (rows.length === 0) return <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-10 text-center text-sm text-zinc-500">{t("No settlements yet.")}</div>;
   return (
-    <Table head={[t("Created"), t("Merchant"), t("Period"), t("Net amount"), t("Paid"), t("Status"), ""]} empty={t("No settlements yet.")}>
+    <div className="space-y-3">
       {rows.map((s) => (
-        <tr key={s.id}>
-          <Td>{dateTime(s.created_at)}</Td>
-          <Td phone="lead">{s.merchant?.name}<div className="font-mono text-xs text-zinc-500">{s.merchant?.merchant_code}</div></Td>
-          <Td className="text-xs">{s.period_start} → {s.period_end}</Td>
-          <Td phone="sum" className="font-semibold"><Amount v={s.amount} /></Td>
-          <Td><Amount v={s.paid_amount} /></Td>
-          <Td phone="sum"><Badge tone={s.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(s.status))}</Badge></Td>
-          <Td><Link href={`/admin/explain?metric=settlement&id=${s.id}`} className="text-sm font-semibold text-perk-purple hover:underline">{t("Why?")} →</Link></Td>
-        </tr>
+        <ExpandRow key={s.id} openLabel={t("View transactions")} closeLabel={t("Hide transactions")} summary={<>
+          <div className="min-w-0 basis-48"><div className="truncate font-semibold">{s.merchant?.name}</div><div className="font-mono text-xs text-zinc-500">{s.settlement_code} · {s.period_start} → {s.period_end}</div></div>
+          <div className="text-sm"><div className="text-xs text-zinc-500">{t("Net amount")}</div><b><Amount v={s.amount} /></b></div>
+          <div className="text-sm"><div className="text-xs text-zinc-500">{t("Paid")}</div><Amount v={s.paid_amount} /></div>
+          <div className="text-xs font-semibold text-amber-700">{t(settlementLabel(s.status))}</div>
+        </>}>
+          <TxTable rows={lines.filter((l) => l.settlement_id === s.id)} t={t} />
+          <div className="mt-3 px-1 text-sm"><Link href={`/admin/explain?metric=settlement&id=${s.id}`} className="font-semibold text-perk-purple hover:underline">{t("Open settlement")} →</Link></div>
+        </ExpandRow>
       ))}
-    </Table>
+    </div>
   );
 }

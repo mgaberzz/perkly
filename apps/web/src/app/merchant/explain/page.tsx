@@ -197,7 +197,7 @@ function TxTable({ rows, t, money }: { rows: Tx[]; t: (s: string, v?: Record<str
       ...(money ? [t("Commission"), t("VAT"), t("Your net"), t("Status")] : [])]} empty={t("No transactions.")}>
       {rows.map((r) => (
         <tr key={r.id}>
-          <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-perk-purple">{r.tx_code}</div><div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
+          <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-zinc-600">{r.tx_code}</div><div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
           <Td>{r.branch?.name ?? <><Icon name="globe" size={14} className="me-1 inline-block align-[-2px]" />{t("Online")}</>}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>
           <Td phone="lead">{r.perk?.title}</Td>
           <Td>{r.first_time_at_merchant ? <Badge tone="live">{t("New customer")}</Badge> : <Badge tone="paused">{t("Recurring customer")}</Badge>}</Td>
@@ -209,9 +209,9 @@ function TxTable({ rows, t, money }: { rows: Tx[]; t: (s: string, v?: Record<str
             <Td><Amount v={r.commission_amount} /></Td>
             <Td><Amount v={r.vat_amount} /></Td>
             <Td className="font-semibold"><Amount v={r.merchant_net} /></Td>
-            <Td>{r.settlement
-              ? <Link href={`/merchant/explain?metric=settlement&id=${r.settlement.id}`} className="hover:underline"><Badge tone={r.settlement.status === "paid" ? "paid" : "pending"}>{t(settlementLabel(r.settlement.status))}</Badge></Link>
-              : <Badge tone="paused">{t("Not settled yet")}</Badge>}</Td>
+            <Td className="whitespace-nowrap text-xs font-semibold">{r.settlement
+              ? <Link href={`/merchant/explain?metric=settlement&id=${r.settlement.id}`} className={`hover:underline ${r.settlement.status === "paid" ? "text-emerald-700" : "text-amber-700"}`}>{t(settlementLabel(r.settlement.status))}</Link>
+              : <span className="text-zinc-500">{t("Not settled yet")}</span>}</Td>
           </>}
         </tr>
       ))}

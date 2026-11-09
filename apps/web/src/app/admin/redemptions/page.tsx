@@ -78,7 +78,7 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
                   <span className={`shrink-0 font-extrabold ${r.status === "reversed" ? "text-zinc-400 line-through" : ""}`}><Amount v={r.original_amount} /></span>
                 </div>
                 <div className="flex items-center justify-between gap-2 text-xs text-zinc-500">
-                  <span className="truncate"><span className="font-mono font-semibold text-perk-purple">{r.tx_code}</span> · {shortDateTime(r.created_at)}</span>
+                  <span className="truncate"><span className="font-mono font-semibold text-zinc-600">{r.tx_code}</span> · {shortDateTime(r.created_at)}</span>
                   <span className="shrink-0 text-emerald-600">−<Amount v={r.discount_amount} /></span>
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-1">
@@ -89,7 +89,7 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
               </div>
             </div>}>
             <DetailRow label={t("Time")}>{dateTime(r.created_at)}</DetailRow>
-            <DetailRow label={t("Transaction ID")}><span className="font-mono text-perk-purple">{r.tx_code}</span></DetailRow>
+            <DetailRow label={t("Transaction ID")}><span className="font-mono text-zinc-600">{r.tx_code}</span></DetailRow>
             <DetailRow label={t("Code")}><span className="font-mono">{r.verification_code}</span></DetailRow>
             <DetailRow label={t("Shop receipt / order no.")}>{review ? <ReceiptRefForm id={r.id} value={r.receipt_ref} /> : <span className="font-mono">{r.receipt_ref ?? "—"}</span>}</DetailRow>
             {r.settlement && <DetailRow label={t("Settlement ID")}><Link href={`/admin/explain?metric=settlement&id=${r.settlement.id}`} className="font-mono text-perk-purple underline">{r.settlement.settlement_code}</Link></DetailRow>}
@@ -120,7 +120,7 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
       <Table className="hidden sm:block" head={[t("Time / ID"), t("Student"), t("Merchant"), t("Branch / cashier"), t("Perk"), t("Total GMV"), t("Discount"), t("Payment"), t("To settle"), t("Status"), ""]} empty={t("No transactions.")}>
         {(data ?? []).map((r) => (
           <tr key={r.id}>
-            <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-perk-purple">{r.tx_code}</div><div className="font-mono text-xs text-zinc-500">{r.verification_code}</div>{r.receipt_ref && <div className="font-mono text-xs text-zinc-500" title={t("Shop receipt / order no.")}>#{r.receipt_ref}</div>}</Td>
+            <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-zinc-600">{r.tx_code}</div><div className="font-mono text-xs text-zinc-500">{r.verification_code}</div>{r.receipt_ref && <div className="font-mono text-xs text-zinc-500" title={t("Shop receipt / order no.")}>#{r.receipt_ref}</div>}</Td>
             <Td>{r.student?.full_name ?? "—"}<div className="font-mono text-xs text-zinc-500">{r.student?.student_code ?? r.student?.user_code}</div></Td>
             <Td><Link href={`/admin/merchants/${r.merchant.id}`} className="hover:underline">{r.merchant.name}</Link><div className="font-mono text-xs text-zinc-500">{r.merchant.merchant_code}</div></Td>
             <Td>{r.branch?.name ?? <><Icon name="globe" size={14} className="me-1 inline-block align-[-2px]" />{t("Online")}</>}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>

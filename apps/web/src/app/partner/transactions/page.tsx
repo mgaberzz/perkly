@@ -40,7 +40,7 @@ export default async function PartnerTransactions({ searchParams }: PageProps<"/
       <Table head={[t("Time / ID"), t("Merchant"), t("Branch"), t("Total GMV"), t("Perkly commission"), t("Deal"), t("You earned"), t("Status")]} empty={t("No transactions in this period.")}>
         {rows.map((r) => (
           <tr key={r.tx_code}>
-            <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-perk-purple">{r.tx_code}</div></Td>
+            <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-zinc-600">{r.tx_code}</div></Td>
             <Td phone="lead">{r.merchant_name}</Td>
             <Td>{r.branch_name === "Online" ? t("Online") : r.branch_name}</Td>
             <Td><Amount v={r.gmv} /></Td>

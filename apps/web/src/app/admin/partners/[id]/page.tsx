@@ -140,7 +140,7 @@ export default async function PartnerPage({ params }: PageProps<"/admin/partners
       <Table head={[t("Time / ID"), t("Merchant"), t("Total GMV"), t("Perkly commission"), t("Deal"), t("Partner cut"), t("Status")]} empty={t("No transactions at this partner's merchants yet.")}>
         {(earnings ?? []).slice(0, 200).map((e) => (
           <tr key={e.redemption_id}>
-            <Td className="whitespace-nowrap">{dateTime(e.created_at)}<div className="font-mono text-xs font-semibold text-perk-purple">{e.redemption?.tx_code}</div></Td>
+            <Td className="whitespace-nowrap">{dateTime(e.created_at)}<div className="font-mono text-xs text-zinc-600">{e.redemption?.tx_code}</div></Td>
             <Td phone="lead">{e.merchant?.name}</Td>
             <Td><Amount v={e.redemption?.original_amount} /></Td>
             <Td><Amount v={e.commission} /></Td>
