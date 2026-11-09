@@ -1,3 +1,4 @@
+import { CardGrid } from "@/components/card-grid";
 import Link from "next/link";
 import { requireMerchantArea } from "@/lib/auth";
 import { Amount, BarChart, Button, Card, HBarList, LinkButton, PageHeader, Select, Stat } from "@/components/ui";
@@ -47,6 +48,7 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
   });
   const hours = Array.from({ length: 24 }, (_, h) => ({ label: String(h), value: s.by_hour?.find((x) => x.hour === h)?.count ?? 0 }));
   const peak = hours.reduce((a, b) => (b.value > a.value ? b : a), hours[0]);
+  const mtx = { scope: "merchant", from: new Date(now - (days - 1) * 86400000).toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" }), branch: branch ?? undefined, qr: qr ?? undefined };
   const tx = (extra = "") => `/merchant/explain?metric=transactions&days=${days}${filt}${extra}`;
   const link = (d: number) => `/merchant?days=${d}${branch && !branchScope ? `&branch=${branch}` : ""}${qr ? `&qr=${qr}` : ""}`;
   const visibleQrs = (qrs ?? []).filter((q) => !branch || q.branch_id === branch);
@@ -75,12 +77,12 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
       </form>
       {error && <p className="mb-4 text-sm text-red-600">{error.message}</p>}
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Link href={tx()} className="block transition hover:-translate-y-0.5"><Stat accent label={t("Redemptions")} value={s.redemptions ?? 0} hint={t("{n} flagged for review", { n: s.flagged ?? 0 })} /></Link>
-        <Link href={tx()} className="block transition hover:-translate-y-0.5"><Stat label={t("Unique students")} value={s.unique_students ?? 0} hint={t("{a} new · {b} recurring", { a: s.new_students ?? 0, b: s.recurring_students ?? 0 })} /></Link>
-        <Stat label={t("New vs recurring customers")} value={`${s.new_customer_pct ?? 0}% / ${s.recurring_customer_pct ?? 0}%`} hint={t("Opens new customers")} href={tx("&customer=new")} />
-        <Link href={tx()} className="block transition hover:-translate-y-0.5"><Stat label={t("Revenue after discount")} value={<Amount v={s.revenue_after_discount} />} hint={t("Discount given {amount}", { amount: egp(s.discount_given) })} /></Link>
-      </div>
+      <CardGrid txPage="/merchant/redemptions" merchantColumn={false} className="grid grid-cols-2 gap-4 lg:grid-cols-4" items={[
+        { key: "r", title: t("Redemptions"), tx: mtx, card: <Stat accent label={t("Redemptions")} value={s.redemptions ?? 0} hint={t("{n} flagged for review", { n: s.flagged ?? 0 })} /> },
+        { key: "s", title: t("Unique students"), tx: mtx, card: <Stat label={t("Unique students")} value={s.unique_students ?? 0} hint={t("{a} new · {b} recurring", { a: s.new_students ?? 0, b: s.recurring_students ?? 0 })} /> },
+        { key: "n", title: t("New customers"), tx: { ...mtx, customer: "new" }, card: <Stat label={t("New vs recurring customers")} value={`${s.new_customer_pct ?? 0}% / ${s.recurring_customer_pct ?? 0}%`} hint={t("Opens new customers")} /> },
+        { key: "v", title: t("Revenue after discount"), tx: mtx, card: <Stat label={t("Revenue after discount")} value={<Amount v={s.revenue_after_discount} />} hint={t("Discount given {amount}", { amount: egp(s.discount_given) })} /> },
+      ]} />
 
       {balance && (
         <Link href="/merchant/explain?metric=to_settle" className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-perk-purple/30 bg-perk-purple/5 p-4">

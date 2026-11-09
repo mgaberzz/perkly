@@ -1,3 +1,4 @@
+import { CardGrid } from "@/components/card-grid";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
@@ -46,12 +47,12 @@ export default async function PartnerPage({ params }: PageProps<"/admin/partners
       <PageHeader title={partner.name} subtitle={<><span className="font-mono">{partner.partner_code}</span> · {dealLabel(partner, t)} · <Badge tone={partner.status}>{t(partner.status)}</Badge></>}
         actions={<div className="flex flex-wrap items-center gap-3"><ExportMenu items={[{ label: t("Transactions"), kind: "transactions", params: { partner: partner.id } }, { label: t("Payments to partner"), kind: "partner_payouts", params: { partner: partner.id } }, { label: t("Balance"), kind: "partners", params: { partner: partner.id } }]} /><Link href="/admin/partners" className="text-sm font-semibold text-zinc-500 hover:text-perk-purple">← {t("All partners")}</Link></div>} />
 
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat accent label={t("Due to partner")} value={<Amount v={b?.due ?? 0} />} hint={t("Earned minus paid")} href="#payments" />
-        <Stat label={t("Earned")} value={<Amount v={b?.earned ?? 0} />} hint={t("{n} transactions", { n: short(b?.transactions ?? 0) })} href={`/admin/redemptions?partner=${id}`} />
-        <Stat label={t("Paid")} value={<Amount v={b?.paid ?? 0} />} hint={b?.last_paid_at ? t("Last paid {date}", { date: date(b.last_paid_at) }) : t("Nothing paid yet")} href="#payments" />
-        <Stat label={t("Commission from their merchants")} value={<Amount v={b?.commission ?? 0} />} hint={t("Total GMV {amount}", { amount: `${short(b?.gmv ?? 0)} EGP` })} href={`/admin/redemptions?partner=${id}`} />
-      </div>
+        <CardGrid className="grid grid-cols-2 gap-4 lg:grid-cols-4" items={[
+          { key: "d", href: "#payments", card: <Stat accent label={t("Due to partner")} value={<Amount v={b?.due ?? 0} />} hint={t("Earned minus paid")} /> },
+          { key: "e", title: t("Earned"), tx: { partner: id }, card: <Stat label={t("Earned")} value={<Amount v={b?.earned ?? 0} />} hint={t("{n} transactions", { n: short(b?.transactions ?? 0) })} /> },
+          { key: "p", href: "#payments", card: <Stat label={t("Paid")} value={<Amount v={b?.paid ?? 0} />} hint={b?.last_paid_at ? t("Last paid {date}", { date: date(b.last_paid_at) }) : t("Nothing paid yet")} /> },
+          { key: "c", title: t("Commission from their merchants"), tx: { partner: id }, card: <Stat label={t("Commission from their merchants")} value={<Amount v={b?.commission ?? 0} />} hint={t("Total GMV {amount}", { amount: `${short(b?.gmv ?? 0)} EGP` })} /> },
+        ]} />
 
       <div className="mb-6 grid gap-6 lg:grid-cols-3">
         <Card title={t("Merchants")} className="lg:col-span-2">

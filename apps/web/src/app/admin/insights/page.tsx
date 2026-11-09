@@ -1,3 +1,4 @@
+import { CardGrid } from "@/components/card-grid";
 import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { requireStaff, inScope } from "@/lib/auth";
@@ -90,13 +91,13 @@ export default async function InsightsPage({ searchParams }: PageProps<"/admin/i
 
   const fmtDate = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   const range = from === to ? fmtDate(to) : `${fmtDate(from)} – ${fmtDate(to)}`;
-  const kpis: { label: string; value: React.ReactNode; now: number; before: number; href?: string; strong?: boolean; hint?: string }[] = [
+  const kpis: { key?: string; label: string; value: React.ReactNode; now: number; before: number; href?: string; strong?: boolean; hint?: string }[] = [
     { label: t("Total GMV"), value: <Amount v={s.gmv} />, now: Number(s.gmv), before: Number(s.prev?.gmv), href: `/admin/redemptions?${new URLSearchParams(txFilters)}`, strong: true },
     { label: t("Net revenue"), value: <Amount v={s.net_revenue} />, now: Number(s.net_revenue), before: Number(s.prev?.net_revenue), hint: t("Excl. VAT {vat}", { vat: short(s.vat) }), href: `/admin/insights?${qs({ dim: "merchant" })}#details` },
     { label: t("Transactions"), value: short(s.transactions), now: Number(s.transactions), before: Number(s.prev?.transactions), href: `/admin/redemptions?${new URLSearchParams(txFilters)}` },
     { label: t("Students"), value: short(s.students), now: Number(s.students), before: Number(s.prev?.students), hint: t("{n} new", { n: short(s.new_students) }), href: `/admin/insights?${qs({ dim: "campus" })}#details` },
     { label: t("Avg. GMV per transaction"), value: <Amount v={s.avg_ticket} />, now: Number(s.avg_ticket), before: Number(s.prev?.avg_ticket), href: `/admin/insights?${qs({ dim: "sector" })}#details` },
-    { label: t("Active merchants"), value: short(s.active_merchants), now: Number(s.active_merchants), before: Number(s.prev?.active_merchants), href: `/admin/insights?${qs({ dim: "merchant" })}#details` },
+    { key: "merchants", label: t("Active merchants"), value: short(s.active_merchants), now: Number(s.active_merchants), before: Number(s.prev?.active_merchants), href: `/admin/insights?${qs({ dim: "merchant" })}#details` },
   ];
 
   return (
@@ -118,21 +119,19 @@ export default async function InsightsPage({ searchParams }: PageProps<"/admin/i
       {error && <p className="mb-4 text-sm text-red-600">{error.message}</p>}
 
       {/* Headline numbers with change vs the previous period of the same length */}
-      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        {kpis.map((k) => {
-          const body = (
-            <div className={`h-full rounded-2xl border p-4 shadow-sm ${k.strong ? "perk-gradient border-transparent text-white" : "border-zinc-200 bg-white"}`}>
-              <div className={`text-xs font-semibold uppercase tracking-wide ${k.strong ? "text-white/80" : "text-zinc-500"}`}>{k.label}</div>
-              <div className="mt-1 truncate text-xl font-extrabold">{k.value}</div>
-              <div className={`mt-1 flex flex-wrap gap-x-2 text-xs ${k.strong ? "text-white/90 [&_span]:!text-white" : "text-zinc-500"}`}>
-                <Delta now={k.now} before={k.before} t={t} /><span className={k.strong ? "text-white/80" : "text-zinc-400"}>{t("vs previous")}</span>
-              </div>
-              {k.hint && <div className={`mt-0.5 text-xs ${k.strong ? "text-white/80" : "text-zinc-500"}`}>{k.hint}</div>}
+      <CardGrid className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6" items={kpis.map((k) => ({
+        key: k.label, title: k.label, tx: k.key === "merchants" ? undefined : txFilters, href: k.key === "merchants" ? k.href : undefined,
+        card: (
+          <div className={`h-full rounded-2xl border p-4 shadow-sm ${k.strong ? "perk-gradient border-transparent text-white" : "border-zinc-200 bg-white"}`}>
+            <div className={`text-xs font-semibold uppercase tracking-wide ${k.strong ? "text-white/80" : "text-zinc-500"}`}>{k.label}</div>
+            <div className="mt-1 truncate text-xl font-extrabold">{k.value}</div>
+            <div className={`mt-1 flex flex-wrap gap-x-2 text-xs ${k.strong ? "text-white/90 [&_span]:!text-white" : "text-zinc-500"}`}>
+              <Delta now={k.now} before={k.before} t={t} /><span className={k.strong ? "text-white/80" : "text-zinc-400"}>{t("vs previous")}</span>
             </div>
-          );
-          return k.href ? <Link key={k.label} href={k.href} className="block min-w-0 transition hover:-translate-y-0.5">{body}</Link> : <div key={k.label} className="min-w-0">{body}</div>;
-        })}
-      </div>
+            {k.hint && <div className={`mt-0.5 text-xs ${k.strong ? "text-white/80" : "text-zinc-500"}`}>{k.hint}</div>}
+          </div>
+        ),
+      }))} />
 
       <Card title={weekly ? t("Weekly trend: total GMV and net revenue") : t("Daily trend: total GMV and net revenue")} className="mb-6"
         actions={<span className="hidden text-xs text-zinc-500 sm:inline">{t("Click a bar to see its transactions")}</span>}>

@@ -1,3 +1,4 @@
+import { CardGrid } from "@/components/card-grid";
 import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -44,7 +45,6 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
   ]);
   const requestFor = new Map((requests ?? []).map((r) => [r.ref_id, r.id]));
   const from30 = resolvePeriod("30d").from;
-  const tx30 = `/admin/redemptions?merchant=${id}&from=${from30}`;
   const s = (stats ?? {}) as { redemptions?: number; unique_students?: number; new_customer_pct?: number; recurring_customer_pct?: number; revenue_after_discount?: number };
 
   return (
@@ -64,13 +64,13 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
         </div>
       )}
 
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <Stat accent label={t("Redemptions (30d)")} value={s.redemptions ?? 0} href={tx30} />
-        <Stat label={t("Unique students")} value={s.unique_students ?? 0} href={tx30} />
-        <Stat label={t("New vs recurring")} value={`${s.new_customer_pct ?? 0}% / ${s.recurring_customer_pct ?? 0}%`} href={`${tx30}&customer=new`} hint={t("Opens new customers")} />
-        <Stat label={t("Revenue after discount")} value={<Amount v={s.revenue_after_discount} />} href={tx30} />
-        <Link href={`/admin/explain?metric=net_to_settle&merchant=${id}`} className="block"><Stat label={t("Net to settle")} value={<Amount v={balance?.net_to_settle ?? 0} />} hint={Number(balance?.net_to_settle ?? 0) >= 0 ? t("Perkly pays merchant") : t("Merchant pays Perkly commission")} /></Link>
-      </div>
+      <CardGrid className="grid grid-cols-2 gap-4 lg:grid-cols-5" items={[
+        { key: "r", title: t("Last 30 days"), tx: { merchant: id, from: from30 }, card: <Stat accent label={t("Redemptions (30d)")} value={s.redemptions ?? 0} /> },
+        { key: "s", title: t("Last 30 days"), tx: { merchant: id, from: from30 }, card: <Stat label={t("Unique students")} value={s.unique_students ?? 0} /> },
+        { key: "n", title: t("New customers"), tx: { merchant: id, from: from30, customer: "new" }, card: <Stat label={t("New vs recurring")} value={`${s.new_customer_pct ?? 0}% / ${s.recurring_customer_pct ?? 0}%`} hint={t("Opens new customers")} /> },
+        { key: "v", title: t("Last 30 days"), tx: { merchant: id, from: from30 }, card: <Stat label={t("Revenue after discount")} value={<Amount v={s.revenue_after_discount} />} /> },
+        { key: "u", title: t("Not yet in a settlement"), tx: { merchant: id, unsettled: "1" }, card: <Stat label={t("Net to settle")} value={<Amount v={balance?.net_to_settle ?? 0} />} hint={Number(balance?.net_to_settle ?? 0) >= 0 ? t("Perkly pays merchant") : t("Merchant pays Perkly commission")} /> },
+      ]} />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card title={t("Details")} className="lg:col-span-3"

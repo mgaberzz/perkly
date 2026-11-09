@@ -1,3 +1,4 @@
+import { CardGrid } from "@/components/card-grid";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireMerchantArea } from "@/lib/auth";
@@ -25,12 +26,12 @@ export default async function PayoutsPage() {
     <>
       <PageHeader title={t("Payouts")} subtitle={t("Merchant level — all branches together. When students pay in the Perkly app, Perkly collects the money and transfers it to your bank account minus commission.")}
         actions={<ExportButtons kind="settlements" params={{ scope: "merchant" }} />} />
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Link href="/merchant/explain?metric=to_settle" className="block transition hover:-translate-y-0.5"><Stat accent label={toSettle >= 0 ? t("Total to be settled to you") : t("Commission you owe Perkly")} value={<Amount v={Math.abs(toSettle)} />} hint={t("In-app payments minus commission on cashier sales, incl. open settlements")} /></Link>
-        <Link href="/merchant/explain?metric=to_settle&kind=in_app" className="block transition hover:-translate-y-0.5"><Stat label={t("In-app sales (unsettled)")} value={<Amount v={b?.in_app_gross} />} hint={t("Perkly commission {amount}", { amount: egp(b?.in_app_commission) })} /></Link>
-        <Link href="/merchant/explain?metric=paid_to_you" className="block transition hover:-translate-y-0.5"><Stat label={t("Paid to you so far")} value={<Amount v={b?.paid_out} />} hint={b?.last_paid_at ? t("Last transfer {date}", { date: date(b.last_paid_at) }) : undefined} /></Link>
-        <Link href="/merchant/explain?metric=to_settle&kind=cashier" className="block transition hover:-translate-y-0.5"><Stat label={t("Commission on cashier sales")} value={<Amount v={b?.commission_owed} />} hint={t("Deducted in your next settlement")} /></Link>
-      </div>
+      <CardGrid txPage="/merchant/redemptions" merchantColumn={false} className="grid grid-cols-2 gap-4 lg:grid-cols-4" items={[
+        { key: "k0", title: t("Not yet in a settlement"), tx: { scope: "merchant", unsettled: "1" }, card: <Stat accent label={toSettle >= 0 ? t("Total to be settled to you") : t("Commission you owe Perkly")} value={<Amount v={Math.abs(toSettle)} />} hint={t("In-app payments minus commission on cashier sales, incl. open settlements")} /> },
+        { key: "k1", title: t("Not yet in a settlement"), tx: { scope: "merchant", unsettled: "1", payment: "in_app" }, card: <Stat label={t("In-app sales (unsettled)")} value={<Amount v={b?.in_app_gross} />} hint={t("Perkly commission {amount}", { amount: egp(b?.in_app_commission) })} /> },
+        { key: "k2", href: "/merchant/explain?metric=paid_to_you", card: <Stat label={t("Paid to you so far")} value={<Amount v={b?.paid_out} />} hint={b?.last_paid_at ? t("Last transfer {date}", { date: date(b.last_paid_at) }) : undefined} /> },
+        { key: "k3", title: t("Not yet in a settlement"), tx: { scope: "merchant", unsettled: "1", payment: "merchant" }, card: <Stat label={t("Commission on cashier sales")} value={<Amount v={b?.commission_owed} />} hint={t("Deducted in your next settlement")} /> },
+      ]} />
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <h2 className="mb-3 font-bold">{t("Settlements")}</h2>

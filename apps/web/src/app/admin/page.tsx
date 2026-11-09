@@ -1,3 +1,4 @@
+import { CardGrid, type CardItem } from "@/components/card-grid";
 import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
@@ -107,22 +108,22 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
   // One simple layout for every role: 4 key numbers, the chart, and the top merchants — all for the chosen period and filters
   const b = (bal ?? []) as Balance[];
   const sumB = (k: keyof Balance) => b.reduce((a, x) => a + Number(x[k] ?? 0), 0);
-  const card = "block transition hover:-translate-y-0.5";
-  const stats = role === "finance" ? [
-    <Link key="g" href={txLink()} className={card}><Stat accent label={t("Total GMV")} value={<Amount v={gmv} />} hint={t("{n} transactions", { n: txCount })} /></Link>,
-    <Link key="r" href={txLink()} className={card}><Stat label={t("Net revenue")} value={<Amount v={commission} />} hint={t("Perkly commission")} /></Link>,
-    <Link key="n" href="/admin/explain?metric=net_to_settle" className={card}><Stat label={t("Net to settle")} value={<Amount v={sumB("net_to_settle")} />} hint={t("Right now, all time")} /></Link>,
-    <Link key="o" href="/admin/explain?metric=open_settlements" className={card}><Stat label={t("Open settlements")} value={<Amount v={sumB("pending_settlements")} />} hint={t("Right now, all time")} /></Link>,
+  const txf = f as Record<string, string>;
+  const stats: CardItem[] = role === "finance" ? [
+    { key: "g", title: t("Total GMV"), tx: txf, card: <Stat accent label={t("Total GMV")} value={<Amount v={gmv} />} hint={t("{n} transactions", { n: txCount })} /> },
+    { key: "r", title: t("Net revenue"), tx: txf, card: <Stat label={t("Net revenue")} value={<Amount v={commission} />} hint={t("Perkly commission")} /> },
+    { key: "n", title: t("Not yet in a settlement"), tx: { unsettled: "1" }, card: <Stat label={t("Net to settle")} value={<Amount v={sumB("net_to_settle")} />} hint={t("Right now, all time")} /> },
+    { key: "o", href: "/admin/finance?tab=settlements", card: <Stat label={t("Open settlements")} value={<Amount v={sumB("pending_settlements")} />} hint={t("Right now, all time")} /> },
   ] : role === "account_manager" ? [
-    <Link key="t" href={txLink()} className={card}><Stat accent label={t("Transactions")} value={txCount} hint={t("{n} students", { n: buyers })} /></Link>,
-    <Link key="g" href={txLink()} className={card}><Stat label={t("Total GMV")} value={<Amount v={gmv} />} /></Link>,
-    <Link key="m" href="/admin/merchants" className={card}><Stat label={t("Active merchants")} value={`${activeMerchants} / ${o.merchants ?? 0}`} hint={t("with transactions / assigned")} /></Link>,
-    <Link key="c" href={txLink()} className={card}><Stat label={t("Net revenue")} value={<Amount v={commission} />} hint={t("Perkly commission")} /></Link>,
+    { key: "t", title: t("Transactions"), tx: txf, card: <Stat accent label={t("Transactions")} value={txCount} hint={t("{n} students", { n: buyers })} /> },
+    { key: "g", title: t("Total GMV"), tx: txf, card: <Stat label={t("Total GMV")} value={<Amount v={gmv} />} /> },
+    { key: "m", href: "/admin/merchants", card: <Stat label={t("Active merchants")} value={`${activeMerchants} / ${o.merchants ?? 0}`} hint={t("with transactions / assigned")} /> },
+    { key: "c", title: t("Net revenue"), tx: txf, card: <Stat label={t("Net revenue")} value={<Amount v={commission} />} hint={t("Perkly commission")} /> },
   ] : [
-    <Link key="g" href={txLink()} className={card}><Stat accent label={t("Total GMV")} value={<Amount v={gmv} />} hint={t("{n} transactions", { n: txCount })} /></Link>,
-    <Link key="r" href={txLink()} className={card}><Stat label={t("Net revenue")} value={<Amount v={commission} />} hint={t("Perkly commission")} /></Link>,
-    <Link key="s" href={txLink()} className={card}><Stat label={t("Students")} value={buyers} hint={t("Used Perkly in this period")} /></Link>,
-    <Link key="m" href="/admin/merchants?status=live" className={card}><Stat label={t("Active merchants")} value={activeMerchants} hint={t("{n} live in total", { n: o.live_merchants ?? 0 })} /></Link>,
+    { key: "g", title: t("Total GMV"), tx: txf, card: <Stat accent label={t("Total GMV")} value={<Amount v={gmv} />} hint={t("{n} transactions", { n: txCount })} /> },
+    { key: "r", title: t("Net revenue"), tx: txf, card: <Stat label={t("Net revenue")} value={<Amount v={commission} />} hint={t("Perkly commission")} /> },
+    { key: "s", title: t("Students"), tx: txf, card: <Stat label={t("Students")} value={buyers} hint={t("Used Perkly in this period")} /> },
+    { key: "m", href: "/admin/merchants?status=live", card: <Stat label={t("Active merchants")} value={activeMerchants} hint={t("{n} live in total", { n: o.live_merchants ?? 0 })} /> },
   ];
   const roleName = role === "account_manager" ? t("Account manager") : t(ROLE_LABEL[role]);
 
@@ -143,7 +144,7 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
       {error && <p className="mb-4 text-sm text-red-600">{error.message}</p>}
       {alerts}
       {role === "account_manager" && o.merchants === 0 && <div className="mb-6"><Notice>{t("No merchants are assigned to you yet. Ask an admin to assign them under Team & assignments.")}</Notice></div>}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{stats}</div>
+      <CardGrid items={stats} className="grid grid-cols-2 gap-4 lg:grid-cols-4" />
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Card title={monthly ? t("Transactions per month") : t("Transactions per day")} className="lg:col-span-2"><BarChart data={series} empty={t("No data yet")} /></Card>
         <Card title={role === "account_manager" ? t("My merchants") : t("Top merchants")}>

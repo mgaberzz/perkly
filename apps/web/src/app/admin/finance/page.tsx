@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
-import { Amount, Badge, Card, Input, PageHeader, Table, Td } from "@/components/ui";
+import { Amount, Card, Input, PageHeader } from "@/components/ui";
 import { FilterBar } from "@/components/filter-bar";
 import { ActionForm, SubmitButton } from "@/components/action-form";
 import { ExportMenu } from "@/components/export-menu";
+import { CardGrid } from "@/components/card-grid";
+import { ExpandRow } from "@/components/expand-row";
+import { TxPeek } from "@/components/tx-peek";
 import { date, egp, short } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { PERIOD_LABEL, PERIODS, resolvePeriod } from "@/lib/periods";
@@ -43,7 +46,6 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
   const q = typeof sp.q === "string" ? sp.q.trim() : "";
   const g = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : "");
   const { period, from, to } = resolvePeriod(g("period") || (g("from") ? "custom" : ""), g("from"), g("to"));
-  const periodQs = new URLSearchParams(Object.entries({ from, to }));
   const [{ data: balances }, { data: settlements }, { data: setting }, { data: tax }, { data: partnerBal }, { data: summary }, { data: periodSum }] = await Promise.all([
     supabase.rpc("merchant_balances"),
     supabase.from("settlements").select("*, merchant:merchants(id, name, merchant_code)").order("created_at", { ascending: false }).limit(100)
@@ -103,24 +105,24 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
 
           <section className="mb-4 rounded-2xl border border-zinc-200 bg-white p-4">
             <h2 className="mb-3 text-sm font-bold">{t(PERIOD_LABEL[period])} <span className="font-normal text-zinc-500">· {range}</span></h2>
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Metric strong label={t("Total volume (GMV)")} value={<Amount v={ps.gmv} />} hint={t("{n} transactions", { n: short(ps.transactions) })} href={`/admin/redemptions?${periodQs}`} />
-              <Metric label={t("Net revenue")} value={<Amount v={ps.net_revenue} />} hint={t("Perkly commission, excl. VAT {vat}", { vat: short(ps.vat) })} href={`/admin/insights?${new URLSearchParams(period === "mtd" ? {} : period === "custom" ? { period, from, to } : { period })}`} />
-              <Metric label={t("Partner cuts")} value={<Amount v={ps.partner_cuts ?? 0} />} hint={t("Share of commission earned by partners")} href={`/admin/redemptions?${periodQs}&partner=any`} />
-              <Metric label={t("Perkly keeps")} value={<Amount v={Number(ps.net_revenue ?? 0) - Number(ps.partner_cuts ?? 0)} />} hint={t("Net revenue after partner cuts")} href={`/admin/insights?${new URLSearchParams(period === "mtd" ? {} : period === "custom" ? { period, from, to } : { period })}`} />
-            </div>
+            <CardGrid className="grid grid-cols-2 gap-3 lg:grid-cols-4" items={[
+              { key: "gmv", title: t("Total volume (GMV)"), tx: { from, to }, card: <Metric strong label={t("Total volume (GMV)")} value={<Amount v={ps.gmv} />} hint={t("{n} transactions", { n: short(ps.transactions) })} /> },
+              { key: "rev", title: t("Net revenue"), tx: { from, to }, card: <Metric label={t("Net revenue")} value={<Amount v={ps.net_revenue} />} hint={t("Perkly commission, excl. VAT {vat}", { vat: short(ps.vat) })} /> },
+              { key: "cuts", title: t("Partner cuts"), tx: { from, to, partner: "any" }, card: <Metric label={t("Partner cuts")} value={<Amount v={ps.partner_cuts ?? 0} />} hint={t("Share of commission earned by partners")} /> },
+              { key: "keep", title: t("Perkly keeps"), tx: { from, to }, card: <Metric label={t("Perkly keeps")} value={<Amount v={Number(ps.net_revenue ?? 0) - Number(ps.partner_cuts ?? 0)} />} hint={t("Net revenue after partner cuts")} /> },
+            ]} />
           </section>
 
           <div className="mb-4 grid gap-4 lg:grid-cols-2">
             <section className="rounded-2xl border border-zinc-200 bg-white p-4">
               <h2 className="mb-3 text-sm font-bold">{t("To settle now")}</h2>
-              <div className="grid grid-cols-2 gap-3">
-                <Metric label={t("Net to settle with merchants")} value={<Amount v={net} />}
-                  hint={net > 0 ? t("Perkly pays merchants") : net < 0 ? t("Merchants pay Perkly commission") : t("All settled")} href="/admin/explain?metric=net_to_settle" />
-                <Metric label={t("Open settlements")} value={<Amount v={sum("pending_settlements")} />} hint={t("{n} settlement(s) not fully paid", { n: pending.length })} href="/admin/finance?tab=settlements" />
-                <Metric label={t("Owed to partners")} value={<Amount v={pSum("due")} />} hint={t("Earned minus paid")} href="/admin/partners" />
-                <Metric label={t("Merchants owe Perkly")} value={<Amount v={s.owed_by_merchants} />} hint={t("Commission on cashier sales")} href="/admin/explain?metric=owed_by" />
-              </div>
+              <CardGrid className="grid grid-cols-2 gap-3" items={[
+                { key: "net", title: t("Not yet in a settlement"), tx: { unsettled: "1" }, card: <Metric label={t("Net to settle with merchants")} value={<Amount v={net} />}
+                  hint={net > 0 ? t("Perkly pays merchants") : net < 0 ? t("Merchants pay Perkly commission") : t("All settled")} /> },
+                { key: "open", href: "/admin/finance?tab=settlements", card: <Metric label={t("Open settlements")} value={<Amount v={sum("pending_settlements")} />} hint={t("{n} settlement(s) not fully paid", { n: pending.length })} /> },
+                { key: "partners", href: "/admin/partners", card: <Metric label={t("Owed to partners")} value={<Amount v={pSum("due")} />} hint={t("Earned minus paid")} /> },
+                { key: "owe", title: t("Cashier sales not yet settled"), tx: { unsettled: "1", payment: "merchant" }, card: <Metric label={t("Merchants owe Perkly")} value={<Amount v={s.owed_by_merchants} />} hint={t("Commission on cashier sales")} /> },
+              ]} />
             </section>
             <section className="rounded-2xl border border-zinc-200 bg-white p-4">
               <h2 className="mb-3 text-sm font-bold">{t("Paid so far (all time)")}</h2>
@@ -152,21 +154,28 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
       <FilterBar path="/admin/finance" keep={{ tab: "balances" }} search={{ name: "q", value: q, placeholder: t("Merchant name or ID") }} fields={[
         { name: "view", label: t("Show"), type: "select", value: view === "all" ? "all" : undefined, all: t("With amounts due"), options: [{ value: "all", label: t("All merchants") }] },
       ]} />
-      <Table head={[t("Merchant"), t("Brand type"), t("In-app sales"), t("Due to merchant"), t("Commission on cashier sales"), t("VAT on commission"), t("Net to settle"), t("Open settlements"), t("Bank")]} empty={t("Nothing due")}>
-        {rows.map((b) => (
-          <tr key={b.merchant_id}>
-            <Td><Link href={`/admin/merchants/${b.merchant_id}`} className="font-semibold hover:text-perk-purple">{b.merchant_name}</Link><div className="font-mono text-xs text-zinc-500">{b.merchant_code}</div></Td>
-            <Td>{t(BRAND_TYPE_LABEL[b.brand_type] ?? b.brand_type)}</Td>
-            <Td><Link href={`/admin/explain?metric=net_to_settle&kind=in_app&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.in_app_gross} /></Link></Td>
-            <Td><Link href={`/admin/explain?metric=net_to_settle&kind=in_app&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.due_to_merchant} /></Link></Td>
-            <Td><Link href={`/admin/explain?metric=net_to_settle&kind=cashier&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.commission_owed} /></Link></Td>
-            <Td><Link href={`/admin/explain?metric=net_to_settle&kind=cashier&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.vat} /></Link></Td>
-            <Td phone="sum" className="font-bold text-perk-purple"><Link href={`/admin/explain?metric=net_to_settle&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.net_to_settle} /></Link><div className="text-xs font-normal text-zinc-500">{Number(b.net_to_settle) > 0 ? t("Perkly pays merchant") : Number(b.net_to_settle) < 0 ? t("Merchant pays Perkly commission") : ""}</div></Td>
-            <Td><Link href={`/admin/explain?metric=open_settlements&merchant=${b.merchant_id}`} className="hover:underline"><Amount v={b.pending_settlements} /></Link></Td>
-            <Td className="text-xs">{b.bank_name ? <>{b.bank_name}<div className="font-mono text-zinc-500">{b.iban}</div></> : <span className="text-amber-600">{t("Missing")}</span>}</Td>
-          </tr>
-        ))}
-      </Table>
+      {rows.length === 0 ? <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-10 text-center text-sm text-zinc-500">{t("Nothing due")}</div> : (
+        <div className="space-y-3">
+          {rows.map((b) => (
+            <ExpandRow key={b.merchant_id} openLabel={t("View transactions")} closeLabel={t("Hide transactions")} summary={<>
+              <div className="min-w-0 basis-48"><div className="truncate font-semibold">{b.merchant_name}</div><div className="font-mono text-xs text-zinc-500">{b.merchant_code} · {t(BRAND_TYPE_LABEL[b.brand_type] ?? b.brand_type)}</div></div>
+              <div className="text-sm"><div className="text-xs text-zinc-500">{t("Net to settle")}</div><b className={Number(b.net_to_settle) < 0 ? "text-amber-700" : "text-perk-purple"}><Amount v={b.net_to_settle} /></b>
+                <div className="text-xs text-zinc-500">{Number(b.net_to_settle) > 0 ? t("Perkly pays merchant") : Number(b.net_to_settle) < 0 ? t("Merchant pays Perkly commission") : ""}</div></div>
+              <div className="text-sm"><div className="text-xs text-zinc-500">{t("Open settlements")}</div><Amount v={b.pending_settlements} /></div>
+              <div className="text-xs">{b.bank_name ? <span className="text-zinc-500">{b.bank_name}</span> : <span className="font-semibold text-amber-600">{t("Bank details missing")}</span>}</div>
+            </>}>
+              <dl className="mb-3 grid grid-cols-2 gap-x-6 gap-y-1 px-1 text-sm sm:grid-cols-4">
+                <div><dt className="text-xs text-zinc-500">{t("In-app sales")}</dt><dd><Amount v={b.in_app_gross} /></dd></div>
+                <div><dt className="text-xs text-zinc-500">{t("Due to merchant")}</dt><dd><Amount v={b.due_to_merchant} /></dd></div>
+                <div><dt className="text-xs text-zinc-500">{t("Commission on cashier sales")}</dt><dd><Amount v={b.commission_owed} /></dd></div>
+                <div><dt className="text-xs text-zinc-500">{t("VAT on commission")}</dt><dd><Amount v={b.vat} /></dd></div>
+              </dl>
+              <TxPeek params={{ unsettled: "1", merchant: b.merchant_id }} moreHref={`/admin/redemptions?unsettled=1&merchant=${b.merchant_id}`} merchantColumn={false} />
+              {b.iban && <p className="mt-2 px-1 font-mono text-xs text-zinc-500">{b.bank_name} · {b.iban}</p>}
+            </ExpandRow>
+          ))}
+        </div>
+      )}
 
         </>
       )}
@@ -180,29 +189,29 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
               <SubmitButton>{t("Create settlements")}</SubmitButton>
             </ActionForm>
           </Card>
-      <Table head={[t("Settlement ID"), t("Merchant"), t("Period"), t("Transactions"), t("Net amount"), t("Paid"), t("Status"), ""]} empty={t("No settlements yet.")}>
-        {(settlements ?? []).map((s) => (
-          <tr key={s.id}>
-            <Td><Link href={`/admin/explain?metric=settlement&id=${s.id}`} className="font-mono font-semibold text-perk-purple hover:underline">{s.settlement_code}</Link><div className="text-xs text-zinc-500">{date(s.created_at)}</div></Td>
-            <Td phone="lead">{s.merchant.name}<div className="font-mono text-xs text-zinc-500">{s.merchant.merchant_code}</div></Td>
-            <Td className="text-xs">{s.period_start} → {s.period_end}</Td>
-            <Td><Link href={`/admin/explain?metric=settlement&id=${s.id}`} className="font-semibold text-perk-purple hover:underline">{s.lines}</Link></Td>
-            <Td phone="sum" className="font-bold"><Link href={`/admin/explain?metric=settlement&id=${s.id}`} className="hover:underline">{egp(Math.abs(s.amount))}</Link><div className="text-xs font-normal text-zinc-500">{s.amount >= 0 ? t("Perkly pays merchant") : t("Merchant pays Perkly commission")}</div><div className="text-xs font-normal text-zinc-500">{t("commission {c} + VAT {v}", { c: egp(s.commission), v: egp(s.vat) })}</div></Td>
-            <Td>{egp(s.paid_amount)}<div className="text-xs text-zinc-500">{t("{amount} remaining", { amount: egp(Math.abs(s.amount) - Number(s.paid_amount)) })}</div></Td>
-            <Td phone="sum"><Badge tone={s.status === "paid" ? "paid" : s.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(s.status))}</Badge>{s.reference && <div className="font-mono text-xs text-zinc-500">{s.reference}</div>}</Td>
-            <Td>
-              {s.status !== "paid" && (
-                <ActionForm action={markSettlementPaid} className="flex flex-wrap gap-2">
-                  <input type="hidden" name="id" value={s.id} />
-                  <Input name="amount" type="number" step="0.01" min="0.01" placeholder={t("Amount (empty = all)")} className="w-32 text-xs" />
-                  <Input name="reference" placeholder={t("Bank reference")} className="w-32 text-xs" required />
-                  <SubmitButton variant="secondary" className="text-xs">{t("Record payment")}</SubmitButton>
+      {(settlements ?? []).length === 0 ? <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-10 text-center text-sm text-zinc-500">{t("No settlements yet.")}</div> : (
+        <div className="space-y-3">
+          {(settlements ?? []).map((x) => (
+            <ExpandRow key={x.id} openLabel={t("View transactions")} closeLabel={t("Hide transactions")} summary={<>
+              <div className="min-w-0 basis-48"><div className="truncate font-semibold">{x.merchant.name}</div><div className="font-mono text-xs text-zinc-500">{x.settlement_code} · {x.period_start} → {x.period_end}</div></div>
+              <div className="text-sm"><div className="text-xs text-zinc-500">{t("Net amount")}</div><b>{egp(Math.abs(x.amount))}</b><div className="text-xs text-zinc-500">{x.amount >= 0 ? t("Perkly pays merchant") : t("Merchant pays Perkly commission")}</div></div>
+              <div className="text-sm"><div className="text-xs text-zinc-500">{t("Paid")}</div>{egp(x.paid_amount)}</div>
+              <div className={`text-xs font-semibold ${x.status === "paid" ? "text-emerald-700" : x.status === "partially_paid" ? "text-amber-700" : "text-zinc-500"}`}>{t(settlementLabel(x.status))}{x.reference && <div className="font-mono font-normal text-zinc-500">{x.reference}</div>}</div>
+            </>}>
+              <p className="mb-2 px-1 text-xs text-zinc-500">{t("{n} transactions", { n: x.lines })} · {t("commission {c} + VAT {v}", { c: egp(x.commission), v: egp(x.vat) })} · {t("{amount} remaining", { amount: egp(Math.abs(x.amount) - Number(x.paid_amount)) })} · {t("Created")} {date(x.created_at)}</p>
+              {x.status !== "paid" && (
+                <ActionForm action={markSettlementPaid} className="mb-3 flex flex-wrap gap-2 rounded-xl bg-zinc-50 p-3">
+                  <input type="hidden" name="id" value={x.id} />
+                  <Input name="amount" type="number" step="0.01" min="0.01" placeholder={t("Amount (empty = all)")} className="w-40 text-sm" />
+                  <Input name="reference" placeholder={t("Bank reference")} className="w-40 text-sm" required />
+                  <SubmitButton variant="secondary" className="text-sm">{t("Record payment")}</SubmitButton>
                 </ActionForm>
               )}
-            </Td>
-          </tr>
-        ))}
-      </Table>
+              <TxPeek params={{ settlement: x.id }} moreHref={`/admin/explain?metric=settlement&id=${x.id}`} merchantColumn={false} />
+            </ExpandRow>
+          ))}
+        </div>
+      )}
         </>
       )}
     </>
