@@ -1,5 +1,6 @@
 import { Icon } from "@/components/icons";
 import { merchantCan, requireMerchant, type MerchantArea } from "@/lib/auth";
+import { SentryUser } from "@/components/sentry-user";
 import { Shell, type NavItem } from "@/components/shell";
 import { Badge } from "@/components/ui";
 import { getT } from "@/lib/i18n/server";
@@ -42,6 +43,7 @@ export default async function MerchantLayout({ children }: LayoutProps<"/merchan
   );
   return (
     <Shell nav={nav} top={top} user={profile?.full_name ?? user.email ?? ""} badge={t("Merchant")}>
+      <SentryUser id={user.id} role={`merchant_${memberRole}`} />
       {merchant.status !== "live" && (
         <div className="mb-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
           {merchant.status === "pending"

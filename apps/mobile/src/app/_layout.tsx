@@ -10,6 +10,7 @@ import { BiometricGate } from '@/components/biometric-gate';
 import { biometricAvailable, biometricEnabled, setBiometricEnabled } from '@/lib/biometric';
 import { initLanguage, t } from '@/lib/i18n';
 import { useNotificationTaps } from '@/lib/push';
+import { Sentry } from '@/lib/sentry';
 import { SessionProvider, useSession } from '@/lib/session';
 import { brand } from '@/lib/theme';
 
@@ -69,7 +70,7 @@ function RootStack() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   const scheme = useColorScheme();
   // Load the saved language before anything renders, so every screen starts in the right language
   const [langReady, setLangReady] = useState(false);
@@ -86,3 +87,6 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+// Sentry.wrap reports crashes that happen while rendering any screen
+export default Sentry.wrap(RootLayout);

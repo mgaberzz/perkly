@@ -1,4 +1,5 @@
 import { requirePartner } from "@/lib/auth";
+import { SentryUser } from "@/components/sentry-user";
 import { Shell } from "@/components/shell";
 import { Badge } from "@/components/ui";
 import { dealLabel } from "@/components/partner-form";
@@ -21,5 +22,5 @@ export default async function PartnerLayout({ children }: LayoutProps<"/partner"
       <div className="mt-2 flex flex-wrap gap-1"><Badge tone="active">{dealLabel(partner, t)}</Badge>{partner.status !== "active" && <Badge tone="paused">{t(partner.status)}</Badge>}</div>
     </div>
   );
-  return <Shell nav={nav} top={top} user={profile?.full_name ?? user.email ?? ""} badge={t("Partner")}>{children}</Shell>;
+  return <Shell nav={nav} top={top} user={profile?.full_name ?? user.email ?? ""} badge={t("Partner")}><SentryUser id={user.id} role="partner" />{children}</Shell>;
 }

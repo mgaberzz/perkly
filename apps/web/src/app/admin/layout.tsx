@@ -1,4 +1,5 @@
 import { can, requireStaff, type Perm } from "@/lib/auth";
+import { SentryUser } from "@/components/sentry-user";
 import { Shell, type NavItem } from "@/components/shell";
 import { getT } from "@/lib/i18n/server";
 import { ROLE_LABEL } from "@/lib/labels";
@@ -36,5 +37,5 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const nav = NAV.filter((n) => can(role, n.perm)).map((n) => ({
     href: n.href, icon: n.icon, group: n.group, exact: n.exact, label: t(mine[n.href] ?? n.label), count: n.href === "/admin/notifications" ? count ?? 0 : n.href === "/admin/verifications" ? toVerify ?? 0 : undefined,
   }));
-  return <Shell nav={nav} user={profile.full_name ?? user.email ?? ""} badge={`Perkly · ${t(ROLE_LABEL[role])}`}>{children}</Shell>;
+  return <Shell nav={nav} user={profile.full_name ?? user.email ?? ""} badge={`Perkly · ${t(ROLE_LABEL[role])}`}><SentryUser id={user.id} role={role} />{children}</Shell>;
 }

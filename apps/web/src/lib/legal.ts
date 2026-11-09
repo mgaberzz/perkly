@@ -56,7 +56,7 @@ const EN: Docs = {
         list: [
           "Merchants see the redemption at their shop: the transaction ID, the time, the amounts and the verification code. They do not see your phone number, email or birth date.",
           "Partners who onboarded a merchant see totals and transaction IDs for that merchant, with no student details.",
-          "Service providers that run Perkly for us under contract: hosting and database (Supabase), the web host (Vercel), SMS and email delivery, the payment provider and crash reporting. Some of them store data outside Egypt; we use providers that protect it to a standard comparable to Egyptian law.",
+          "Service providers that run Perkly for us under contract: hosting and database (Supabase), the web host (Vercel), SMS and email delivery, the payment provider and crash reporting (Sentry). Some of them store data outside Egypt; we use providers that protect it to a standard comparable to Egyptian law.",
           "Authorities, when the law requires it, or to protect users, merchants or Perkly from fraud.",
         ],
       },
@@ -215,7 +215,7 @@ const AR: Docs = {
         list: [
           "يرى التاجر عملية الاستخدام في متجره: رقم المعاملة، والوقت، والمبالغ، ورمز التحقق. لا يرى رقم هاتفك أو بريدك الإلكتروني أو تاريخ ميلادك.",
           "يرى الشريك الذي ضم تاجرًا إجماليات وأرقام معاملات هذا التاجر، دون أي بيانات عن الطلاب.",
-          "مزودو الخدمات الذين يشغّلون Perkly لصالحنا بموجب عقود: الاستضافة وقاعدة البيانات (Supabase)، واستضافة الموقع (Vercel)، وإرسال الرسائل النصية والبريد، ومزود الدفع، وتقارير الأعطال. يخزن بعضهم البيانات خارج مصر، ونختار مزودين يحمونها بمستوى مماثل لما يتطلبه القانون المصري.",
+          "مزودو الخدمات الذين يشغّلون Perkly لصالحنا بموجب عقود: الاستضافة وقاعدة البيانات (Supabase)، واستضافة الموقع (Vercel)، وإرسال الرسائل النصية والبريد، ومزود الدفع، وتقارير الأعطال (Sentry). يخزن بعضهم البيانات خارج مصر، ونختار مزودين يحمونها بمستوى مماثل لما يتطلبه القانون المصري.",
           "الجهات الرسمية عندما يتطلب القانون ذلك، أو لحماية المستخدمين أو التجار أو Perkly من الاحتيال.",
         ],
       },

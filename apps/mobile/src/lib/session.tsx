@@ -7,6 +7,7 @@ import { supabase } from './supabase';
 import type { Campus, Merchant, Profile, Stats } from './types';
 import { lang, t } from './i18n';
 import { registerPush, unregisterPush } from './push';
+import { setSentryUser } from './sentry';
 
 type Coords = { lat: number; lng: number } | null;
 /** Where the student is browsing: around their GPS position, or a chosen campus/area. */
@@ -104,7 +105,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     } else setCampus(null);
   }, [userId]);
 
-  useEffect(() => { if (userId) registerPush(false); }, [userId]);
+  useEffect(() => { if (userId) registerPush(false); setSentryUser(userId ?? null); }, [userId]);
 
   const refreshMerchants = useCallback(async () => {
     const [{ data }, { data: pop }] = await Promise.all([
