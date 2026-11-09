@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { inScope, requireStaff } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
@@ -21,12 +22,12 @@ export default async function AdminPerksPage({ searchParams }: PageProps<"/admin
     <>
       <PageHeader title={t("Campaigns & perks")} subtitle={t("Hero perks (above 30%) wait here for approval.")}
         actions={[...STATUSES, "all"].map((s) => <LinkButton key={s} href={`/admin/perks?status=${s}`} variant={s === status ? "primary" : "secondary"} >{t(s)}</LinkButton>)} />
-      <Table head={[t("Perk"), t("Merchant"), t("Discount"), t("Limits"), t("Ends"), t("Status"), ""]} empty={status === "pending" ? t("Nothing waiting for approval 🎉") : t("No perks.")}>
+      <Table head={[t("Perk"), t("Merchant"), t("Discount"), t("Limits"), t("Ends"), t("Status"), ""]} empty={status === "pending" ? t("Nothing waiting for approval") : t("No perks.")}>
         {(data ?? []).map((p) => {
           const tier = tierFor(p);
           return (
             <tr key={p.id}>
-              <Td><Link href={`/admin/perks/${p.id}`} className="font-semibold hover:text-perk-purple">{p.is_flash && "⚡ "}{p.title}</Link></Td>
+              <Td><Link href={`/admin/perks/${p.id}`} className="font-semibold hover:text-perk-purple">{p.is_flash && <Icon name="zap" size={14} className="me-1 inline-block align-[-2px]" />}{p.title}</Link></Td>
               <Td><Link href={`/admin/merchants/${p.merchant.id}`} className="hover:underline">{p.merchant.name}</Link></Td>
               <Td phone="sum">{discountLabel(p, t)} {tier && <span className={`ms-1 rounded-full px-2 py-0.5 text-xs font-bold ${tier.cls}`}>{t(tier.name)}</span>}</Td>
               <Td className="text-xs text-zinc-500">{p.max_uses_per_user ?? "∞"}/{t("student")} · {p.daily_cap ?? "∞"}/{t("day")}</Td>

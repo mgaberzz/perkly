@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { Badge, PageHeader, Table, Td } from "@/components/ui";
@@ -47,7 +48,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
           <tr key={u.id}>
             <Td><div className="flex items-center gap-3">{(u.avatar_kind === "cartoon" || !u.avatar_path) && u.avatar_config
                 ? <span className="h-11 w-11 shrink-0 overflow-hidden rounded-full" dangerouslySetInnerHTML={{ __html: cartoonSvg(u.avatar_config) }} />
-                : <Avatar name={u.full_name ?? u.email ?? "?"} src={u.avatar_path ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${u.avatar_path}` : null} />}<div className="min-w-0"><div className="font-semibold">{u.deleted_at ? <span className="italic text-zinc-400">{t("Deleted account")}</span> : u.full_name ?? "—"}{u.verification_status === "verified" && <span title={t("Verified student")} className="ms-1 text-emerald-600">✓</span>}{u.verification_status === "pending" && <Link href="/admin/verifications" className="ms-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">{t("ID to review")}</Link>}</div><div className="text-xs font-normal text-zinc-500">{u.phone ?? u.email}</div></div></div></Td>
+                : <Avatar name={u.full_name ?? u.email ?? "?"} src={u.avatar_path ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${u.avatar_path}` : null} />}<div className="min-w-0"><div className="font-semibold">{u.deleted_at ? <span className="italic text-zinc-400">{t("Deleted account")}</span> : u.full_name ?? "—"}{u.verification_status === "verified" && <span title={t("Verified student")} className="ms-1 inline-block align-[-2px] text-emerald-600"><Icon name="check" size={14} /></span>}{u.verification_status === "pending" && <Link href="/admin/verifications" className="ms-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">{t("ID to review")}</Link>}</div><div className="text-xs font-normal text-zinc-500">{u.phone ?? u.email}</div></div></div></Td>
             <Td phone="sum" className="font-mono text-xs">{u.user_code}{u.student_code && <div className="text-perk-purple">{u.student_code}</div>}</Td>
             <Td>{u.campus?.short_name ?? u.campus?.name ?? "—"}</Td>
             <Td>L{u.stats?.level ?? 1} · {u.stats?.total_xp ?? 0}</Td>

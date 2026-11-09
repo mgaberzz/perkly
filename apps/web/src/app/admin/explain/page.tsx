@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { inScope, requireStaff } from "@/lib/auth";
@@ -167,7 +168,7 @@ export default async function ExplainPage({ searchParams }: PageProps<"/admin/ex
       <Explained title={metric === "to_be_paid" ? t("To be paid to merchants") : t("Merchants owe Perkly")} value={sum(rows, due)}
         subtitle={metric === "to_be_paid" ? t("Per merchant: unsettled in-app money owed to them plus open settlements in their favour.") : t("Per merchant: unsettled commission + VAT from cashier sales plus open settlements in Perkly's favour.")}
         formula={<Line sign="=" strong label={t("{n} merchant(s)", { n: rows.length })} value={sum(rows, due)} />}>
-        <Table head={[t("Merchant"), t("Net to settle"), t("Open settlements"), t("Total"), ""]} empty={t("Nothing due 🎉")}>
+        <Table head={[t("Merchant"), t("Net to settle"), t("Open settlements"), t("Total"), ""]} empty={t("Nothing due")}>
           {rows.map((b) => (
             <tr key={b.merchant_id}>
               <Td><Link href={`/admin/merchants/${b.merchant_id}`} className="font-semibold hover:text-perk-purple">{b.merchant_name}</Link><div className="font-mono text-xs text-zinc-500">{b.merchant_code}</div></Td>
@@ -223,9 +224,9 @@ function Explained({ title, value, subtitle, formula, children, exportParams, fi
           <div className="text-xs font-semibold uppercase tracking-wide text-white/80">{title}</div>
           <div className="mt-2 text-4xl font-extrabold"><Amount v={value} /></div>
         </div>
-        <Card title="🧮" className="lg:col-span-2"><div className="space-y-1 text-sm">{formula}</div></Card>
+        <Card title={<Icon name="calculator" size={18} />} className="lg:col-span-2"><div className="space-y-1 text-sm">{formula}</div></Card>
       </div>
-      {filterNote && <div className="mb-3 text-sm text-zinc-600">{filterNote} · <Link href={clear!} className="font-semibold text-perk-purple hover:underline">✕</Link></div>}
+      {filterNote && <div className="mb-3 text-sm text-zinc-600">{filterNote} · <Link href={clear!} className="font-semibold text-perk-purple hover:underline"><Icon name="x" size={14} className="inline-block align-[-2px]" /></Link></div>}
       {children}
       <div className="mt-6"><LinkButton href="/admin/finance" variant="secondary">← Finance</LinkButton></div>
     </>

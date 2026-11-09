@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { Amount, BarChart, Card, HBarList, Notice, PageHeader, Stat } from "@/components/ui";
@@ -96,10 +97,10 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
   const alerts = (
     <div className="mb-6 flex flex-wrap gap-3">
       {sp.denied && <div className="w-full"><Notice tone="error">{t("Your role doesn't have access to that page.")}</Notice></div>}
-      {o.pending_requests > 0 && <Link href="/admin/notifications" className="rounded-xl bg-perk-pink/10 px-4 py-2 text-sm font-semibold text-perk-pink">🔔 {t("{n} request(s) waiting", { n: o.pending_requests })}</Link>}
+      {o.pending_requests > 0 && <Link href="/admin/notifications" className="rounded-xl bg-perk-pink/10 px-4 py-2 text-sm font-semibold text-perk-pink"><Icon name="bell" size={14} className="me-1 inline-block align-[-2px]" />{t("{n} request(s) waiting", { n: o.pending_requests })}</Link>}
       {can("perks") && o.pending_perks > 0 && <Link href="/admin/perks?status=pending" className="rounded-xl bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800">⏳ {t("{n} perk(s) to approve", { n: o.pending_perks })}</Link>}
-      {can("redemptions_review") && o.flagged_redemptions > 0 && <Link href="/admin/redemptions?status=flagged" className="rounded-xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">🚩 {t("{n} flagged transaction(s)", { n: o.flagged_redemptions })}</Link>}
-      {can("merchants_edit") && o.pending_merchants > 0 && <Link href="/admin/merchants?status=pending" className="rounded-xl bg-perk-blue/10 px-4 py-2 text-sm font-semibold text-perk-blue">🏪 {t("{n} merchant(s) not live yet", { n: o.pending_merchants })}</Link>}
+      {can("redemptions_review") && o.flagged_redemptions > 0 && <Link href="/admin/redemptions?status=flagged" className="rounded-xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-700"><Icon name="flag" size={14} className="me-1 inline-block align-[-2px]" />{t("{n} flagged transaction(s)", { n: o.flagged_redemptions })}</Link>}
+      {can("merchants_edit") && o.pending_merchants > 0 && <Link href="/admin/merchants?status=pending" className="rounded-xl bg-perk-blue/10 px-4 py-2 text-sm font-semibold text-perk-blue"><Icon name="store" size={14} className="me-1 inline-block align-[-2px]" />{t("{n} merchant(s) not live yet", { n: o.pending_merchants })}</Link>}
     </div>
   );
 
@@ -127,7 +128,7 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
 
   return (
     <>
-      <PageHeader title={t("Hi {name} 👋", { name: first })} subtitle={`${roleName} · ${subtitle} · ${t(PERIOD_LABEL[period])}: ${range}`} />
+      <PageHeader title={t("Hi {name}", { name: first })} subtitle={`${roleName} · ${subtitle} · ${t(PERIOD_LABEL[period])}: ${range}`} />
       <FilterBar path="/admin" fields={[
         { name: "period", label: t("Period"), type: "select", value: period === "mtd" ? "" : period, all: t("This month (MTD)"),
           options: PERIODS.filter((p) => p !== "mtd").map((p) => ({ value: p, label: t(PERIOD_LABEL[p]) })) },

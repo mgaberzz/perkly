@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
@@ -26,7 +27,7 @@ export default async function AdminPerkPage({ params }: PageProps<"/admin/perks/
         <Card title={t("Review")} className="mb-6">
           <div id="review" className="flex flex-wrap items-end gap-3">
             <form action={reviewPerk}><input type="hidden" name="id" value={perk.id} /><input type="hidden" name="decision" value="approve" />
-              <button className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">✓ {t("Approve & go live")}</button></form>
+              <button className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"><Icon name="check" size={14} className="me-1 inline-block align-[-2px]" />{t("Approve & go live")}</button></form>
             <form action={reviewPerk} className="flex flex-1 gap-2">
               <input type="hidden" name="id" value={perk.id} /><input type="hidden" name="decision" value="reject" />
               <Input name="note" placeholder={t("Reason shown to merchant (e.g. lower to 30% or add a daily cap)")} className="min-w-64 flex-1" />

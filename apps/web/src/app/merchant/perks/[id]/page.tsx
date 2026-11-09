@@ -21,7 +21,7 @@ export default async function EditPerkPage({ params, searchParams }: PageProps<"
     <>
       <PageHeader title={perk.title} subtitle={<span className="flex items-center gap-2">{discountLabel(perk, t)} <Badge tone={perk.status}>{t(perk.status)}</Badge></span>} />
       {created === "pending" && <div className="mb-4"><Notice>{t("Created! Hero perks (above 30%) go live once the Perkly team approves them.")}</Notice></div>}
-      {created === "active" && <div className="mb-4"><Notice tone="success">{t("Created and live 🎉 Students can redeem it now.")}</Notice></div>}
+      {created === "active" && <div className="mb-4"><Notice tone="success">{t("Created and live. Students can redeem it now.")}</Notice></div>}
       {perk.status === "rejected" && perk.review_note && <div className="mb-4"><Notice tone="error">{t("Not approved")}: {perk.review_note}</Notice></div>}
       <Card>
         {canManage

@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import { PageTabs } from "@/components/page-tabs";
 import { redirect } from "next/navigation";
 import { requireMerchantArea } from "@/lib/auth";
@@ -44,7 +45,7 @@ export default async function TeamPage() {
                 <tr key={m.user_id}>
                   <Td className="font-semibold">{p?.full_name ?? t("Invited")}{m.user_id === user.id && ` (${t("you")})`}<div className="font-mono text-xs font-normal text-zinc-500">{p?.user_code}</div></Td>
                   <Td>{p?.email}</Td>
-                  <Td phone="sum"><Badge tone={m.member_role}>{t(MEMBER_ROLE_LABEL[m.member_role])}</Badge>{m.branch_id && <div className="mt-1 text-xs text-zinc-500">📍 {branchName.get(m.branch_id)}</div>}</Td>
+                  <Td phone="sum"><Badge tone={m.member_role}>{t(MEMBER_ROLE_LABEL[m.member_role])}</Badge>{m.branch_id && <div className="mt-1 text-xs text-zinc-500"><Icon name="pin" size={12} className="me-1 inline-block align-[-2px]" />{branchName.get(m.branch_id)}</div>}</Td>
                   <Td className="text-end">
                     {memberRole === "owner" && m.user_id !== user.id && (
                       <form action={removeStaff}>

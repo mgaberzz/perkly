@@ -34,7 +34,7 @@ export default async function PartnerHome() {
   const first = profile?.full_name?.split(" ")[0] ?? "";
   return (
     <>
-      <PageHeader title={t("Hi {name} 👋", { name: first })} subtitle={`${partner.name} · ${dealLabel(partner, t)}`} />
+      <PageHeader title={t("Hi {name}", { name: first })} subtitle={`${partner.name} · ${dealLabel(partner, t)}`} />
       {merchants.length === 0 && <div className="mb-6"><Notice>{t("No merchants are linked to you yet. Once Perkly links the merchants you onboarded, their transactions and your earnings show here.")}</Notice></div>}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Link href="/partner/payments" className="block transition hover:-translate-y-0.5"><Stat accent label={t("Due to you")} value={<Amount v={b?.due ?? 0} />} hint={t("Earned minus paid")} /></Link>

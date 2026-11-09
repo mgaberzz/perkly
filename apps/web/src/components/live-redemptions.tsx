@@ -1,4 +1,5 @@
 "use client";
+import { Icon } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "./i18n";
@@ -67,7 +68,7 @@ export function LiveRedemptions({ merchantId, branchId, initial }: { merchantId:
             </div>}>
             <DetailRow label={t("Transaction ID")}><span className="font-mono text-perk-purple">{r.tx_code}</span></DetailRow>
             <DetailRow label={t("Time")}>{dateTime(r.created_at)}</DetailRow>
-            <DetailRow label={t("Branch / cashier")}>{r.branch?.name ?? `🌐 ${t("Online")}`}{(r.qr?.cashier_name ?? r.qr?.label) && <span className="block text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</span>}</DetailRow>
+            <DetailRow label={t("Branch / cashier")}>{r.branch?.name ?? <><Icon name="globe" size={14} className="me-1 inline-block align-[-2px]" />{t("Online")}</>}{(r.qr?.cashier_name ?? r.qr?.label) && <span className="block text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</span>}</DetailRow>
             <DetailRow label={t("Bill")}>{egp(r.original_amount)}</DetailRow>
             <DetailRow label={t("Discount")}>{egp(r.discount_amount)}</DetailRow>
             <DetailRow label={t("Paid after discount")}>{egp(r.final_amount)}</DetailRow>
@@ -82,7 +83,7 @@ export function LiveRedemptions({ merchantId, branchId, initial }: { merchantId:
             <Td><span className="rounded-lg bg-perk-ink px-2 py-1 font-mono text-base font-bold tracking-widest text-white">{r.verification_code}</span></Td>
             <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-perk-purple">{r.tx_code}</div></Td>
             <Td>{r.perk?.title}</Td>
-            <Td>{r.branch?.name ?? `🌐 ${t("Online")}`}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>
+            <Td>{r.branch?.name ?? <><Icon name="globe" size={14} className="me-1 inline-block align-[-2px]" />{t("Online")}</>}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>
             <Td>{egp(r.original_amount)}</Td>
             <Td className="font-semibold text-perk-purple">{egp(r.discount_amount)}</Td>
             <Td>{r.payment_method === "in_app"

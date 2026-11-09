@@ -54,7 +54,7 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
   return (
     <>
       <PageHeader
-        title={t("Hey {name} 👋", { name: merchant.name })}
+        title={t("Hey {name}", { name: merchant.name })}
         subtitle={branchScope ? t("{branch} · last {days} days", { branch: branchScope.name, days }) : t("Your student traffic for the last {days} days", { days })}
         actions={<>{[7, 30, 90].map((d) => <LinkButton key={d} href={link(d)} variant={d === days ? "primary" : "secondary"}>{d}d</LinkButton>)}</>}
       />
@@ -108,7 +108,7 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
           </Card>
         )}
       </div>
-      <p className="mt-6 text-sm text-zinc-500">{t("Average bill")}: <b>{egp(s.avg_ticket)}</b> · {t("“More redemptions = more youth visibility.” 💜")}</p>
+      <p className="mt-6 text-sm text-zinc-500">{t("Average bill")}: <b>{egp(s.avg_ticket)}</b> · {t("“More redemptions = more youth visibility.”")}</p>
     </>
   );
 }

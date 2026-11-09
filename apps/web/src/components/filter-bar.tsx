@@ -1,4 +1,5 @@
 "use client";
+import { Icon } from "@/components/icons";
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -102,7 +103,7 @@ export function FilterBar({ path, fields, search, keep = {} }: {
         <div className="mt-3 flex flex-wrap gap-2">
           {active.map((f) => (
             <Link key={f.name} href={without(f.name)} className="flex items-center gap-1.5 rounded-full bg-perk-purple/10 py-1 ps-3 pe-2 text-xs font-semibold text-perk-purple hover:bg-perk-purple/20">
-              {chipText(f)} <span className="flex h-4 w-4 items-center justify-center rounded-full bg-perk-purple/20 text-[10px]">✕</span>
+              {chipText(f)} <span className="flex h-4 w-4 items-center justify-center rounded-full bg-perk-purple/20 text-[10px]"><Icon name="x" size={10} /></span>
             </Link>
           ))}
         </div>

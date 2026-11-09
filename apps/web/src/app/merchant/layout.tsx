@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import { merchantCan, requireMerchant, type MerchantArea } from "@/lib/auth";
 import { Shell, type NavItem } from "@/components/shell";
 import { Badge } from "@/components/ui";
@@ -35,7 +36,7 @@ export default async function MerchantLayout({ children }: LayoutProps<"/merchan
         <div className="truncate font-bold">{merchant.name}</div>
       )}
       <div className="mt-1 font-mono text-xs text-zinc-500">{merchant.merchant_code}</div>
-      {branchScope && <div className="mt-1 truncate text-xs text-zinc-500">📍 {branchScope.name}</div>}
+      {branchScope && <div className="mt-1 truncate text-xs text-zinc-500"><Icon name="pin" size={12} className="me-1 inline-block align-[-2px]" />{branchScope.name}</div>}
       <div className="mt-2 flex flex-wrap gap-1"><Badge tone={merchant.status}>{t(merchant.status)}</Badge><Badge tone={memberRole}>{t(MEMBER_ROLE_LABEL[memberRole])}</Badge></div>
     </div>
   );

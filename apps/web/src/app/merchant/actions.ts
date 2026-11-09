@@ -188,7 +188,7 @@ export async function confirmOnlineCode(_: ActionState, fd: FormData): Promise<A
   const r = data as { ok: boolean; error?: string; discount_amount?: number; final_amount?: number; perk_title?: string; verification_code?: string };
   if (!r.ok) return { error: ONLINE_ERRORS[r.error ?? ""] ?? r.error };
   revalidatePath("/merchant/online");
-  return { ok: `✓ ${r.perk_title}: discount ${r.discount_amount ?? 0} EGP → customer pays ${r.final_amount ?? "—"} EGP (receipt ${r.verification_code}).` };
+  return { ok: `${r.perk_title}: discount ${r.discount_amount ?? 0} EGP → customer pays ${r.final_amount ?? "—"} EGP (receipt ${r.verification_code}).` };
 }
 
 export async function reportOnlineOrder(_: ActionState, fd: FormData): Promise<ActionState> {

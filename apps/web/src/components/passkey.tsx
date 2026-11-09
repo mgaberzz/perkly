@@ -1,4 +1,5 @@
 "use client";
+import { Icon } from "@/components/icons";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -14,7 +15,7 @@ function message(t: (s: string) => string, e: { code?: string; message?: string;
   const text = `${code} ${e?.name ?? ""} ${e?.message ?? ""}`;
   // Browser gives the same "timed out or not allowed" error when the user cancels AND when no passkey exists on this device
   if (signIn && /NotAllowed|not allowed|timed out|abort|cancel/i.test(text))
-    return t("No Face ID / fingerprint found for Perkly on this device (or it was cancelled). First time? Sign in with your password, then open 🔐 Face ID / fingerprint in the menu and tap \"Set up\".");
+    return t("No Face ID / fingerprint found for Perkly on this device (or it was cancelled). First time? Sign in with your password, then open Face ID / fingerprint in the menu and tap \"Set up\".");
   if (code === "passkey_disabled") return t("Face ID / fingerprint login isn't switched on for Perkly yet. Ask an admin.");
   if (code === "webauthn_credential_not_found") return t("This device has no Perkly passkey yet. Sign in with your password, then set it up under Security.");
   if (code === "webauthn_credential_exists") return t("This device is already set up.");
@@ -42,7 +43,7 @@ export function PasskeySignIn({ next }: { next?: string }) {
     <div className="mb-6">
       <button onClick={go} disabled={busy}
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-perk-ink px-4 py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
-        🔐 {busy ? t("Waiting for your device…") : t("Sign in with Face ID / fingerprint")}
+        <Icon name="fingerprint" size={16} className="me-1 inline-block align-[-2px]" />{busy ? t("Waiting for your device…") : t("Sign in with Face ID / fingerprint")}
       </button>
       {error && <p className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>}
       <div className="mt-6 flex items-center gap-3 text-xs text-zinc-400"><span className="h-px flex-1 bg-zinc-200" />{t("or with your password")}<span className="h-px flex-1 bg-zinc-200" /></div>
@@ -99,7 +100,7 @@ export function PasskeyManager() {
         {(list ?? []).map((p) => (
           <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
             <div>
-              <div className="font-semibold">🔑 {p.friendly_name || t("Passkey")}</div>
+              <div className="font-semibold"><Icon name="key" size={14} className="me-1 inline-block align-[-2px]" />{p.friendly_name || t("Passkey")}</div>
               <div className="text-xs text-zinc-500">
                 {t("Added {date}", { date: new Date(p.created_at).toLocaleDateString() })}
                 {p.last_used_at && ` · ${t("last used {date}", { date: new Date(p.last_used_at).toLocaleDateString() })}`}

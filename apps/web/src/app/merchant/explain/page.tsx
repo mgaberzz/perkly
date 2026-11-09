@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { merchantCan, requireMerchant } from "@/lib/auth";
@@ -183,7 +184,7 @@ function Explained({ title, value, subtitle, formula, children, exportParams }: 
           <div className="text-xs font-semibold uppercase tracking-wide text-white/80">{title}</div>
           <div className="mt-2 text-4xl font-extrabold">{value}</div>
         </div>
-        <Card title="🧮" className="lg:col-span-2"><div className="space-y-1 text-sm">{formula}</div></Card>
+        <Card title={<Icon name="calculator" size={18} />} className="lg:col-span-2"><div className="space-y-1 text-sm">{formula}</div></Card>
       </div>
       {children}
     </>
@@ -197,7 +198,7 @@ function TxTable({ rows, t, money }: { rows: Tx[]; t: (s: string, v?: Record<str
       {rows.map((r) => (
         <tr key={r.id}>
           <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-perk-purple">{r.tx_code}</div><div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
-          <Td>{r.branch?.name ?? `🌐 ${t("Online")}`}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>
+          <Td>{r.branch?.name ?? <><Icon name="globe" size={14} className="me-1 inline-block align-[-2px]" />{t("Online")}</>}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>
           <Td phone="lead">{r.perk?.title}</Td>
           <Td>{r.first_time_at_merchant ? <Badge tone="live">{t("New customer")}</Badge> : <Badge tone="paused">{t("Recurring customer")}</Badge>}</Td>
           <Td phone="sum"><Badge tone={r.payment_method === "in_app" ? "active" : "paused"}>{r.payment_method === "in_app" ? t("Paid in app") : t("Pay at cashier")}</Badge></Td>

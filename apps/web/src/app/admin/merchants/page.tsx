@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { inScope, requireStaff } from "@/lib/auth";
 import { Amount, Badge, PageHeader, Table, Td } from "@/components/ui";
@@ -114,7 +115,7 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
                 <Avatar name={m.name} src={m.logo_url} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2"><span className="truncate font-bold">{m.name}</span><Badge tone={m.status} className="shrink-0 !px-2 !text-[10px]">{t(m.status)}</Badge></div>
-                  <div className="truncate text-xs text-zinc-500">{t(m.category)} · <span className="font-mono">{m.merchant_code}</span>{m.partner_id && partnerName.get(m.partner_id) ? ` · 🤝 ${partnerName.get(m.partner_id)}` : ""}</div>
+                  <div className="truncate text-xs text-zinc-500">{t(m.category)} · <span className="font-mono">{m.merchant_code}</span>{m.partner_id && partnerName.get(m.partner_id) ? <> · <Icon name="handshake" size={12} className="me-1 inline-block align-[-2px]" />{partnerName.get(m.partner_id)}</> : ""}</div>
                   <div className="mt-1 flex gap-3 text-xs">
                     <span className="text-zinc-600"><b>{short(tx(m.id))}</b> {t("tx")} · <b><Amount v={gmv(m.id)} /></b> <span className="text-zinc-400">{t("30d")}</span></span>
                     {to > 0 ? <span className="font-bold text-perk-purple">{t("Due")} <Amount v={to} /></span> : by > 0 ? <span className="font-bold text-amber-700">{t("Owes")} <Amount v={by} /></span> : null}

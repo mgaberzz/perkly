@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import { requireAdmin } from "@/lib/auth";
 import { Badge, Card, Field, PageHeader, Select } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/action-form";
@@ -53,8 +54,8 @@ export default async function TeamPage() {
                     {mine.map((a) => (
                       <form key={a.id} action={removeAssignment} className="flex items-center gap-1 rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold">
                         <input type="hidden" name="id" value={a.id} />
-                        {a.merchant ? `🏪 ${a.merchant.name}` : `🏫 ${a.campus?.name}`}
-                        <button className="text-zinc-400 hover:text-red-600" title={t("Remove")}>✕</button>
+                        {a.merchant ? <><Icon name="store" size={14} className="me-1 inline-block align-[-2px]" />{a.merchant.name}</> : <><Icon name="school" size={14} className="me-1 inline-block align-[-2px]" />{a.campus?.name}</>}
+                        <button className="text-zinc-400 hover:text-red-600" title={t("Remove")}><Icon name="x" size={16} /></button>
                       </form>
                     ))}
                     {mine.length === 0 && <span className="text-xs text-amber-600">{t("Nothing assigned yet — they can't see any merchant.")}</span>}

@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { inScope, requireStaff } from "@/lib/auth";
 import { Badge, PageHeader, Table, Td } from "@/components/ui";
@@ -62,7 +63,7 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
       {chips.length > 0 && (
         <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
           <span className="text-zinc-500">{t("From Insights")}:</span>
-          {chips.map((c) => <Link key={c.k} href={without(c.k)} className="rounded-full bg-perk-purple/10 px-3 py-1 font-semibold text-perk-purple hover:bg-perk-purple/20">{c.label} ✕</Link>)}
+          {chips.map((c) => <Link key={c.k} href={without(c.k)} className="rounded-full bg-perk-purple/10 px-3 py-1 font-semibold text-perk-purple hover:bg-perk-purple/20">{c.label} <Icon name="x" size={12} className="ms-1 inline-block align-[-1px]" /></Link>)}
         </div>
       )}
       <ExpandList empty={t("No transactions.")}>
@@ -91,7 +92,7 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
             <DetailRow label={t("Code")}><span className="font-mono">{r.verification_code}</span></DetailRow>
             <DetailRow label={t("Student")}>{r.student?.full_name ?? "—"} <span className="font-mono text-xs text-zinc-500">{r.student?.student_code ?? r.student?.user_code}</span></DetailRow>
             <DetailRow label={t("Merchant")}><Link href={`/admin/merchants/${r.merchant.id}`} className="underline">{r.merchant.name}</Link> <span className="font-mono text-xs text-zinc-500">{r.merchant.merchant_code}</span></DetailRow>
-            <DetailRow label={t("Branch / cashier")}>{r.branch?.name ?? `🌐 ${t("Online")}`}{(r.qr?.cashier_name ?? r.qr?.label) && <span className="block text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</span>}</DetailRow>
+            <DetailRow label={t("Branch / cashier")}>{r.branch?.name ?? <><Icon name="globe" size={14} className="me-1 inline-block align-[-2px]" />{t("Online")}</>}{(r.qr?.cashier_name ?? r.qr?.label) && <span className="block text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</span>}</DetailRow>
             <DetailRow label={t("Perk")}>{r.perk.title}</DetailRow>
             <DetailRow label={t("Total GMV")}>{egp(r.original_amount)}</DetailRow>
             <DetailRow label={t("Discount")}>{egp(r.discount_amount)}</DetailRow>
@@ -102,11 +103,11 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
               <div className="my-2 flex gap-2">
                 {review && r.status !== "success" && (
                   <form action={setRedemptionStatus} className="flex-1"><input type="hidden" name="id" value={r.id} /><input type="hidden" name="status" value="success" />
-                    <button className="w-full rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white">✓ {t("Mark OK")}</button></form>
+                    <button className="w-full rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white"><Icon name="check" size={14} className="me-1 inline-block align-[-2px]" />{t("Mark OK")}</button></form>
                 )}
                 {review && r.status !== "reversed" && (
                   <form action={setRedemptionStatus} className="flex-1"><input type="hidden" name="id" value={r.id} /><input type="hidden" name="status" value="reversed" /><input type="hidden" name="reason" value="reversed by Perkly" />
-                    <button className="w-full rounded-xl border border-red-200 bg-white py-2.5 text-sm font-semibold text-red-600">↩ {t("Reverse")}</button></form>
+                    <button className="w-full rounded-xl border border-red-200 bg-white py-2.5 text-sm font-semibold text-red-600"><Icon name="undo" size={14} className="me-1 inline-block align-[-2px]" />{t("Reverse")}</button></form>
                 )}
               </div>
             ) : null}
@@ -119,7 +120,7 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
             <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-perk-purple">{r.tx_code}</div><div className="font-mono text-xs text-zinc-500">{r.verification_code}</div></Td>
             <Td>{r.student?.full_name ?? "—"}<div className="font-mono text-xs text-zinc-500">{r.student?.student_code ?? r.student?.user_code}</div></Td>
             <Td><Link href={`/admin/merchants/${r.merchant.id}`} className="hover:underline">{r.merchant.name}</Link><div className="font-mono text-xs text-zinc-500">{r.merchant.merchant_code}</div></Td>
-            <Td>{r.branch?.name ?? `🌐 ${t("Online")}`}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>
+            <Td>{r.branch?.name ?? <><Icon name="globe" size={14} className="me-1 inline-block align-[-2px]" />{t("Online")}</>}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>
             <Td>{r.perk.title}</Td>
             <Td><Amount v={r.original_amount} /></Td>
             <Td><Amount v={r.discount_amount} /></Td>

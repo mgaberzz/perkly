@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import { PageTabs } from "@/components/page-tabs";
 import Link from "next/link";
 import { requireMerchantArea } from "@/lib/auth";
@@ -24,7 +25,7 @@ export default async function PerksPage() {
           const tier = tierFor(p);
           return (
             <tr key={p.id}>
-              <Td><Link href={`/merchant/perks/${p.id}`} className="font-semibold hover:text-perk-purple">{p.is_flash && "⚡ "}{p.title}</Link></Td>
+              <Td><Link href={`/merchant/perks/${p.id}`} className="font-semibold hover:text-perk-purple">{p.is_flash && <Icon name="zap" size={14} className="me-1 inline-block align-[-2px]" />}{p.title}</Link></Td>
               <Td phone="sum">{discountLabel(p, t)}</Td>
               <Td>{tier && <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${tier.cls}`}>{t(tier.name)}</span>}</Td>
               <Td>{p.branch?.name ?? t("All branches")}</Td>

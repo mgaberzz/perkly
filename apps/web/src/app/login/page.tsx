@@ -35,7 +35,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           <div className="mb-8 flex items-center justify-between"><Logo className="text-xl lg:invisible" /><LangSwitch /></div>
-          <h2 className="text-2xl font-extrabold">{t("Welcome back 👋")}</h2>
+          <h2 className="text-2xl font-extrabold">{t("Welcome back")}</h2>
           <p className="mb-6 mt-1 text-sm text-zinc-500">{t("Sign in to the merchant portal or the Perkly team portal.")}</p>
           {error && <div className="mb-4"><Notice tone="error">{error}</Notice></div>}
           <PasskeySignIn next={next} />

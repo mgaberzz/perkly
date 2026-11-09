@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { Amount, Badge, Card, Input, LinkButton, PageHeader, Stat, Table, Td } from "@/components/ui";
@@ -49,7 +50,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
         <Link href={`/admin/explain?metric=received_from_merchants`} className="block transition hover:-translate-y-0.5"><Stat label={t("Received from merchants")} value={<Amount v={sum("received_from_merchant")} />} hint={t("Commission collected")} /></Link>
       </div>
 
-      <div className="mb-3 mt-2 flex items-center justify-between"><h2 className="font-bold">🤝 {t("Partners")}</h2><Link href="/admin/partners" className="text-sm font-semibold text-perk-purple hover:underline">{t("Open partners")} →</Link></div>
+      <div className="mb-3 mt-2 flex items-center justify-between"><h2 className="font-bold"><Icon name="handshake" size={16} className="me-1 inline-block align-[-2px]" />{t("Partners")}</h2><Link href="/admin/partners" className="text-sm font-semibold text-perk-purple hover:underline">{t("Open partners")} →</Link></div>
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Link href="/admin/partners" className="block transition hover:-translate-y-0.5"><Stat label={t("Owed to partners")} value={<Amount v={pSum("due")} />} hint={t("Earned minus paid")} /></Link>
         <Link href="/admin/partners" className="block transition hover:-translate-y-0.5"><Stat label={t("Partner cuts")} value={<Amount v={pSum("earned")} />} hint={t("All time")} /></Link>
@@ -81,7 +82,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
           <LinkButton href="/admin/finance?view=all" variant={view === "all" ? "primary" : "secondary"}>{t("All merchants")}</LinkButton>
         </div>
       </div>
-      <Table head={[t("Merchant"), t("Brand type"), t("In-app sales"), t("Due to merchant"), t("Commission on cashier sales"), t("VAT on commission"), t("Net to settle"), t("Open settlements"), t("Bank")]} empty={t("Nothing due 🎉")}>
+      <Table head={[t("Merchant"), t("Brand type"), t("In-app sales"), t("Due to merchant"), t("Commission on cashier sales"), t("VAT on commission"), t("Net to settle"), t("Open settlements"), t("Bank")]} empty={t("Nothing due")}>
         {rows.map((b) => (
           <tr key={b.merchant_id}>
             <Td><Link href={`/admin/merchants/${b.merchant_id}`} className="font-semibold hover:text-perk-purple">{b.merchant_name}</Link><div className="font-mono text-xs text-zinc-500">{b.merchant_code}</div></Td>

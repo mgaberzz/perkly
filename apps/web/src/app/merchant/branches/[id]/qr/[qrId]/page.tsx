@@ -21,7 +21,7 @@ export default async function QrPosterPage({ params }: PageProps<"/merchant/bran
       <div className="no-print mb-6"><PrintButton /></div>
       <div className="perk-gradient w-[420px] rounded-[32px] p-8 text-center text-white shadow-xl print:shadow-none">
         <div className="text-2xl font-extrabold">Perkly</div>
-        <div className="mt-1 text-sm text-white/85">{t("Students get instant discounts here 💜")}</div>
+        <div className="mt-1 text-sm text-white/85">{t("Students get instant discounts here")}</div>
         <div className="mx-auto mt-6 w-fit rounded-3xl bg-white p-4"><QrImage value={qr.code} size={260} /></div>
         <div className="mt-6 text-3xl font-extrabold leading-tight">{t("Scan to save")}</div>
         <ol className="mx-auto mt-4 max-w-xs space-y-1 text-start text-sm text-white/90">

@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { Amount, Card, HBarList, LinkButton, PageHeader, Stat, Table, Td } from "@/components/ui";
@@ -15,11 +16,11 @@ type Summary = { transactions: number; gmv: number; discount: number; paid: numb
   paid_to_merchants: number; to_be_paid_to_merchants: number };
 
 const DIMS = [
-  { key: "sector", label: "Sector", icon: "🏷️", param: "category" },
-  { key: "location", label: "Location", icon: "📍", param: "city" },
-  { key: "campus", label: "Campus", icon: "🎓", param: "campus" },
-  { key: "age", label: "Age range", icon: "🎂", param: "age" },
-  { key: "merchant", label: "Merchant", icon: "🏪", param: "merchant" },
+  { key: "sector", label: "Sector", icon: "tag", param: "category" },
+  { key: "location", label: "Location", icon: "pin", param: "city" },
+  { key: "campus", label: "Campus", icon: "school", param: "campus" },
+  { key: "age", label: "Age range", icon: "cake", param: "age" },
+  { key: "merchant", label: "Merchant", icon: "store", param: "merchant" },
 ] as const;
 
 export default async function InsightsPage({ searchParams }: PageProps<"/admin/insights">) {
@@ -101,7 +102,7 @@ export default async function InsightsPage({ searchParams }: PageProps<"/admin/i
         {DIMS.map((d) => (
           <Link key={d.key} href={link(d.key, days)}
             className={`rounded-full px-4 py-2 text-sm font-semibold ${d.key === dim.key ? "bg-perk-ink text-white" : "bg-white ring-1 ring-zinc-200 hover:bg-zinc-50"}`}>
-            {d.icon} {t(`By ${d.label.toLowerCase()}`)}
+            <Icon name={d.icon} size={14} className="me-1 inline-block align-[-2px]" />{t(`By ${d.label.toLowerCase()}`)}
           </Link>
         ))}
       </div>

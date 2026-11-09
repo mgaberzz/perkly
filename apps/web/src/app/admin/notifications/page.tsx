@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { Badge, LinkButton, PageHeader } from "@/components/ui";
@@ -8,7 +9,7 @@ import type { AdminRequest } from "@/lib/types";
 import { resolveRequest } from "../actions";
 
 export const metadata = { title: "Notifications" };
-const ICON: Record<string, string> = { qr_code: "🔳", perk: "🎁", cashback: "💸", payout: "🏦" };
+const ICON: Record<string, string> = { qr_code: "qr", perk: "gift", cashback: "cash", payout: "building" };
 
 export default async function NotificationsPage({ searchParams }: PageProps<"/admin/notifications">) {
   const { supabase, can } = await requireStaff("notifications");
@@ -33,14 +34,14 @@ export default async function NotificationsPage({ searchParams }: PageProps<"/ad
       <div className="mb-4 flex flex-wrap gap-2 text-sm">
         {["", "qr_code", "perk", "cashback", "payout"].map((k) => (
           <Link key={k} href={href(status, k)} className={`rounded-full px-3 py-1 font-semibold ${k === kind ? "bg-perk-ink text-white" : "bg-white ring-1 ring-zinc-200"}`}>
-            {k ? `${ICON[k]} ${t(REQUEST_KIND_LABEL[k])}` : t("All types")}
+            {k ? <><Icon name={ICON[k]} size={14} className="me-1 inline-block align-[-2px]" />{t(REQUEST_KIND_LABEL[k])}</> : t("All types")}
           </Link>
         ))}
       </div>
       <ul className="space-y-3">
         {(data ?? []).map((r) => (
           <li key={r.id} className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm md:flex-row md:items-center">
-            <div className="text-2xl">{ICON[r.kind]}</div>
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-zinc-100 text-zinc-600"><Icon name={ICON[r.kind]} size={20} /></div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-semibold">{r.title}</span>
@@ -58,7 +59,7 @@ export default async function NotificationsPage({ searchParams }: PageProps<"/ad
               <div className="flex flex-wrap items-center gap-2">
                 <form action={resolveRequest}>
                   <input type="hidden" name="id" value={r.id} /><input type="hidden" name="decision" value="approve" />
-                  <button className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white">✓ {t("Approve")}</button>
+                  <button className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white"><Icon name="check" size={14} className="me-1 inline-block align-[-2px]" />{t("Approve")}</button>
                 </form>
                 <form action={resolveRequest} className="flex gap-2">
                   <input type="hidden" name="id" value={r.id} /><input type="hidden" name="decision" value="reject" />
@@ -69,7 +70,7 @@ export default async function NotificationsPage({ searchParams }: PageProps<"/ad
             )}
           </li>
         ))}
-        {(data ?? []).length === 0 && <li className="rounded-2xl border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500">{t("All caught up 🎉")}</li>}
+        {(data ?? []).length === 0 && <li className="rounded-2xl border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500">{t("All caught up")}</li>}
       </ul>
     </>
   );

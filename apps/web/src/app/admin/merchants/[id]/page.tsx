@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
@@ -59,7 +60,7 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
 
       {partnerList && (
         <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm shadow-sm">
-          <span className="font-semibold">🤝 {t("Partner")}:</span>
+          <span className="font-semibold"><Icon name="handshake" size={14} className="me-1 inline-block align-[-2px]" />{t("Partner")}:</span>
           {partner
             ? <Link href={`/admin/partners/${partner.id}`} className="font-semibold text-perk-purple hover:underline">{partner.name} <span className="font-mono text-xs text-zinc-500">{partner.partner_code}</span></Link>
             : <span className="text-zinc-500">{t("None (onboarded by Perkly)")}</span>}
@@ -109,14 +110,14 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
                   <div className="min-w-0">
                     <div className="truncate font-semibold">{p?.full_name ?? p?.email ?? t("Invited")}</div>
                     <div className="truncate text-xs text-zinc-500">{p?.email} {p?.user_code && `· ${p.user_code}`}</div>
-                    {m.branch_id && <div className="text-xs text-zinc-500">📍 {branchName.get(m.branch_id)}</div>}
+                    {m.branch_id && <div className="text-xs text-zinc-500"><Icon name="pin" size={12} className="me-1 inline-block align-[-2px]" />{branchName.get(m.branch_id)}</div>}
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge tone={m.member_role}>{t(MEMBER_ROLE_LABEL[m.member_role])}</Badge>
                     {editable && (
                       <form action={adminRemoveMember}>
                         <input type="hidden" name="merchant_id" value={id} /><input type="hidden" name="user_id" value={m.user_id} />
-                        <ConfirmButton message={t("Remove portal access?")} className="text-xs text-red-600 hover:underline">✕</ConfirmButton>
+                        <ConfirmButton message={t("Remove portal access?")} className="text-xs text-red-600 hover:underline"><Icon name="x" size={14} /></ConfirmButton>
                       </form>
                     )}
                   </div>
@@ -149,7 +150,7 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
                 <ul className="mt-3 space-y-2">
                   {b.qr.map((q) => (
                     <li key={q.id} className={`flex items-center gap-3 rounded-xl border p-2 ${q.is_active ? "border-zinc-200" : "border-dashed border-zinc-300 opacity-60"}`}>
-                      {q.status === "approved" && q.is_active ? <QrImage value={q.code} size={56} /> : <div className="grid h-14 w-14 place-items-center rounded-lg bg-zinc-100 text-xl">🔳</div>}
+                      {q.status === "approved" && q.is_active ? <QrImage value={q.code} size={56} /> : <div className="grid h-14 w-14 place-items-center rounded-lg bg-zinc-100 text-zinc-400"><Icon name="qr" size={24} /></div>}
                       <div className="min-w-0 flex-1 text-xs">
                         <div className="truncate font-semibold">{q.cashier_name ?? q.label}</div>
                         <div className="font-mono text-zinc-500">{q.code}</div>
@@ -159,7 +160,7 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
                         <div className="flex flex-col items-end gap-1 text-xs font-semibold">
                           {q.status === "pending" && requestFor.get(q.id) && (
                             <form action={resolveRequest}><input type="hidden" name="id" value={requestFor.get(q.id)} /><input type="hidden" name="decision" value="approve" />
-                              <button className="text-emerald-700 hover:underline">✓ {t("Approve")}</button></form>
+                              <button className="text-emerald-700 hover:underline"><Icon name="check" size={14} className="me-1 inline-block align-[-2px]" />{t("Approve")}</button></form>
                           )}
                           <form action={adminToggleQr}>
                             <input type="hidden" name="id" value={q.id} /><input type="hidden" name="merchant_id" value={id} /><input type="hidden" name="active" value={String(!q.is_active)} />
@@ -202,7 +203,7 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
           <Table head={[t("Perk"), t("Discount"), t("Status")]} empty={t("No perks.")}>
             {(perks ?? []).map((p) => (
               <tr key={p.id}>
-                <Td>{can("perks") ? <Link href={`/admin/perks/${p.id}`} className="font-semibold hover:text-perk-purple">{p.is_flash && "⚡ "}{p.title}</Link> : p.title}</Td>
+                <Td>{can("perks") ? <Link href={`/admin/perks/${p.id}`} className="font-semibold hover:text-perk-purple">{p.is_flash && <Icon name="zap" size={14} className="me-1 inline-block align-[-2px]" />}{p.title}</Link> : p.title}</Td>
                 <Td phone="sum">{discountLabel(p, t)}</Td>
                 <Td phone="sum"><Badge tone={p.status}>{t(p.status)}</Badge></Td>
               </tr>

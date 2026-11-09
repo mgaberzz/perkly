@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import { ActionForm, SubmitButton } from "./action-form";
 import { Field, Input, Select, Textarea } from "./ui";
 import { DAYS } from "@/lib/format";
@@ -55,7 +56,7 @@ export async function PerkForm({
         <Field label={t("Notes for cashier / terms")} className="md:col-span-2"><Textarea name="terms" defaultValue={perk?.terms ?? ""} placeholder="Not valid with other offers. Dine-in only." /></Field>
         <label className="flex items-center gap-2 text-sm font-semibold md:col-span-2">
           <input type="checkbox" name="is_flash" defaultChecked={perk?.is_flash} className="h-4 w-4 accent-perk-pink" />
-          ⚡ {t("Flash perk (shown in “Ending soon” — set an end date)")}
+          <Icon name="zap" size={14} className="me-1 inline-block align-[-2px]" />{t("Flash perk (shown in “Ending soon” — set an end date)")}
         </label>
       </div>
       <SubmitButton>{submitLabel ?? t("Save perk")}</SubmitButton>

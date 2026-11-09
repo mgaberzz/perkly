@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icons";
 import { PageTabs } from "@/components/page-tabs";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -29,7 +30,7 @@ export default async function BranchesPage() {
               <Td>{b.campus?.name ?? "—"}</Td>
               <Td phone="sum">{b.city ?? "—"}</Td>
               <Td>{live} {pending > 0 && <Badge tone="pending" className="ms-1">{t("{n} pending", { n: pending })}</Badge>}</Td>
-              <Td>{b.lat != null ? `✅ ${t("Set")}` : <span className="text-amber-600">{t("Missing")}</span>}</Td>
+              <Td>{b.lat != null ? <span className="text-emerald-700"><Icon name="check" size={14} className="me-1 inline-block align-[-2px]" />{t("Set")}</span> : <span className="text-amber-600">{t("Missing")}</span>}</Td>
               <Td phone="sum"><Badge tone={b.is_active ? "active" : "paused"}>{b.is_active ? t("open") : t("closed")}</Badge></Td>
             </tr>
           );
