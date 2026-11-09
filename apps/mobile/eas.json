@@ -13,7 +13,8 @@
         "EXPO_PUBLIC_SUPABASE_URL": "https://qnvzkjojuumtzpkvjlja.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_acSp196d89a1J3Thuoutng_RDfhfQ4u",
         "EXPO_PUBLIC_WEB_URL": "https://perkly-five.vercel.app"
-      }
+      },
+      "environment": "preview"
     },
     "production": {
       "autoIncrement": true,
@@ -21,7 +22,8 @@
         "EXPO_PUBLIC_SUPABASE_URL": "https://qnvzkjojuumtzpkvjlja.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_acSp196d89a1J3Thuoutng_RDfhfQ4u",
         "EXPO_PUBLIC_WEB_URL": "https://perkly-five.vercel.app"
-      }
+      },
+      "environment": "production"
     }
   },
   "submit": {
