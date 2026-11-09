@@ -43,6 +43,11 @@ type Ctx = {
 };
 
 const SessionContext = createContext<Ctx | null>(null);
+
+// Saved on the phone so the app opens instantly and still works with a weak or no connection
+const MERCHANTS_CACHE = 'perkly.cache.merchants';
+const userCacheKey = (id: string) => `perkly.cache.user.${id}`;
+type UserCache = { profile: Profile | null; stats: Stats | null; campus: Campus | null; favorites: string[] };
 const PARKED_KEY = 'perkly.parkedSession';
 
 const MERCHANT_SELECT =
@@ -89,36 +94,43 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = useCallback(async () => {
     if (!userId) return;
-    const [{ data: p }, { data: s }, { data: f }] = await Promise.all([
+    const [{ data: p, error: pe }, { data: s }, { data: f }] = await Promise.all([
       supabase.from('profiles').select('id, full_name, phone, email, campus_id, referral_code, status, role, birth_date, marketing_opt_in, terms_accepted_at, referred_by, user_code, student_code, avatar_path, avatar_config, avatar_kind, verification_status, verified_until, lang').eq('id', userId).single<Profile>(),
       supabase.from('user_stats').select('*').eq('user_id', userId).single<Stats>(),
       supabase.from('favorites').select('merchant_id').eq('user_id', userId),
     ]);
-    setProfile(p ?? null);
+    if (pe || !p) return; // offline or failed: keep showing the saved copy
+    setProfile(p);
     setStats(s ?? null);
     // Messages from Perkly arrive in the language the app is in
     if (p && (p as Profile & { lang?: string }).lang !== lang()) supabase.from('profiles').update({ lang: lang() }).eq('id', p.id).then(() => {});
     setFavorites(new Set((f ?? []).map((x: { merchant_id: string }) => x.merchant_id)));
-    if (p?.campus_id) {
-      const { data: c } = await supabase.from('campuses').select('*').eq('id', p.campus_id).single<Campus>();
-      setCampus(c ?? null);
-    } else setCampus(null);
+    let c: Campus | null = null;
+    if (p.campus_id) {
+      const { data } = await supabase.from('campuses').select('*').eq('id', p.campus_id).single<Campus>();
+      c = data ?? null;
+    }
+    setCampus(c);
+    const cache: UserCache = { profile: p, stats: s ?? null, campus: c, favorites: (f ?? []).map((x: { merchant_id: string }) => x.merchant_id) };
+    AsyncStorage.setItem(userCacheKey(p.id), JSON.stringify(cache)).catch(() => {});
   }, [userId]);
 
   useEffect(() => { if (userId) registerPush(false); setSentryUser(userId ?? null); }, [userId]);
 
   const refreshMerchants = useCallback(async () => {
-    const [{ data }, { data: pop }] = await Promise.all([
+    const [{ data, error }, { data: pop }] = await Promise.all([
       supabase.from('merchants').select(MERCHANT_SELECT).eq('status', 'live').order('name').returns<Merchant[]>(),
       supabase.rpc('perk_popularity'),
     ]);
-    setPopularity(Object.fromEntries(((pop ?? []) as { perk_id: string; redemptions_30d: number }[]).map((r) => [r.perk_id, Number(r.redemptions_30d)])));
+    if (error || !data) return; // offline: keep the saved perks
+    const popular = Object.fromEntries(((pop ?? []) as { perk_id: string; redemptions_30d: number }[]).map((r) => [r.perk_id, Number(r.redemptions_30d)]));
+    setPopularity(popular);
     const now = Date.now();
-    setMerchants(
-      (data ?? [])
-        .map((m) => ({ ...m, perks: m.perks.filter((p) => !p.end_at || new Date(p.end_at).getTime() > now) }))
-        .filter((m) => m.perks.length > 0),
-    );
+    const live = data
+      .map((m) => ({ ...m, perks: m.perks.filter((p) => !p.end_at || new Date(p.end_at).getTime() > now) }))
+      .filter((m) => m.perks.length > 0);
+    setMerchants(live);
+    AsyncStorage.setItem(MERCHANTS_CACHE, JSON.stringify({ merchants: live, popularity: popular })).catch(() => {});
   }, []);
 
   const refreshLocation = useCallback(async (ask = false): Promise<Coords> => {
@@ -160,6 +172,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
     // Full sign-out: stop pushes to this phone, then clear the session on this device right away
     await Promise.race([unregisterPush(), new Promise((r) => setTimeout(r, 2500))]);
+    const uid = (await supabase.auth.getSession()).data.session?.user.id;
+    if (uid) await AsyncStorage.removeItem(userCacheKey(uid)).catch(() => {});
     await AsyncStorage.removeItem(PARKED_KEY).catch(() => {});
     await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
     setParked(false);
@@ -201,6 +215,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setProfile(null); setStats(null); setCampus(null);
       return;
     }
+    // Show the saved copy first (instant, works offline), then refresh from the server
+    AsyncStorage.multiGet([userCacheKey(userId), MERCHANTS_CACHE]).then(([[, u], [, m]]) => {
+      if (u) { const c = JSON.parse(u) as UserCache; setProfile((cur) => cur ?? c.profile); setStats((cur) => cur ?? c.stats); setCampus((cur) => cur ?? c.campus); setFavorites((cur) => (cur.size ? cur : new Set(c.favorites))); }
+      if (m) {
+        const c = JSON.parse(m) as { merchants: Merchant[]; popularity: Record<string, number> };
+        const now = Date.now();
+        setMerchants((cur) => (cur.length ? cur : c.merchants.map((x) => ({ ...x, perks: x.perks.filter((p) => !p.end_at || new Date(p.end_at).getTime() > now) })).filter((x) => x.perks.length > 0)));
+        setPopularity((cur) => (Object.keys(cur).length ? cur : c.popularity));
+      }
+    }).catch(() => {});
     refreshProfile();
     refreshMerchants();
     refreshLocation(false);

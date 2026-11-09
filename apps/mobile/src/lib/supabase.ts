@@ -8,7 +8,18 @@ const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
 export const supabaseConfigured = Boolean(url && anonKey);
 
+/** Gives up on a request that hangs (weak connection) so screens can show "try again" instead of spinning forever. */
+const fetchWithTimeout: typeof fetch = (input, init) => {
+  if (init?.signal) return fetch(input, init);
+  const target = typeof input === 'string' ? input : input instanceof URL ? input.href : (input as Request).url;
+  const ms = target.includes('/storage/') ? 60_000 : 15_000; // photo uploads get longer
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  return fetch(input, { ...init, signal: ctrl.signal }).finally(() => clearTimeout(timer));
+};
+
 export const supabase = createClient(url || 'http://localhost:54321', anonKey || 'missing-key', {
+  global: { fetch: fetchWithTimeout },
   auth: {
     storage: Platform.OS === 'web' && typeof window === 'undefined' ? undefined : AsyncStorage,
     autoRefreshToken: true,

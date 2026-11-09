@@ -12,7 +12,15 @@ export function ActionForm({
   className?: string;
   resetOnSuccess?: boolean;
 }) {
-  const [state, formAction, pending] = useActionState(action, undefined);
+  // A dropped connection (fetch fails) becomes a clear message instead of a silent failure
+  const safeAction = async (prev: ActionState, fd: FormData): Promise<ActionState> => {
+    try { return await action(prev, fd); }
+    catch (e) {
+      if (e instanceof TypeError) return { error: "Couldn't reach Perkly. Check your connection and try again — nothing was saved." };
+      throw e;
+    }
+  };
+  const [state, formAction, pending] = useActionState(safeAction, undefined);
   const t = useT();
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => { if (state?.ok && resetOnSuccess) ref.current?.reset(); }, [state, resetOnSuccess]);

@@ -1,5 +1,8 @@
 // Arabic translations for the student app. Keys are the English text used in the code (see lib/i18n.ts).
 export const AR: Record<string, string> = {
+  "Back online ✓": "عاد الاتصال ✓",
+  "No connection: showing saved perks": "لا يوجد اتصال: نعرض العروض المحفوظة",
+  "Weak connection — we couldn't confirm it. Tap Try again: you won't be charged or counted twice.": "الاتصال ضعيف ولم نتمكن من التأكيد. اضغط حاول مرة أخرى: لن يتم احتسابها أو خصمها مرتين.",
   "Shop receipt / order no. (optional)": "رقم إيصال أو طلب المتجر (اختياري)",
   "Shop receipt / order no.": "رقم إيصال أو طلب المتجر",
   "e.g. INV-0042": "مثال: INV-0042",

@@ -1,5 +1,8 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Back online": "عاد الاتصال",
+  "You're offline. Changes won't be saved until the connection is back.": "أنت غير متصل. لن يتم حفظ التغييرات حتى يعود الاتصال.",
+  "Couldn't reach Perkly. Check your connection and try again — nothing was saved.": "تعذّر الوصول إلى Perkly. تحقق من اتصالك وحاول مرة أخرى، لم يتم حفظ أي شيء.",
   "Remove this branch? Students will no longer see it or be able to use Perkly there. Its QR codes and history are kept, and you can reopen it later.": "إزالة هذا الفرع؟ لن يراه الطلاب ولن يتمكنوا من استخدام Perkly فيه. تبقى رموز QR والسجل كما هي، ويمكنك إعادة فتحه لاحقًا.",
   "This branch is removed: students can't see it.": "تمت إزالة هذا الفرع: لا يراه الطلاب.",
   "Reopen branch": "إعادة فتح الفرع",

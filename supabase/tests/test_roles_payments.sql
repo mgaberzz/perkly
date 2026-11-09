@@ -788,3 +788,26 @@ do $$ begin
 end $$;
 reset role;
 
+
+-- ── Safe retries: the same request twice gives the same receipt and one redemption ──
+insert into auth.users (id, email, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000b9', 'retry@perkly.test', '{"full_name":"Rami Retry"}');
+select set_config('test.qr', (select q.code from branch_qr_codes q join merchant_branches b on b.id = q.branch_id join merchants m on m.id = b.merchant_id
+  where q.is_active and q.status = 'approved' and b.is_active and m.status = 'live'
+    and exists (select 1 from perks p where p.merchant_id = m.id and p.status = 'active' and p.branch_id is null and p.valid_days is null and p.end_at is null)
+  order by q.code limit 1), false);
+select set_config('test.qr_perk', (select p.id::text from perks p join merchant_branches b on b.merchant_id = p.merchant_id join branch_qr_codes q on q.branch_id = b.id
+  where q.code = current_setting('test.qr') and p.status = 'active' and p.branch_id is null and p.valid_days is null and p.end_at is null limit 1), false);
+select set_config('test.qr_lat', (select coalesce(b.lat, 0)::text from branch_qr_codes q join merchant_branches b on b.id = q.branch_id where q.code = current_setting('test.qr')), false);
+select set_config('test.qr_lng', (select coalesce(b.lng, 0)::text from branch_qr_codes q join merchant_branches b on b.id = q.branch_id where q.code = current_setting('test.qr')), false);
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000b9', false);
+do $$ declare rid uuid := gen_random_uuid(); a jsonb; b jsonb; c jsonb; begin
+  a := redeem_perk_safe(rid, current_setting('test.qr'), current_setting('test.qr_perk')::uuid, 500, current_setting('test.qr_lat')::float8, current_setting('test.qr_lng')::float8);
+  assert (a->>'ok')::boolean, 'first attempt redeems: ' || a::text;
+  b := redeem_perk_safe(rid, current_setting('test.qr'), current_setting('test.qr_perk')::uuid, 500, current_setting('test.qr_lat')::float8, current_setting('test.qr_lng')::float8);
+  assert (b->>'ok')::boolean and (b->>'replayed')::boolean and b->>'redemption_id' = a->>'redemption_id', 'retry returns the same receipt: ' || b::text;
+  assert (select count(*) from my_redemptions) = 1, 'only one redemption';
+  c := redeem_perk_safe(gen_random_uuid(), current_setting('test.qr'), current_setting('test.qr_perk')::uuid, 500, current_setting('test.qr_lat')::float8, current_setting('test.qr_lng')::float8);
+  assert c->>'error' = 'too_soon', 'a genuinely new attempt is still rate-limited: ' || c::text;
+end $$;
+reset role;

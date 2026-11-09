@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BiometricGate } from '@/components/biometric-gate';
+import { OfflineBar } from '@/components/offline-bar';
 import { biometricAvailable, biometricEnabled, setBiometricEnabled } from '@/lib/biometric';
 import { initLanguage, t } from '@/lib/i18n';
 import { useNotificationTaps } from '@/lib/push';
@@ -82,6 +83,7 @@ function RootLayout() {
         <SessionProvider>
           <StatusBar style="auto" />
           <RootStack />
+          <OfflineBar />
         </SessionProvider>
       </ThemeProvider>
     </SafeAreaProvider>

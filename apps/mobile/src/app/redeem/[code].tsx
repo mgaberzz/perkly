@@ -72,6 +72,11 @@ export default function Redeem() {
   const needsAmount = (!!perk && Number(perk.min_spend) > 0) || inApp;
   const belowMin = !!perk && bill > 0 && bill < Number(perk.min_spend);
 
+  // One ID per attempt: retrying after a lost reply returns the same receipt instead of a second redemption.
+  // Changing the perk, bill or payment method makes it a new attempt.
+  const attempt = useRef<{ key: string; id: string } | null>(null);
+  const [retrying, setRetrying] = useState(false);
+
   async function redeem() {
     if (!perk) return;
     if (inApp && !bill) return setError(t('Enter your bill to pay in the app.'));
@@ -79,13 +84,16 @@ export default function Redeem() {
     if (belowMin) return setError(t('Minimum spend is {amount}.', { amount: egp(perk.min_spend) }));
     setSubmitting(true); setError(null);
     const here = await refreshLocation(true);
-    const { data, error: err } = await supabase.rpc('redeem_perk', {
-      p_code: code, p_perk_id: perk.id, p_original_amount: bill || null, p_lat: here?.lat ?? null, p_lng: here?.lng ?? null,
+    const key = `${perk.id}|${bill || ''}|${inApp ? 'in_app' : 'merchant'}`;
+    if (attempt.current?.key !== key) attempt.current = { key, id: newRequestId() };
+    const { data, error: err } = await supabase.rpc('redeem_perk_safe', {
+      p_request_id: attempt.current.id, p_code: code, p_perk_id: perk.id, p_original_amount: bill || null, p_lat: here?.lat ?? null, p_lng: here?.lng ?? null,
       p_payment_method: inApp ? 'in_app' : 'merchant',
     });
     setSubmitting(false);
     const res = data as RedeemResult | RpcError | null;
-    if (err || !res) return setError(friendlyError('network'));
+    if (err || !res) { setRetrying(true); return setError(t("Weak connection — we couldn't confirm it. Tap Try again: you won't be charged or counted twice.")); }
+    setRetrying(false);
     if (!res.ok) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       setNeedsVerify(res.error === 'verification_required');
@@ -192,7 +200,7 @@ export default function Redeem() {
 
           {error && <View style={{ backgroundColor: '#F044381A', borderRadius: 14, padding: 12 }}><T color={brand.danger}>{error}</T></View>}
           {needsVerify && <Button title={t('Verify my student ID')} icon="🎓" variant="secondary" onPress={() => { router.back(); router.push('/student-verification'); }} />}
-          <Button title={cta} icon={inApp ? '💳' : '✨'} onPress={redeem} loading={submitting} disabled={!perk} />
+          <Button title={retrying ? t('Try again') : cta} icon={inApp ? '💳' : '✨'} onPress={redeem} loading={submitting} disabled={!perk} />
           <T v="small" style={{ textAlign: 'center' }}>
             {inApp ? t('You pay now in the app — then show the green screen so the cashier knows it is paid.') : t('Tap when you’re paying — then show the green screen to the cashier.')}
           </T>
@@ -200,4 +208,12 @@ export default function Redeem() {
       </ScrollView>
     </KeyboardAvoidingView>
   );
+}
+
+/** Random one-time ID for a redemption attempt (RFC 4122 v4 format). */
+function newRequestId() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
 }

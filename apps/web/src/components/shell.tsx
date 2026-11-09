@@ -4,6 +4,7 @@ import { getT } from "@/lib/i18n/server";
 import { Logo } from "./logo";
 import { NavLink } from "./nav-link";
 import { MobileMenu } from "./mobile-menu";
+import { ConnectionNotice } from "./connection-notice";
 import { TableToggle } from "./table-toggle";
 import { Icon } from "./icons";
 
@@ -65,6 +66,7 @@ export async function Shell({ nav, children, top, user, badge }: { nav: NavItem[
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 p-4 md:p-8">{children}</main>
         <TableToggle />
+        <ConnectionNotice />
       </div>
     </div>
   );
