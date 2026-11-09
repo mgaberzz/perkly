@@ -36,6 +36,19 @@ export function FilterBar({ path, fields, search, keep = {} }: {
   const url = (p: Record<string, string>) => { const q = new URLSearchParams(Object.entries(p).filter(([, v]) => v)); const s = q.toString(); return s ? `${path}?${s}` : path; };
   const go = (p: Record<string, string>) => start(() => router.push(url(p)));
   const active = fields.filter((f) => f.value);
+  // Search as you type: update the results shortly after typing stops (keeps the other filters)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  function typed(v: string) {
+    if (!search) return;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      const p = { ...current };
+      if (v.trim()) p[search.name] = v.trim(); else delete p[search.name];
+      delete p.page;
+      start(() => router.replace(url(p), { scroll: false }));
+    }, 350);
+  }
 
   function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -57,7 +70,7 @@ export function FilterBar({ path, fields, search, keep = {} }: {
         {search && (
           <div className="relative min-w-0 flex-1 sm:max-w-sm">
             <svg className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-zinc-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-            <input name={search.name} defaultValue={search.value} placeholder={search.placeholder} enterKeyHint="search"
+            <input name={search.name} defaultValue={search.value} placeholder={search.placeholder} enterKeyHint="search" onChange={(e) => typed(e.target.value)} autoComplete="off"
               className="h-11 w-full rounded-xl border border-zinc-200 bg-white ps-9 pe-3 text-sm shadow-sm outline-none focus:border-perk-purple focus:ring-2 focus:ring-perk-purple/20" />
           </div>
         )}
