@@ -811,3 +811,40 @@ do $$ declare rid uuid := gen_random_uuid(); a jsonb; b jsonb; c jsonb; begin
   assert c->>'error' = 'too_soon', 'a genuinely new attempt is still rate-limited: ' || c::text;
 end $$;
 reset role;
+
+
+-- ── Merchant applications: only Admin / Operations see them; one open application per email ──
+insert into merchant_applications (business_name, category, contact_name, contact_phone, contact_email)
+  values ('Apply Café', 'Coffee', 'Hana', '01000000000', 'Owner@ApplyCafe.test');
+do $$ begin
+  begin
+    insert into merchant_applications (business_name, category, contact_name, contact_phone, contact_email)
+      values ('Apply Café again', 'Coffee', 'Hana', '01000000000', 'owner@applycafe.test');
+    raise exception 'duplicate allowed';
+  exception when unique_violation then null; end;
+end $$;
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000b9', false);
+do $$ begin assert (select count(*) from merchant_applications) = 0, 'students cannot see applications'; end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ begin
+  assert (select count(*) from merchant_applications) = 1, 'operations sees applications';
+  update merchant_applications set status = 'rejected', reviewed_at = now() where contact_email = 'Owner@ApplyCafe.test';
+  assert (select status from merchant_applications limit 1) = 'rejected', 'operations can review';
+end $$;
+reset role;
+-- After a decision the shop may apply again
+insert into merchant_applications (business_name, category, contact_name, contact_phone, contact_email)
+  values ('Apply Café', 'Coffee', 'Hana', '01000000000', 'owner@applycafe.test');
+-- The public form (signed out) goes through submit_merchant_application
+set role anon;
+do $$ declare r jsonb; begin
+  r := submit_merchant_application('{"business_name":"Anon Shop","category":"Food","contact_name":"Ali","contact_phone":"01011112222","contact_email":"anon@shop.test","branches":"3"}');
+  assert (r->>'ok')::boolean, 'anon can apply: ' || r::text;
+  r := submit_merchant_application('{"business_name":"Anon Shop","category":"Food","contact_name":"Ali","contact_phone":"01011112222","contact_email":"ANON@shop.test"}');
+  assert r->>'error' = 'duplicate', 'duplicate blocked: ' || r::text;
+  r := submit_merchant_application('{"business_name":"X","category":"Food","contact_name":"Ali","contact_phone":"01011112222","contact_email":"bad"}');
+  assert r->>'error' = 'invalid', 'bad input rejected: ' || r::text;
+  begin perform count(*) from merchant_applications; raise exception 'anon read allowed'; exception when insufficient_privilege then null; end;
+end $$;
+reset role;

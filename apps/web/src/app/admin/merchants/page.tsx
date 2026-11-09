@@ -5,6 +5,7 @@ import { Amount, Badge, PageHeader } from "@/components/ui";
 import { getT } from "@/lib/i18n/server";
 import { FilterBar } from "@/components/filter-bar";
 import { PageTabs } from "@/components/page-tabs";
+import { merchantListTabs } from "@/lib/merchant-tabs";
 import { Avatar } from "@/components/expand-list";
 import { short } from "@/lib/format";
 import { BRAND_TYPE_LABEL, CHANNEL_LABEL } from "@/lib/labels";
@@ -36,11 +37,12 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
   if (partner === "none") query = query.is("partner_id", null);
   else if (partner === "any") query = query.not("partner_id", "is", null);
   else if (partner) query = query.eq("partner_id", partner);
-  const [{ data: list }, { data: bal }, { data: act }, { data: partners }] = await Promise.all([
+  const [{ data: list }, { data: bal }, { data: act }, { data: partners }, { count: applications }] = await Promise.all([
     query.returns<Row[]>(),
     supabase.rpc("merchant_balances"),
     supabase.rpc("insights", { p_dimension: "merchant", p_days: 30 }),
     can("partners_view") ? supabase.from("partners").select("id, name").order("name") : Promise.resolve({ data: null }),
+    can("merchants_create") ? supabase.from("merchant_applications").select("*", { count: "exact", head: true }).eq("status", "pending") : Promise.resolve({ count: 0 }),
   ]);
   const balances = new Map(((bal ?? []) as Balance[]).map((b) => [b.merchant_id, b]));
   const activity = new Map(((act ?? []) as Act[]).map((a) => [a.key, a]));
@@ -72,7 +74,7 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
   return (
     <>
       <PageHeader title={role === "account_manager" ? t("My merchants") : t("Merchants")} subtitle={t("{n} merchants", { n: rows.length })} />
-      {can("merchants_create") && <PageTabs tabs={[{ href: "/admin/merchants", label: t("All merchants") }, { href: "/admin/merchants/new", label: t("New merchant") }]} />}
+      {can("merchants_create") && <PageTabs tabs={merchantListTabs(t, applications ?? 0)} />}
 
       <FilterBar path="/admin/merchants" search={{ name: "q", value: q, placeholder: t("Search name or Merchant ID") }} fields={[
         { name: "status", label: t("Status"), type: "select", value: status, all: t("All statuses ({n})", { n: base.length }),

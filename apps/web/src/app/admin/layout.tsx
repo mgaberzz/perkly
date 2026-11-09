@@ -26,16 +26,17 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const { profile, user, role, supabase } = await requireStaff();
   const t = await getT();
   // Open requests this person can act on (RLS scopes the count)
-  const [{ count }, { count: toVerify }] = await Promise.all([
+  const [{ count }, { count: toVerify }, { count: applications }] = await Promise.all([
     supabase.from("admin_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
     can(role, "verifications") ? supabase.from("student_verifications").select("*", { count: "exact", head: true }).eq("status", "pending") : Promise.resolve({ count: 0 }),
+    can(role, "merchants_create") ? supabase.from("merchant_applications").select("*", { count: "exact", head: true }).eq("status", "pending") : Promise.resolve({ count: 0 }),
   ]);
   // Account managers see "My …" because they only ever see their own merchants and campuses
   const mine: Record<string, string> = role === "account_manager"
     ? { "/admin/merchants": "My merchants", "/admin/campuses": "My campuses", "/admin/perks": "My campaigns", "/admin/redemptions": "My transactions" }
     : role === "finance" ? { "/admin/merchants": "Merchants (view)" } : {};
   const nav = NAV.filter((n) => can(role, n.perm)).map((n) => ({
-    href: n.href, icon: n.icon, group: n.group, exact: n.exact, label: t(mine[n.href] ?? n.label), count: n.href === "/admin/notifications" ? count ?? 0 : n.href === "/admin/verifications" ? toVerify ?? 0 : undefined,
+    href: n.href, icon: n.icon, group: n.group, exact: n.exact, label: t(mine[n.href] ?? n.label), count: n.href === "/admin/notifications" ? count ?? 0 : n.href === "/admin/verifications" ? toVerify ?? 0 : n.href === "/admin/merchants" ? applications || undefined : undefined,
   }));
   return <Shell nav={nav} user={profile.full_name ?? user.email ?? ""} badge={`Perkly · ${t(ROLE_LABEL[role])}`}><SentryUser id={user.id} role={role} />{children}</Shell>;
 }

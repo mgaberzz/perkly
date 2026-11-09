@@ -52,7 +52,10 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
               <SubmitButton variant="secondary" className="w-full">{t("Send reset link")}</SubmitButton>
             </ActionForm>
           </details>
-          <p className="mt-10 flex gap-4 text-xs text-zinc-400">
+          <p className="mt-8 rounded-xl bg-zinc-50 p-3 text-center text-sm text-zinc-600">
+            {t("New to Perkly?")} <Link href="/apply" className="font-semibold text-perk-purple hover:underline">{t("Apply to join as a merchant")}</Link>
+          </p>
+          <p className="mt-6 flex gap-4 text-xs text-zinc-400">
             <Link href="/terms" className="hover:text-perk-purple">{t("Terms of Use")}</Link>
             <Link href="/privacy" className="hover:text-perk-purple">{t("Privacy Policy")}</Link>
           </p>

@@ -454,3 +454,38 @@ export async function inviteTeamMember(_: ActionState, fd: FormData): Promise<Ac
   revalidatePath("/admin/users"); revalidatePath("/admin/team");
   return { ok: `Invite sent to ${email}.` };
 }
+
+// ───────── Merchant applications (self-signup) ─────────
+/** Approve: create the merchant (status "pending" so the team can finish setup) and invite the owner. */
+export async function approveApplication(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase, user } = await requireStaff("merchants_create");
+  const id = str(fd, "id");
+  const { data: app } = await supabase.from("merchant_applications").select("*").eq("id", id).eq("status", "pending").maybeSingle();
+  if (!app) return { error: "This application was already handled." };
+  const commission = Number(str(fd, "commission_pct") || 5);
+  if (!(commission >= 0 && commission <= 100)) return { error: "Commission must be 0–100." };
+  const brand = (BRAND_TYPES as readonly string[]).includes(str(fd, "brand_type")) ? str(fd, "brand_type") : app.branches > 1 ? "chain" : "local";
+  const notes = [app.student_offer && `Suggested offer: ${app.student_offer}`, app.area && `Area: ${app.area}`, app.address && `Address: ${app.address}`, app.social_url && `Social: ${app.social_url}`]
+    .filter(Boolean).join("\n");
+  const { data: m, error } = await supabase.from("merchants").insert({
+    name: app.business_name, category: app.category, channel: app.channel, brand_type: brand,
+    website_url: app.website_url, contact_name: app.contact_name, contact_phone: app.contact_phone, contact_email: app.contact_email,
+    description: notes || null, status: "pending", plan: "free", commission_pct: commission,
+  }).select("id").single();
+  if (error) return { error: error.message };
+  await supabase.from("merchant_applications").update({ status: "approved", merchant_id: m.id, reviewed_by: user.id, reviewed_at: new Date().toISOString() }).eq("id", id);
+  const res = await addMember(m.id, app.contact_email, "owner");
+  revalidatePath("/admin/merchants", "layout");
+  redirect(`/admin/merchants/${m.id}${res?.error ? `?invite_error=${encodeURIComponent(res.error)}` : ""}`);
+}
+
+export async function rejectApplication(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase, user } = await requireStaff("merchants_create");
+  const { data, error } = await supabase.from("merchant_applications")
+    .update({ status: "rejected", review_note: str(fd, "note").slice(0, 500) || null, reviewed_by: user.id, reviewed_at: new Date().toISOString() })
+    .eq("id", str(fd, "id")).eq("status", "pending").select("id");
+  if (error) return { error: error.message };
+  if (!data?.length) return { error: "This application was already handled." };
+  revalidatePath("/admin/merchants", "layout");
+  return { ok: "Application rejected." };
+}

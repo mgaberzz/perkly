@@ -94,7 +94,7 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
               </div>
             ))}
           </dl>
-          {merchant.description && <p className="mt-4 text-sm text-zinc-600">{merchant.description}</p>}
+          {merchant.description && <p className="mt-4 whitespace-pre-line text-sm text-zinc-600">{merchant.description}</p>}
         </Card>
 
         <Card title={t("Branches & cashier QR codes")} className="lg:col-span-3">
