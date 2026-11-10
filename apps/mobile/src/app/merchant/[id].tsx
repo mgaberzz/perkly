@@ -54,11 +54,11 @@ export default function MerchantScreen() {
                 <T v="muted">{CATEGORY_EMOJI[m.category]} {m.subcategory ?? t(m.category)}</T>
               </View>
             </View>
-            {best && <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><T v="h3">{t('Save up to')}</T><DiscountBadge perk={best} size="lg" /></View>}
+            {best && <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><T v="h3">{t('Save Up To')}</T><DiscountBadge perk={best} size="lg" /></View>}
             {m.description ? <T v="muted">{m.description}</T> : null}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {weekCount != null && weekCount > 0 && <Tag text={`🔥 ${t('{n} students redeemed this week', { n: weekCount })}`} />}
-              {m.channel !== 'in_store' && <Tag text={`🌐 ${m.channel === 'online' ? t('Online only') : t('In-store + online')}`} />}
+              {m.channel !== 'in_store' && <Tag text={`🌐 ${m.channel === 'online' ? t('Online Only') : t('In-Store + Online')}`} />}
               {onCampus && <Tag text={`🎓 ${t('Near {place}', { place: campus?.short_name ?? t('your campus') })}`} />}
             </View>
           </Card>
@@ -75,11 +75,11 @@ export default function MerchantScreen() {
               {p.description ? <T v="muted">{p.description}</T> : null}
               <T v="small">
                 {[
-                  Number(p.min_spend) > 0 ? t('Min spend {amount}', { amount: egp(p.min_spend) }) : null,
-                  p.max_discount_amount ? t('Max {amount} off', { amount: egp(p.max_discount_amount) }) : null,
+                  Number(p.min_spend) > 0 ? t('Min Spend {amount}', { amount: egp(p.min_spend) }) : null,
+                  p.max_discount_amount ? t('Max {amount} Off', { amount: egp(p.max_discount_amount) }) : null,
                   p.end_at ? `⏳ ${timeLeft(p.end_at)}` : null,
                   p.branch_id ? t('Only at {place}', { place: m.branches.find((b) => b.id === p.branch_id)?.name ?? t('one branch') }) : null,
-                ].filter(Boolean).join(' · ') || t('Valid at all branches')}
+                ].filter(Boolean).join(' · ') || t('Valid at All Branches')}
               </T>
               {p.terms ? <T v="small">ℹ️ {p.terms}</T> : null}
             </Card>
@@ -111,7 +111,7 @@ export default function MerchantScreen() {
       </Pressable>
       {m.channel !== 'online' && (
         <View style={{ position: 'absolute', left: 20, right: 20, bottom: 30 }}>
-          <Button title={t('Scan to redeem')} icon="📷" onPress={() => router.push('/scan')} />
+          <Button title={t('Scan to Redeem')} icon="📷" onPress={() => router.push('/scan')} />
         </View>
       )}
     </View>

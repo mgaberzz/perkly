@@ -23,7 +23,7 @@ type Order = { id: string; order_ref: string; amount: number; cashback_amount: n
 const REASON: Record<string, string> = {
   redemption: 'Redeeming a perk', new_merchant: 'Trying a new place', streak: 'Streak bonus', streak_milestone: 'Streak milestone',
   quest: 'Quest completed', referral: 'Friend joined with your code', daily_open: 'Opening the app', admin: 'Bonus from Perkly',
-  spin: 'Spin the wheel', online_order: 'Online order',
+  spin: 'Spin the Wheel', online_order: 'Online order',
 };
 const ICON: Record<string, string> = { redemption: '🧾', new_merchant: '🧭', streak: '🔥', streak_milestone: '🏅', quest: '🎯', referral: '💜', daily_open: '☀️', admin: '🎁', spin: '🎡', online_order: '🌐' };
 
@@ -96,16 +96,16 @@ export default function Explain() {
         title: metric === 'saved' ? t('Saved') : t('Redemptions'),
         big: metric === 'saved' ? egp(stats?.total_saved ?? saved) : String(stats?.total_redemptions ?? ok.length),
         lines: metric === 'saved'
-          ? [<Row key="b" label={t('Your bills')} value={egp(bills)} />, <Row key="p" sign="−" label={t('You paid')} value={egp(paid)} />, <Row key="s" sign="=" strong label={t('You saved')} value={egp(saved)} />]
-          : [<Row key="a" strong label={t('Perks used')} value={String(ok.length)} />, <Row key="p" label={t('Different places')} value={String(places.size)} />,
-             <Row key="s" label={t('You saved')} value={egp(saved)} onPress={() => router.setParams({ metric: 'saved' })} />],
+          ? [<Row key="b" label={t('Your Bills')} value={egp(bills)} />, <Row key="p" sign="−" label={t('You Paid')} value={egp(paid)} />, <Row key="s" sign="=" strong label={t('You Saved')} value={egp(saved)} />]
+          : [<Row key="a" strong label={t('Perks Used')} value={String(ok.length)} />, <Row key="p" label={t('Different Places')} value={String(places.size)} />,
+             <Row key="s" label={t('You Saved')} value={egp(saved)} onPress={() => router.setParams({ metric: 'saved' })} />],
         extra: top.length > 0 && (
           <Card style={{ gap: 4 }}>
-            <T v="label">{metric === 'saved' ? t('Where you saved the most') : t('Your fave spots')}</T>
+            <T v="label">{metric === 'saved' ? t('Where You Saved the Most') : t('Your Fave Spots')}</T>
             {top.map(([name, p]) => <Row key={name} label={name} value={metric === 'saved' ? egp(p.saved) : t('{n}×', { n: p.n })} />)}
           </Card>
         ),
-        list: reds.length ? reds.map((r) => <RedRow key={r.id} r={r} />) : <Empty emoji="🧾" title={t('No redemptions yet')} subtitle={t('Scan a Perkly QR at the cashier to start saving.')} />,
+        list: reds.length ? reds.map((r) => <RedRow key={r.id} r={r} />) : <Empty emoji="🧾" title={t('No Redemptions Yet')} subtitle={t('Scan a Perkly QR at the cashier to start saving.')} />,
       };
     }
     if (metric === 'xp') {
@@ -130,7 +130,7 @@ export default function Explain() {
             <View style={{ flex: 1 }}><T style={{ fontWeight: '700' }}>{t(REASON[e.reason] ?? e.reason)}</T><T v="small">{new Date(e.created_at).toLocaleString(locale(), { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</T></View>
             <T style={{ fontWeight: '900' }} color={brand.purple}>+{e.amount}</T>
           </Pressable>
-        )) : <Empty emoji="⚡" title={t('No XP yet')} subtitle={t('Redeem a perk to earn your first XP.')} />,
+        )) : <Empty emoji="⚡" title={t('No XP Yet')} subtitle={t('Redeem a perk to earn your first XP.')} />,
       };
     }
     if (metric === 'streak') {
@@ -139,9 +139,9 @@ export default function Explain() {
       return {
         title: t('Streak'), big: t('{n} days', { n: stats?.current_streak ?? 0 }),
         lines: [
-          <Row key="c" strong label={t('Current streak')} value={t('{n} days', { n: stats?.current_streak ?? 0 })} />,
-          <Row key="l" label={t('Longest streak')} value={t('{n} days', { n: stats?.longest_streak ?? 0 })} />,
-          <Row key="f" label={`❄️ ${t('Streak freezes')}`} value={String(stats?.freeze_tokens ?? 0)} onPress={() => router.push('/arcade')} />,
+          <Row key="c" strong label={t('Current Streak')} value={t('{n} days', { n: stats?.current_streak ?? 0 })} />,
+          <Row key="l" label={t('Longest Streak')} value={t('{n} days', { n: stats?.longest_streak ?? 0 })} />,
+          <Row key="f" label={`❄️ ${t('Streak Freezes')}`} value={String(stats?.freeze_tokens ?? 0)} onPress={() => router.push('/arcade')} />,
           <Row key="h" label={t('Redeem at least once a day to keep it going. A freeze saves one missed day.')} value="" />,
         ],
         extra: null,
@@ -154,7 +154,7 @@ export default function Explain() {
               <T v="small">{t('{n}×', { n: that.length })}</T>
             </Pressable>
           );
-        }) : <Empty emoji="🔥" title={t('No streak yet')} subtitle={t('Use a perk today to start your streak 🔥')} />,
+        }) : <Empty emoji="🔥" title={t('No Streak Yet')} subtitle={t('Use a perk today to start your streak 🔥')} />,
       };
     }
     if (metric === 'cashback') {
@@ -163,7 +163,7 @@ export default function Explain() {
         title: t('Cashback'), big: egp(stats?.cashback_balance ?? 0),
         lines: [
           <Row key="b" strong label={t('Available')} value={egp(stats?.cashback_balance ?? 0)} />,
-          <Row key="p" label={t('Waiting for the shop to confirm')} value={egp(stats?.cashback_pending ?? 0)} />,
+          <Row key="p" label={t('Waiting for the Shop to Confirm')} value={egp(stats?.cashback_pending ?? 0)} />,
         ],
         extra: null,
         list: orders.length ? orders.map((o) => (
@@ -172,23 +172,23 @@ export default function Explain() {
             <View style={{ flex: 1 }}><T style={{ fontWeight: '700' }}>{o.merchant?.name}</T><T v="small">{t('Order {ref}', { ref: o.order_ref })} · {egp(o.amount)} · {shortDate(o.created_at)}</T></View>
             <View style={{ alignItems: 'flex-end' }}><T style={{ fontWeight: '900' }} color={o.status === 'rejected' ? c.textMuted : brand.success}>+{egp(o.cashback_amount)}</T><T v="small">{t(o.status)}</T></View>
           </View>
-        )) : <Empty emoji="💸" title={t('No cashback yet')} subtitle={t('Shop online through Perkly to earn cashback.')} />,
+        )) : <Empty emoji="💸" title={t('No Cashback Yet')} subtitle={t('Shop online through Perkly to earn cashback.')} />,
       };
     }
     if (metric === 'redemption') {
       const r = (reds ?? []).find((x) => x.id === id);
       if (!reds) return null;
-      if (!r) return { title: t('Receipt'), big: '—', lines: [], extra: null, list: <Empty emoji="🫥" title={t('Not found')} /> };
+      if (!r) return { title: t('Receipt'), big: '—', lines: [], extra: null, list: <Empty emoji="🫥" title={t('Not Found')} /> };
       const events = (xp ?? []).filter((e) => e.context?.redemption_id === r.id);
       return {
-        title: r.merchant_name, big: r.discount_amount != null ? `−${egp(r.discount_amount)}` : t('Applied by cashier'),
+        title: r.merchant_name, big: r.discount_amount != null ? `−${egp(r.discount_amount)}` : t('Applied by Cashier'),
         lines: [
           <Row key="b" label={t('Bill')} value={egp(r.original_amount)} />,
-          <Row key="d" sign="−" label={t('Perkly discount')} value={r.discount_amount != null ? egp(r.discount_amount) : t('Applied by cashier')} />,
-          <Row key="p" sign="=" strong label={t('You paid')} value={egp(r.final_amount ?? r.original_amount)} />,
-          <Row key="m" label={t('Payment')} value={r.payment_method === 'in_app' ? t('Paid in app') : t('At the cashier')} />,
+          <Row key="d" sign="−" label={t('Perkly Discount')} value={r.discount_amount != null ? egp(r.discount_amount) : t('Applied by Cashier')} />,
+          <Row key="p" sign="=" strong label={t('You Paid')} value={egp(r.final_amount ?? r.original_amount)} />,
+          <Row key="m" label={t('Payment')} value={r.payment_method === 'in_app' ? t('Paid in App') : t('At the Cashier')} />,
           ...events.map((e) => <Row key={e.id} sign="+" label={`${ICON[e.reason] ?? '⚡'} ${t(REASON[e.reason] ?? e.reason)}`} value={`${e.amount} XP`} onPress={() => router.setParams({ metric: 'xp', id: undefined })} />),
-          <Row key="x" sign="=" strong label={t('XP earned')} value={`+${r.xp_awarded} XP`} onPress={() => router.setParams({ metric: 'xp', id: undefined })} />,
+          <Row key="x" sign="=" strong label={t('XP Earned')} value={`+${r.xp_awarded} XP`} onPress={() => router.setParams({ metric: 'xp', id: undefined })} />,
         ],
         extra: (
           <Card style={{ gap: 4 }}>

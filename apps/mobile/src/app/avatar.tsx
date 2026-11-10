@@ -30,7 +30,7 @@ export default function AvatarBuilder() {
       { key: 'skin', label: t('Skin'), emoji: '✋', kind: 'color', field: 'skin', colors: SKIN },
       { key: 'face', label: t('Face'), emoji: '🙂', kind: 'shape', field: 'face', options: OPTIONS.face },
       { key: 'hair', label: t('Hair'), emoji: '💇', kind: 'shape', field: 'hair', options: OPTIONS.hair },
-      { key: 'hairColor', label: t('Hair colour'), emoji: '🎨', kind: 'color', field: 'hairColor', colors: HAIR_COLORS },
+      { key: 'hairColor', label: t('Hair Colour'), emoji: '🎨', kind: 'color', field: 'hairColor', colors: HAIR_COLORS },
       { key: 'eyes', label: t('Eyes'), emoji: '👀', kind: 'shape', field: 'eyes', options: OPTIONS.eyes },
       { key: 'brows', label: t('Brows'), emoji: '🤨', kind: 'shape', field: 'brows', options: OPTIONS.brows },
       { key: 'mouth', label: t('Mouth'), emoji: '😁', kind: 'shape', field: 'mouth', options: OPTIONS.mouth },
@@ -38,10 +38,10 @@ export default function AvatarBuilder() {
       { key: 'glasses', label: t('Glasses'), emoji: '👓', kind: 'shape', field: 'glasses', options: OPTIONS.glasses },
       { key: 'headwear', label: t('Head'), emoji: '🧕', kind: 'shape', field: 'headwear', options: OPTIONS.headwear },
     ];
-    if (cfg.headwear === 'hijab') list.push({ key: 'hijabColor', label: t('Hijab colour'), emoji: '🧣', kind: 'color', field: 'hijabColor', colors: HIJAB_COLORS });
+    if (cfg.headwear === 'hijab') list.push({ key: 'hijabColor', label: t('Hijab Colour'), emoji: '🧣', kind: 'color', field: 'hijabColor', colors: HIJAB_COLORS });
     list.push(
       { key: 'outfit', label: t('Outfit'), emoji: '👕', kind: 'shape', field: 'outfit', options: OPTIONS.outfit },
-      { key: 'outfitColor', label: t('Outfit colour'), emoji: '🌈', kind: 'color', field: 'outfitColor', colors: OUTFIT_COLORS },
+      { key: 'outfitColor', label: t('Outfit Colour'), emoji: '🌈', kind: 'color', field: 'outfitColor', colors: OUTFIT_COLORS },
       { key: 'bg', label: t('Background'), emoji: '🖼️', kind: 'color', field: 'bg', colors: BG_COLORS },
       { key: 'blush', label: t('Blush'), emoji: '😊', kind: 'shape', field: 'blush', options: OPTIONS.blush },
     );
@@ -72,7 +72,7 @@ export default function AvatarBuilder() {
       {/* top bar */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10 }}>
         <Pressable onPress={() => router.back()} hitSlop={10}><T style={{ fontWeight: '700' }}>{t('Cancel')}</T></Pressable>
-        <T v="h3">{t('My avatar')}</T>
+        <T v="h3">{t('My Avatar')}</T>
         <Pressable onPress={save} disabled={saving} hitSlop={10} style={{ backgroundColor: brand.purple, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 7, opacity: saving ? 0.6 : 1 }}>
           {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={{ color: '#fff', fontWeight: '900' }}>{t('Save')}</Text>}
         </Pressable>

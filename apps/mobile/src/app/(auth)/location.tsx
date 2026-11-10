@@ -34,15 +34,15 @@ export default function LocationPermission() {
         <Animated.View style={{ transform: [{ translateY: bob.interpolate({ inputRange: [0, 1], outputRange: [0, -12] }) }] }}>
           <MascotPin size={Math.min(150, height * 0.2)} />
         </Animated.View>
-        <T v="h1" style={{ textAlign: 'center' }}>{t('Find perks around you')}</T>
+        <T v="h1" style={{ textAlign: 'center' }}>{t('Find Perks Around You')}</T>
         <T v="muted" style={{ textAlign: 'center', paddingHorizontal: 12 }}>
           {t('Turn on location so we can show the closest deals and confirm you’re in-store when you redeem.')}
         </T>
       </View>
       <View style={{ gap: 6 }}>
-        <Button title={t('Turn on location')} icon="📍" onPress={enable} loading={busy} />
+        <Button title={t('Turn On Location')} icon="📍" onPress={enable} loading={busy} />
         <Pressable onPress={() => router.replace('/')} style={{ padding: 14 }}>
-          <T style={{ textAlign: 'center', fontWeight: '800' }} color={brand.purple}>{t('Not now')}</T>
+          <T style={{ textAlign: 'center', fontWeight: '800' }} color={brand.purple}>{t('Not Now')}</T>
         </Pressable>
       </View>
     </Screen>

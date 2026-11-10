@@ -121,10 +121,10 @@ export default function Arcade() {
                 <Text>⚡</Text><Text style={{ color: '#fff', fontWeight: '900' }}>{stats?.total_xp ?? 0}</Text>
               </View>
               <View style={{ flex: 1 }} />
-              <Pressable onPress={() => setTour(0)}><Text style={{ color: '#fff', fontWeight: '800' }}>{t('How it works')}</Text></Pressable>
+              <Pressable onPress={() => setTour(0)}><Text style={{ color: '#fff', fontWeight: '800' }}>{t('How It Works')}</Text></Pressable>
             </View>
             <Text style={{ color: '#fff', fontSize: 26, fontWeight: '900', lineHeight: 30 }}>{t('SPIN\nTHE WHEEL')}</Text>
-            <Text style={{ color: '#ffffffcc', fontWeight: '600' }}>{t('Every spin wins · 1 🎟️ per spin')}</Text>
+            <Text style={{ color: '#ffffffcc', fontWeight: '600' }}>{t('Every Spin Wins · 1 🎟️ per Spin')}</Text>
 
             <View style={{ alignItems: 'center', marginTop: 8 }}>
               <View style={{ position: 'absolute', top: -4, zIndex: 2, width: 0, height: 0, borderLeftWidth: 16, borderRightWidth: 16, borderTopWidth: 28,
@@ -149,11 +149,11 @@ export default function Arcade() {
           </View>
           {tab === 'missions' ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-              {[{ e: '🎡', name: 'Spin the wheel', live: true }, { e: '🃏', name: 'Flip the cards', live: false }, { e: '🕹️', name: 'Claw machine', live: false }].map((m) => (
+              {[{ e: '🎡', name: 'Spin the Wheel', live: true }, { e: '🃏', name: 'Flip the Cards', live: false }, { e: '🕹️', name: 'Claw Machine', live: false }].map((m) => (
                 <View key={m.name} style={{ width: 130, height: 150, borderRadius: 18, backgroundColor: '#ffffff1a', borderWidth: 2, borderColor: m.live ? GOLD : '#ffffff33', padding: 12, justifyContent: 'space-between', opacity: m.live ? 1 : 0.6 }}>
                   <Text style={{ fontSize: 44 }}>{m.e}</Text>
                   <Text style={{ color: '#fff', fontWeight: '900' }}>{t(m.name)}</Text>
-                  <Text style={{ color: m.live ? GOLD : '#ffffffaa', fontWeight: '800', fontSize: 12 }}>{m.live ? t('Playing now') : t('Coming soon')}</Text>
+                  <Text style={{ color: m.live ? GOLD : '#ffffffaa', fontWeight: '800', fontSize: 12 }}>{m.live ? t('Playing Now') : t('Coming Soon')}</Text>
                 </View>
               ))}
             </ScrollView>
@@ -178,7 +178,7 @@ export default function Arcade() {
               <Text style={{ fontWeight: '900', color: brand.ink }}>{tour + 1}/{TOUR.length}</Text>
               <Text style={{ fontWeight: '800', fontSize: 16, color: brand.ink }}>{t(TOUR[tour].text)}</Text>
               <Pressable onPress={() => (tour < TOUR.length - 1 ? setTour(tour + 1) : endTour())} style={{ alignSelf: 'flex-end' }}>
-                <Text style={{ color: brand.purple, fontWeight: '900', fontSize: 16 }}>{tour < TOUR.length - 1 ? `${t('Next')} ${fwdChevron()}` : `${t('Let’s play')} ${fwdChevron()}`}</Text>
+                <Text style={{ color: brand.purple, fontWeight: '900', fontSize: 16 }}>{tour < TOUR.length - 1 ? `${t('Next')} ${fwdChevron()}` : `${t('Let’s Play')} ${fwdChevron()}`}</Text>
               </Pressable>
             </View>
           )}
@@ -203,13 +203,13 @@ export default function Arcade() {
             ) : (
               <>
                 <Text style={{ fontSize: 60 }}>🎟️</Text>
-                <Text style={{ fontSize: 24, fontWeight: '900', color: brand.ink }}>{result?.error === 'no_tickets' ? t('Out of tickets 😭') : t('Oops!')}</Text>
+                <Text style={{ fontSize: 24, fontWeight: '900', color: brand.ink }}>{result?.error === 'no_tickets' ? t('Out of Tickets 😭') : t('Oops!')}</Text>
                 <Text style={{ color: '#6B6680', fontWeight: '600', textAlign: 'center' }}>
                   {result?.error === 'no_tickets' ? t('Redeem a perk today or finish a quest to earn another spin.') : t('Wi-Fi acting up? Try again in a sec 💜')}
                 </Text>
               </>
             )}
-            <Text style={{ color: brand.purple, fontWeight: '900', marginTop: 8 }}>{t('Tap to close')}</Text>
+            <Text style={{ color: brand.purple, fontWeight: '900', marginTop: 8 }}>{t('Tap to Close')}</Text>
           </View>
         </Pressable>
       </Modal>

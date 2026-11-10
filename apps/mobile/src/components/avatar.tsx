@@ -55,7 +55,7 @@ export function EditableAvatar({ size = 96 }: { size?: number }) {
     setBusy(false);
     if (r.cancelled) return;
     if (r.ok === false || (r.ok === undefined && r.error)) {
-      Alert.alert(t('Photo not changed'),
+      Alert.alert(t('Photo Not Changed'),
         r.error === 'permission' ? t('Allow Perkly to use your camera or photos in your phone settings.')
           : r.error === 'too_big' ? t('That photo is too big. Try another one.') : t('Something went wrong. Try again.'));
       return;
@@ -64,19 +64,19 @@ export function EditableAvatar({ size = 96 }: { size?: number }) {
   }
   function open() {
     if (!uid || busy) return;
-    Alert.alert(t('Profile picture'), undefined, [
-      { text: hasCartoon ? `🧑‍🎨 ${t('Edit my avatar')}` : `🧑‍🎨 ${t('Create my avatar')}`, onPress: () => router.push('/avatar') },
-      { text: `📷 ${t('Take photo')}`, onPress: () => run(() => changeAvatar(uid, 'camera', path)) },
-      { text: `🖼️ ${t('Choose from photos')}`, onPress: () => run(() => changeAvatar(uid, 'library', path)) },
-      ...(kind === 'cartoon' && path ? [{ text: t('Show my photo instead'), onPress: () => run(() => showAvatarKind(uid, 'photo')) }] : []),
-      ...(kind === 'photo' && hasCartoon ? [{ text: t('Show my avatar instead'), onPress: () => run(() => showAvatarKind(uid, 'cartoon')) }] : []),
-      ...(kind === 'photo' ? [{ text: t('Remove photo'), style: 'destructive' as const, onPress: () => run(() => removeAvatar(uid, path, hasCartoon)) }] : []),
-      ...(kind === 'cartoon' ? [{ text: t('Remove avatar'), style: 'destructive' as const, onPress: () => run(() => removeCartoon(uid, !!path)) }] : []),
+    Alert.alert(t('Profile Picture'), undefined, [
+      { text: hasCartoon ? `🧑‍🎨 ${t('Edit My Avatar')}` : `🧑‍🎨 ${t('Create My Avatar')}`, onPress: () => router.push('/avatar') },
+      { text: `📷 ${t('Take Photo')}`, onPress: () => run(() => changeAvatar(uid, 'camera', path)) },
+      { text: `🖼️ ${t('Choose from Photos')}`, onPress: () => run(() => changeAvatar(uid, 'library', path)) },
+      ...(kind === 'cartoon' && path ? [{ text: t('Show My Photo Instead'), onPress: () => run(() => showAvatarKind(uid, 'photo')) }] : []),
+      ...(kind === 'photo' && hasCartoon ? [{ text: t('Show My Avatar Instead'), onPress: () => run(() => showAvatarKind(uid, 'cartoon')) }] : []),
+      ...(kind === 'photo' ? [{ text: t('Remove Photo'), style: 'destructive' as const, onPress: () => run(() => removeAvatar(uid, path, hasCartoon)) }] : []),
+      ...(kind === 'cartoon' ? [{ text: t('Remove Avatar'), style: 'destructive' as const, onPress: () => run(() => removeCartoon(uid, !!path)) }] : []),
       { text: t('Cancel'), style: 'cancel' as const },
     ]);
   }
   return (
-    <Pressable onPress={open} accessibilityRole="button" accessibilityLabel={t('Change profile picture')} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
+    <Pressable onPress={open} accessibilityRole="button" accessibilityLabel={t('Change Profile Picture')} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
       <View style={{ borderRadius: size / 2, padding: 3, backgroundColor: brand.pink }}>
         <View style={{ borderRadius: size / 2, padding: 2, backgroundColor: '#fff' }}>
           <Avatar profile={profile} size={size} />

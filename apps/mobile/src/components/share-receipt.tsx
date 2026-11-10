@@ -26,7 +26,7 @@ export function ShareReceiptButton({ data, variant = 'solid', label }: { data: R
         style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: bg, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 16,
           borderWidth: variant === 'outline' ? 1.5 : 0, borderColor: brand.purple, opacity: pressed ? 0.85 : 1 })}>
         <Text style={{ fontSize: 15 }}>📤</Text>
-        <Text style={{ color: fg, fontWeight: '900' }}>{label ?? t('Share receipt')}</Text>
+        <Text style={{ color: fg, fontWeight: '900' }}>{label ?? t('Share Receipt')}</Text>
       </Pressable>
       {open && <ShareSheet data={data} onClose={() => setOpen(false)} />}
     </>
@@ -38,14 +38,14 @@ function ShareSheet({ data, onClose }: { data: ReceiptData; onClose: () => void 
   const [busy, setBusy] = useState(false);
 
   const text = () => [
-    `🧾 ${t('Perkly receipt')} ${data.tx_code ?? ''}`.trim(),
+    `🧾 ${t('Perkly Receipt')} ${data.tx_code ?? ''}`.trim(),
     `${data.merchant_name} · ${data.perk_title}`,
     `${t('Bill')}: ${egp(data.original_amount)}`,
-    data.discount_amount != null ? `${t('Perkly discount')}: −${egp(data.discount_amount)}` : '',
-    `${t('You paid')}: ${egp(data.final_amount ?? data.original_amount)}`,
+    data.discount_amount != null ? `${t('Perkly Discount')}: −${egp(data.discount_amount)}` : '',
+    `${t('You Paid')}: ${egp(data.final_amount ?? data.original_amount)}`,
     new Date(data.created_at).toLocaleString(locale(), { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }),
     '',
-    t('Students save more with Perkly 💜'),
+    t('Students Save More with Perkly 💜'),
   ].filter((x) => x !== '').join('\n');
 
   async function share() {
@@ -53,7 +53,7 @@ function ShareSheet({ data, onClose }: { data: ReceiptData; onClose: () => void 
     try {
       const uri = shot.current ? await captureRef(shot.current as unknown as number, { format: 'png', quality: 1, result: 'tmpfile' }) : null;
       if (uri && (await Sharing.isAvailableAsync())) {
-        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: t('Share receipt'), UTI: 'public.png' });
+        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: t('Share Receipt'), UTI: 'public.png' });
       } else {
         await Share.share({ message: text() });
       }
@@ -91,8 +91,8 @@ function ShareSheet({ data, onClose }: { data: ReceiptData; onClose: () => void 
 export function ReceiptCard({ data }: { data: ReceiptData }) {
   const rows: [string, string, boolean?][] = [
     [t('Bill'), egp(data.original_amount)],
-    [t('Perkly discount'), data.discount_amount != null ? `−${egp(data.discount_amount)}` : t('Applied by cashier'), true],
-    [t('Payment'), data.payment_method === 'in_app' ? t('Paid in app') : t('At the cashier')],
+    [t('Perkly Discount'), data.discount_amount != null ? `−${egp(data.discount_amount)}` : t('Applied by Cashier'), true],
+    [t('Payment'), data.payment_method === 'in_app' ? t('Paid in App') : t('At the Cashier')],
   ];
   const line = <View style={{ height: 1, backgroundColor: '#ECE8F3' }} />;
   return (
@@ -125,14 +125,14 @@ export function ReceiptCard({ data }: { data: ReceiptData }) {
       ))}
       {line}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Text style={{ fontWeight: '900', fontSize: 16, color: brand.ink }}>{t('Total paid')}</Text>
+        <Text style={{ fontWeight: '900', fontSize: 16, color: brand.ink }}>{t('Total Paid')}</Text>
         <Text style={{ fontWeight: '900', fontSize: 16, color: brand.ink }}>{egp(data.final_amount ?? data.original_amount)}</Text>
       </View>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <Text style={{ color: '#6B6680', fontSize: 12 }}>{t('Transaction ID')}</Text>
         <Text style={{ fontWeight: '800', fontSize: 12, color: brand.ink, writingDirection: 'ltr' }}>{data.tx_code ?? '—'}</Text>
       </View>
-      {data.status === 'reversed' && <Text style={{ color: '#EF4444', fontWeight: '800', textAlign: 'center' }}>{t('This transaction was reversed')}</Text>}
+      {data.status === 'reversed' && <Text style={{ color: '#EF4444', fontWeight: '800', textAlign: 'center' }}>{t('This Transaction Was Reversed')}</Text>}
       <Text style={{ color: '#9A94AB', fontSize: 11, textAlign: 'center' }}>{t('Proof of purchase · not a discount voucher')}</Text>
     </View>
   );

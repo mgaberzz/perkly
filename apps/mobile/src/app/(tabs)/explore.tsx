@@ -11,9 +11,9 @@ import { t } from '@/lib/i18n';
 
 type Sort = 'best' | 'near' | 'az';
 const COLLECTIONS = [
-  { key: 'flash', label: 'Flash perks', icon: '⚡' },
-  { key: 'big', label: '20%+ off', icon: '🤑' },
-  { key: 'fav', label: 'My favorites', icon: '❤️' },
+  { key: 'flash', label: 'Flash Perks', icon: '⚡' },
+  { key: 'big', label: '20%+ Off', icon: '🤑' },
+  { key: 'fav', label: 'My Favs', icon: '❤️' },
 ];
 
 export default function Explore() {
@@ -65,13 +65,13 @@ export default function Explore() {
         {COLLECTIONS.map((x) => <Chip key={x.key} label={`${x.icon} ${t(x.label)}`} active={collection === x.key} onPress={() => setCollection(collection === x.key ? null : x.key)} />)}
         <View style={{ width: 8 }} />
         {coords && <Chip label={t('Nearest')} active={sort === 'near'} onPress={() => setSort('near')} />}
-        <Chip label={t('Best deal')} active={sort === 'best'} onPress={() => setSort('best')} />
+        <Chip label={t('Best Deal')} active={sort === 'best'} onPress={() => setSort('best')} />
         <Chip label="A–Z" active={sort === 'az'} onPress={() => setSort('az')} />
       </ScrollView>
       <T v="label">{t('{n} places', { n: list.length })}</T>
       <View style={{ gap: 10 }}>
         {list.map(({ m, d }) => <MerchantRow key={m.id} m={m} distance={d} />)}
-        {list.length === 0 && <Empty emoji="🔍" title={t('No perks here yet')} subtitle={t('Want us to add some? Tell your ambassador 👇')} />}
+        {list.length === 0 && <Empty emoji="🔍" title={t('No Perks Here Yet')} subtitle={t('Want us to add some? Tell your ambassador 👇')} />}
       </View>
     </Screen>
   );

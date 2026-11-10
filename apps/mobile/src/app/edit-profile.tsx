@@ -11,9 +11,9 @@ export default function EditProfile() {
       <Screen edges={[]}>
         <View style={{ alignItems: 'center', gap: 6, marginBottom: 4 }}>
           <EditableAvatar size={104} />
-          <T v="small">{t('Tap your photo to change it')}</T>
+          <T v="small">{t('Tap Your Photo to Change It')}</T>
         </View>
-        <ProfileForm submitLabel={t('Save changes')} onDone={() => router.back()} />
+        <ProfileForm submitLabel={t('Save Changes')} onDone={() => router.back()} />
       </Screen>
     </KeyboardAvoidingView>
   );

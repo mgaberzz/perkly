@@ -33,7 +33,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="scan"
         options={{
-          title: t('Scan & save'),
+          title: t('Scan & Save'),
           tabBarIcon: () => (
             <LinearGradient colors={gradient} style={{ width: 58, height: 58, borderRadius: 29, marginTop: -26, alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: c.card }}>
               <View><Text style={{ fontSize: 24 }}>📷</Text></View>

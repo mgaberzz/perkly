@@ -33,11 +33,11 @@ export default function Consent() {
         <T v="h1">{t('Almost there! 🎉')}</T>
       </View>
       <Card style={{ gap: 12 }}>
-        <T v="h3">{t('How we use your data')}</T>
+        <T v="h3">{t('How We Use Your Data')}</T>
         <T v="muted">
           {t('Perkly keeps the minimum it needs to run your account: your phone or email, name, campus and the perks you redeem. Your location is used only to show nearby perks and to confirm you’re in-store when you redeem. We never sell your data.')}
         </T>
-        <T v="h3">{t('Perk drops')}</T>
+        <T v="h3">{t('Perk Drops')}</T>
         <T v="muted">{t('Wanna know first when new perks and flash deals drop on your campus? Tick the box below. You can turn it off anytime in Settings.')}</T>
       </Card>
       <T v="muted">
@@ -45,12 +45,12 @@ export default function Consent() {
         <Text style={{ color: brand.purple, fontWeight: '800' }} onPress={() => Linking.openURL(legalUrl('terms'))}>{t('Terms of Use')}</Text> {t('and')}{' '}
         <Text style={{ color: brand.purple, fontWeight: '800' }} onPress={() => Linking.openURL(legalUrl('privacy'))}>{t('Privacy Policy')}</Text>.
       </T>
-      <Checkbox checked={drops} onChange={setDrops} label={t('Send me new perk drops 🔥')} sub={t('Push notifications & emails — unsubscribe anytime')} />
+      <Checkbox checked={drops} onChange={setDrops} label={t('Send Me New Perk Drops 🔥')} sub={t('Push notifications & emails — unsubscribe anytime')} />
       <View style={{ gap: 6, marginTop: 8 }}>
-        <Button title={t('Accept all & continue')} onPress={() => accept(true)} loading={saving === 'all'} />
+        <Button title={t('Accept All & Continue')} onPress={() => accept(true)} loading={saving === 'all'} />
         {!drops && (
           <Pressable onPress={() => accept(false)} style={{ padding: 14 }} disabled={!!saving}>
-            <T style={{ textAlign: 'center', fontWeight: '800' }} color={brand.purple}>{saving === 'basic' ? t('Saving…') : t('Continue without perk drops')}</T>
+            <T style={{ textAlign: 'center', fontWeight: '800' }} color={brand.purple}>{saving === 'basic' ? t('Saving…') : t('Continue Without Perk Drops')}</T>
           </Pressable>
         )}
       </View>

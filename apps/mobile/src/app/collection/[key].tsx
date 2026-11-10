@@ -30,7 +30,7 @@ export default function CollectionScreen() {
         </SafeAreaView>
       </LinearGradient>
       <FlatList data={list} keyExtractor={(x) => x.perk.id} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 60 }}
-        renderItem={({ item }) => <PerkRow item={item} />} ListEmptyComponent={<Empty emoji="😴" title={t('Nothing here yet 👀')} />} />
+        renderItem={({ item }) => <PerkRow item={item} />} ListEmptyComponent={<Empty emoji="😴" title={t('Nothing Here Yet 👀')} />} />
     </View>
   );
 }

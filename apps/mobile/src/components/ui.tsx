@@ -147,7 +147,7 @@ export function XPBar({ totalXp, compact }: { totalXp: number; compact?: boolean
       {!compact && (
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <T v="small">{t('Lv {n} · {name}', { n: cur.level, name: cur.name })}</T>
-          <T v="small">{next ? t('{n} XP to {name}', { n: toNext, name: next.name }) : t('Max level 👑')}</T>
+          <T v="small">{next ? t('{n} XP to {name}', { n: toNext, name: next.name }) : t('Max Level 👑')}</T>
         </View>
       )}
       <View style={{ height: 10, borderRadius: 999, backgroundColor: c.chip, overflow: 'hidden' }}>

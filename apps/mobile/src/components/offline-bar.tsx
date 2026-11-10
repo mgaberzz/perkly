@@ -29,7 +29,7 @@ export function OfflineBar() {
   return (
     <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 100, paddingTop: insets.top + 4, paddingBottom: 6, paddingHorizontal: 16, backgroundColor: back ? '#12B76A' : '#1F1A2E' }}>
       <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '700', fontSize: 13 }}>
-        {back ? t('Back online ✓') : t('No connection: showing saved perks')}
+        {back ? t('Back Online ✓') : t('No Connection: Showing Saved Perks')}
       </Text>
     </View>
   );

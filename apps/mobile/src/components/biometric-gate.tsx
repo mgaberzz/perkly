@@ -57,12 +57,12 @@ export function BiometricGate({ active, onUsePassword, children }: { active: boo
       {active && (!checked || locked) && (
         <LinearGradient colors={gradient} style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', padding: 32, gap: 18 }]}>
           <Mascot size={110} />
-          <Text style={{ color: '#fff', fontSize: 26, fontWeight: '900' }}>{t('Perkly is locked')}</Text>
+          <Text style={{ color: '#fff', fontSize: 26, fontWeight: '900' }}>{t('Perkly Is Locked')}</Text>
           <Text style={{ color: '#ffffffcc', fontWeight: '600', textAlign: 'center' }}>{t('Use Face ID, your fingerprint or your phone passcode to continue.')}</Text>
           {checked && <Button variant="white" icon="🔓" title={t('Unlock')} onPress={tryUnlock} style={{ alignSelf: 'stretch' }} />}
           {checked && (
             <Text onPress={() => { setLocked(false); onUsePassword(); }} style={{ color: '#fff', fontWeight: '800', textDecorationLine: 'underline', padding: 8 }}>
-              {t('Use code or password instead')}
+              {t('Use Code or Password Instead')}
             </Text>
           )}
         </LinearGradient>

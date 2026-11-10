@@ -52,20 +52,20 @@ export function OnlineActions({ merchant, perk }: { merchant: Merchant; perk?: P
 
   return (
     <Card style={{ gap: 10 }}>
-      <T v="h3">🌐 {t('Shop online with Perkly')}</T>
+      <T v="h3">🌐 {t('Shop Online with Perkly')}</T>
       {perk && (
         code ? (
           <View style={{ alignItems: 'center', gap: 6, padding: 12, borderRadius: 16, backgroundColor: '#7B2FF70D', borderWidth: 1, borderColor: '#7B2FF733', borderStyle: 'dashed' }}>
-            <T v="small">{t('Your one-time code')}</T>
+            <T v="small">{t('Your One-Time Code')}</T>
             <Text selectable style={{ fontSize: 28, fontWeight: '900', letterSpacing: 3, color: brand.purple, writingDirection: 'ltr' }}>{code.code}</Text>
             <T v="small">{t('Type it at checkout · valid for {n} min · single use', { n: minutes })}</T>
-            <Button variant="secondary" title={t('Share / copy code')} onPress={() => Share.share({ message: code.code })} style={{ alignSelf: 'stretch' }} />
+            <Button variant="secondary" title={t('Share / Copy Code')} onPress={() => Share.share({ message: code.code })} style={{ alignSelf: 'stretch' }} />
           </View>
         ) : (
-          <Button variant="secondary" icon="🔑" title={t('Get a one-time code')} onPress={getCode} loading={busy === 'code'} />
+          <Button variant="secondary" icon="🔑" title={t('Get a One-Time Code')} onPress={getCode} loading={busy === 'code'} />
         )
       )}
-      {hasLink && <Button icon="🛍️" title={t('Shop & earn cashback')} onPress={openShop} loading={busy === 'link'} />}
+      {hasLink && <Button icon="🛍️" title={t('Shop & Earn Cashback')} onPress={openShop} loading={busy === 'link'} />}
       {hasLink && <T v="small">{t('Orders made through this link earn you cashback once the shop confirms them.')}</T>}
       {error && <T color={brand.danger}>{error}</T>}
     </Card>

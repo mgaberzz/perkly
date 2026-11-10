@@ -58,8 +58,8 @@ function Hero() {
         <Text style={{ color: '#fff', fontWeight: '900', fontSize: 26, marginStart: 24, marginTop: 8 }}>Perkly</Text>
         <View style={{ flex: 1 }}>
           <View style={{ position: 'absolute', alignSelf: 'center', top: 62 }}><Mascot size={92} /></View>
-          <Card emoji="☕" title={t('Coffee run')} badge={t('{n}% OFF', { n: 15 })} style={{ left: 20, top: 16 }} />
-          <Card emoji="🍔" title={t('Burger night')} badge={t('{n}% OFF', { n: 20 })} style={{ right: 18, top: 150 }} />
+          <Card emoji="☕" title={t('Coffee Run')} badge={t('{n}% OFF', { n: 15 })} style={{ left: 20, top: 16 }} />
+          <Card emoji="🍔" title={t('Burger Night')} badge={t('{n}% OFF', { n: 20 })} style={{ right: 18, top: 150 }} />
           <Animated.View style={{ position: 'absolute', left: 24, right: 24, bottom: 18, opacity: fade, backgroundColor: '#ffffffee', borderRadius: 18, padding: 12, flexDirection: 'row', gap: 10, alignItems: 'center' }}>
             <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: brand.purple, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontWeight: '900' }}>P</Text></View>
             <Text style={{ fontWeight: '800', color: brand.ink, flex: 1 }}>{t(TOASTS[i])}</Text>
@@ -126,16 +126,16 @@ export default function Login() {
         <Hero />
         <View style={{ padding: 24, gap: 16 }}>
           <View style={{ alignItems: 'center', gap: 6 }}>
-            <T v="h1" style={{ textAlign: 'center' }}>{t('Log in or sign up')}</T>
+            <T v="h1" style={{ textAlign: 'center' }}>{t('Log In or Sign Up')}</T>
             <T v="muted" style={{ textAlign: 'center' }}>{t('Student perks at cafés, restaurants, gyms and stores around your campus.')}</T>
           </View>
           {quickLogin.available && (
             <View style={{ gap: 6 }}>
-              <Button icon="🔐" title={t('Log in with {method}', { method: bioLabel })} onPress={bioLogin} loading={loading === 'bio'} />
+              <Button icon="🔐" title={t('Log In with {method}', { method: bioLabel })} onPress={bioLogin} loading={loading === 'bio'} />
               {quickLogin.email && <T v="small" style={{ textAlign: 'center' }}>{t('Signed in as {who}', { who: quickLogin.email })}</T>}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 }}>
                 <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
-                <T v="small">{t('Or use another way')}</T>
+                <T v="small">{t('Or Use Another Way')}</T>
                 <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
               </View>
             </View>
@@ -157,17 +157,17 @@ export default function Login() {
               style={[box, { paddingHorizontal: 16, paddingVertical: 18, fontSize: 18, fontWeight: '700', color: c.text }]} />
           )}
           {mode === 'email' && (
-            <TextInput value={password} onChangeText={setPassword} placeholder={t('Password (optional)')} placeholderTextColor={c.textMuted}
+            <TextInput value={password} onChangeText={setPassword} placeholder={t('Password (Optional)')} placeholderTextColor={c.textMuted}
               secureTextEntry autoCapitalize="none" autoComplete="password"
               style={[box, { paddingHorizontal: 16, paddingVertical: 18, fontSize: 18, fontWeight: '700', color: c.text }]} />
           )}
           {mode === 'email' && <T v="small">{t('Have a password? Enter it to sign in. Leave it empty and we’ll email you a code.')}</T>}
           {error && <T v="small" color={brand.danger}>{error}</T>}
-          <Button title={mode === 'email' && password ? t('Sign in') : t('Continue')} onPress={send} loading={loading === 'otp'} disabled={!value.trim()} />
+          <Button title={mode === 'email' && password ? t('Sign In') : t('Continue')} onPress={send} loading={loading === 'otp'} disabled={!value.trim()} />
 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 }}>
             <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
-            <T v="small">{t('Or continue with')}</T>
+            <T v="small">{t('Or Continue With')}</T>
             <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>

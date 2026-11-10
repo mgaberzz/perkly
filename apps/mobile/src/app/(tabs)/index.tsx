@@ -40,9 +40,9 @@ export default function Home() {
   const trending = useMemo(() => applySortFilter(items.filter((x) => x.merchant.branches.some((b) => b.campus_id === campus?.id)), 'popular', NO_FILTERS).slice(0, 10), [items, campus]);
 
   const BANNERS = [
-    { colors: ['#7B2FF7', '#FF3EA5'] as const, emoji: '🎡', title: t('Spin the wheel'), body: t('{n} ticket(s) waiting — win XP & streak freezes', { n: stats?.spin_tickets ?? 0 }), onPress: () => router.push('/arcade') },
-    { colors: ['#2F80FF', '#7B2FF7'] as const, emoji: '📷', title: t('How Perkly works'), body: t('Scan the QR at the cashier → save instantly'), onPress: () => setHowOpen(true) },
-    { colors: ['#FF3EA5', '#FF7A59'] as const, emoji: '💜', title: t('Invite friends, earn XP'), body: t('Share code {code} · +50 XP each', { code: profile?.referral_code ?? '' }), onPress: () => router.push('/profile') },
+    { colors: ['#7B2FF7', '#FF3EA5'] as const, emoji: '🎡', title: t('Spin the Wheel'), body: t('{n} ticket(s) waiting — win XP & streak freezes', { n: stats?.spin_tickets ?? 0 }), onPress: () => router.push('/arcade') },
+    { colors: ['#2F80FF', '#7B2FF7'] as const, emoji: '📷', title: t('How Perkly Works'), body: t('Scan the QR at the cashier → save instantly'), onPress: () => setHowOpen(true) },
+    { colors: ['#FF3EA5', '#FF7A59'] as const, emoji: '💜', title: t('Invite friends, earn XP'), body: t('Share Code {code} · +50 XP Each', { code: profile?.referral_code ?? '' }), onPress: () => router.push('/profile') },
   ];
 
   return (
@@ -107,21 +107,21 @@ export default function Home() {
       <Card onPress={() => router.push('/rewards')}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Pressable onPress={() => router.push('/profile')} hitSlop={8}><Avatar profile={profile} size={40} /></Pressable>
-          <T v="h3" style={{ flex: 1 }}>{t('Hey {name} 👋 let’s level up', { name: firstName(profile?.full_name) })}</T>
+          <T v="h3" style={{ flex: 1 }}>{t('Hey {name} 👋 Let’s Level Up', { name: firstName(profile?.full_name) })}</T>
         </View>
         <XPBar totalXp={stats?.total_xp ?? 0} />
       </Card>
 
       {flash.length > 0 && (
         <View style={{ gap: 12 }}>
-          <SectionHeader title={t('Ending soon ⏳')} action={`${t('See all')} ${fwdChevron()}`} onAction={() => router.push({ pathname: '/collection/[key]', params: { key: 'flash' } })} />
+          <SectionHeader title={t('Ending Soon ⏳')} action={`${t('See All')} ${fwdChevron()}`} onAction={() => router.push({ pathname: '/collection/[key]', params: { key: 'flash' } })} />
           <FlatList horizontal data={flash} keyExtractor={(x) => x.perk.id} showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: 12 }} renderItem={({ item }) => <PerkCard item={item} />} />
         </View>
       )}
 
       <View style={{ gap: 12 }}>
-        <SectionHeader title={t('Near you 📍')} action={`${t('See all')} ${fwdChevron()}`} onAction={() => router.push({ pathname: '/category/[name]', params: { name: 'All' } })} />
+        <SectionHeader title={t('Near You 📍')} action={`${t('See All')} ${fwdChevron()}`} onAction={() => router.push({ pathname: '/category/[name]', params: { name: 'All' } })} />
         {nearby.length ? (
           <FlatList horizontal data={nearby} keyExtractor={(x) => x.perk.id} showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: 12 }} renderItem={({ item }) => <PerkCard item={item} />} />
@@ -131,12 +131,12 @@ export default function Home() {
       <View style={{ gap: 12 }}>
         <View style={{ gap: 2 }}>
           <SectionHeader title={t('Trending at {place} 🔥', { place: campus?.short_name ?? t('your campus') })} />
-          <T v="muted">{t('The perks everyone’s obsessed with this week')}</T>
+          <T v="muted">{t('The Perks Everyone’s Obsessed with This Week')}</T>
         </View>
         {trending.length ? (
           <FlatList horizontal data={trending} keyExtractor={(x) => x.perk.id} showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: 12 }} renderItem={({ item }) => <PerkCard item={item} />} />
-        ) : <Empty emoji="💜" title={t('New perks coming tomorrow')} subtitle={t("We're adding merchants around your campus.")} />}
+        ) : <Empty emoji="💜" title={t('New Perks Coming Tomorrow')} subtitle={t("We're adding merchants around your campus.")} />}
       </View>
       <T v="small" style={{ textAlign: 'center' }}>{t('{n} places on Perkly', { n: merchants.length })}</T>
       <HowItWorks visible={howOpen} onClose={() => setHowOpen(false)} />

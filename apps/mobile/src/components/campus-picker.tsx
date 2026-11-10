@@ -30,7 +30,7 @@ export function CampusPicker({ visible, onClose, onPick, selectedId }: {
     return s ? campuses.filter((x) => `${x.name} ${x.short_name ?? ''} ${x.city}`.toLowerCase().includes(s)) : campuses;
   }, [campuses, q]);
   return (
-    <Sheet visible={visible} onClose={onClose} title={t('Pick your campus')}>
+    <Sheet visible={visible} onClose={onClose} title={t('Pick Your Campus')}>
       <TextInput value={q} onChangeText={setQ} placeholder={`🔍  ${t('University, school or area')}`} placeholderTextColor={c.textMuted}
         style={{ backgroundColor: c.bg, borderRadius: 16, padding: 14, fontSize: 16, fontWeight: '600', color: c.text }} />
       <ScrollView style={{ flexGrow: 0 }} keyboardShouldPersistTaps="handled">

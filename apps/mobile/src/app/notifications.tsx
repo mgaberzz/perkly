@@ -37,7 +37,7 @@ export default function Inbox() {
       <Screen edges={[]}>
         <View style={{ alignItems: 'center', gap: 8, marginTop: 60 }}>
           <Text style={{ fontSize: 48 }}>📭</Text>
-          <T v="h3">{t('No notifications yet')}</T>
+          <T v="h3">{t('No Notifications Yet')}</T>
           <T v="muted" style={{ textAlign: 'center' }}>{t('Perk drops, payment receipts and your student verification result show up here.')}</T>
         </View>
       </Screen>

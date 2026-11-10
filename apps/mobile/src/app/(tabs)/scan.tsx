@@ -57,9 +57,9 @@ export default function Scan() {
       ) : null}
       <View style={{ flex: 1, padding: 24, justifyContent: 'space-between' }}>
         <View style={{ gap: 6 }}>
-          <Text style={{ color: '#fff', fontSize: 28, fontWeight: '900' }}>{t('Scan to save 💜')}</Text>
+          <Text style={{ color: '#fff', fontSize: 28, fontWeight: '900' }}>{t('Scan to Save 💜')}</Text>
           <Text style={{ color: '#ffffffcc', fontWeight: '600' }}>{t('Point your camera at the Perkly QR on the cashier table.')}</Text>
-          <Text onPress={() => setGuide(true)} style={{ color: '#fff', fontWeight: '800', textDecorationLine: 'underline', marginTop: 4 }}>{t('How it works')}</Text>
+          <Text onPress={() => setGuide(true)} style={{ color: '#fff', fontWeight: '800', textDecorationLine: 'underline', marginTop: 4 }}>{t('How It Works')}</Text>
         </View>
 
         {!showManual && permission?.granted && (
@@ -68,15 +68,15 @@ export default function Scan() {
 
         {!showManual && permission && !permission.granted && (
           <Card style={{ gap: 12 }}>
-            <T v="h3">{t('Camera access needed 📷')}</T>
+            <T v="h3">{t('Camera Access Needed 📷')}</T>
             <T v="muted">{t("Perkly uses your camera only to scan the merchant's QR code.")}</T>
-            <Button title={permission.canAskAgain ? t('Allow camera') : t('Open settings to allow')} onPress={requestPermission} />
+            <Button title={permission.canAskAgain ? t('Allow Camera') : t('Open Settings to Allow')} onPress={requestPermission} />
           </Card>
         )}
 
         {showManual ? (
           <Card style={{ gap: 12 }}>
-            <T v="h3">{t('Type the code')}</T>
+            <T v="h3">{t('Type the Code')}</T>
             <T v="muted">{t("It's printed under the QR (starts with PK-).")}</T>
             <TextInput
               value={manual} onChangeText={setManual} autoCapitalize="characters" autoCorrect={false} placeholder="PK-XXXXXXXXXX"
@@ -84,7 +84,7 @@ export default function Scan() {
               style={{ borderRadius: 14, borderWidth: 1, borderColor: c.border, padding: 14, fontSize: 18, fontWeight: '800', color: c.text, letterSpacing: 1, writingDirection: 'ltr', textAlign: 'left' }}
             />
             <Button title={t('Continue')} onPress={() => { locked.current = false; open(manual); }} disabled={manual.trim().length < 5} />
-            {Platform.OS !== 'web' && <Button variant="ghost" title={t('Back to camera')} onPress={() => setShowManual(false)} />}
+            {Platform.OS !== 'web' && <Button variant="ghost" title={t('Back to Camera')} onPress={() => setShowManual(false)} />}
           </Card>
         ) : (
           <Button variant="secondary" title={t("QR won't scan? Type the code")} onPress={() => setShowManual(true)} />

@@ -41,8 +41,8 @@ function RootStack() {
       if (!bio.ok) return;
       await AsyncStorage.setItem('perkly.biometricAsked', '1');
       Alert.alert(t('Log in faster?'), t('Use {method} to open Perkly — you stay signed in, no codes or passwords.', { method: bio.label }), [
-        { text: t('Not now'), style: 'cancel' },
-        { text: t('Turn on'), onPress: () => { setBiometricEnabled(true).catch(() => {}); } },
+        { text: t('Not Now'), style: 'cancel' },
+        { text: t('Turn On'), onPress: () => { setBiometricEnabled(true).catch(() => {}); } },
       ]);
     })();
   }, [session, onboarded]);
@@ -55,17 +55,17 @@ function RootStack() {
       <Stack.Screen name="merchant/[id]" options={{ headerShown: true, headerTransparent: true, title: '' }} />
       <Stack.Screen name="redeem/[code]" options={{ headerShown: false, presentation: 'modal' }} />
       <Stack.Screen name="success" options={{ gestureEnabled: false, animation: 'fade' }} />
-      <Stack.Screen name="history" options={{ headerShown: true, title: t('Savings history') }} />
+      <Stack.Screen name="history" options={{ headerShown: true, title: t('Savings History') }} />
       <Stack.Screen name="perk/[id]" />
       <Stack.Screen name="category/[name]" />
       <Stack.Screen name="collection/[key]" />
       <Stack.Screen name="explain" />
       <Stack.Screen name="arcade" options={{ animation: 'fade_from_bottom' }} />
       <Stack.Screen name="notifications" options={{ headerShown: true, title: t('Notifications') }} />
-      <Stack.Screen name="student-verification" options={{ headerShown: true, title: t('Student verification') }} />
+      <Stack.Screen name="student-verification" options={{ headerShown: true, title: t('Student Verification') }} />
       <Stack.Screen name="settings" options={{ headerShown: true, title: t('Settings') }} />
       <Stack.Screen name="avatar" options={{ headerShown: false, presentation: 'modal' }} />
-      <Stack.Screen name="edit-profile" options={{ headerShown: true, title: t('Edit profile') }} />
+      <Stack.Screen name="edit-profile" options={{ headerShown: true, title: t('Edit Profile') }} />
     </Stack>
     </BiometricGate>
   );

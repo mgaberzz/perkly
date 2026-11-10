@@ -71,7 +71,7 @@ export default function Rewards() {
           </View>
           <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'streak' } })} style={{ backgroundColor: '#ffffff26', borderRadius: 20, padding: 12, alignItems: 'center' }}>
             <StreakFlame days={streak} size={34} />
-            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 11 }}>{t('Day streak')}</Text>
+            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 11 }}>{t('Day Streak')}</Text>
           </Pressable>
         </View>
         <View style={{ backgroundColor: '#ffffff', borderRadius: 16, padding: 12 }}><XPBar totalXp={stats?.total_xp ?? 0} /></View>
@@ -86,7 +86,7 @@ export default function Rewards() {
       <Card onPress={() => router.push('/arcade')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderColor: '#FFD25A', borderWidth: 2 }}>
         <Text style={{ fontSize: 40 }}>🎡</Text>
         <View style={{ flex: 1 }}>
-          <T v="h3">{t('Arcade · Spin the wheel')}</T>
+          <T v="h3">{t('Arcade · Spin the Wheel')}</T>
           <T v="small">{t('{n} ticket(s) · every spin wins XP or a streak freeze', { n: stats?.spin_tickets ?? 0 })}</T>
         </View>
         <T v="h3" color={brand.purple}>{t('Play')} {fwdChevron()}</T>
@@ -139,7 +139,7 @@ export default function Rewards() {
 
       <SectionHeader title={`${t("This week's leaderboard")} 🥇`} />
       <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Chip label={t('My campus')} active={scope === 'campus'} onPress={() => setScope('campus')} />
+        <Chip label={t('My Campus')} active={scope === 'campus'} onPress={() => setScope('campus')} />
         <Chip label={t('Nationwide')} active={scope === 'all'} onPress={() => setScope('all')} />
       </View>
       <Card style={{ gap: 0, paddingVertical: 4 }}>

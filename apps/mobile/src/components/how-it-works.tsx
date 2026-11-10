@@ -39,9 +39,9 @@ function StepArt({ step }: { step: number }) {
           <View style={{ padding: 10, gap: 6 }}>
             <Text style={{ fontSize: 9, color: '#6B6680' }}>{t('How much are you paying?')}</Text>
             <Text style={{ fontSize: 26, fontWeight: '900', color: brand.ink, textAlign: 'right' }}>180.00</Text>
-            <Text style={{ fontSize: 10, fontWeight: '800', color: brand.success }}>{t('You save {amount} 🎉', { amount: `27 ${t('EGP')}` })}</Text>
+            <Text style={{ fontSize: 10, fontWeight: '800', color: brand.success }}>{t('You Save {amount} 🎉', { amount: `27 ${t('EGP')}` })}</Text>
             <LinearGradient colors={gradient} style={{ borderRadius: 10, padding: 8, marginTop: 20 }}>
-              <Text style={{ color: '#fff', fontWeight: '900', fontSize: 11, textAlign: 'center' }}>{t('Redeem now')}</Text>
+              <Text style={{ color: '#fff', fontWeight: '900', fontSize: 11, textAlign: 'center' }}>{t('Redeem Now')}</Text>
             </LinearGradient>
           </View>
         </View>,
@@ -64,8 +64,8 @@ function StepArt({ step }: { step: number }) {
 
 const STEPS = [
   { title: 'Scan the QR', body: 'Find the Perkly QR on the cashier table and scan it from the Scan tab.' },
-  { title: 'Pick your perk & enter the bill', body: 'Choose the perk, type what you’re paying and see your savings instantly.' },
-  { title: 'Show the green screen', body: 'The cashier checks the live screen and applies your discount. You earn XP! 🎉' },
+  { title: 'Pick Your Perk & Enter the Bill', body: 'Choose the perk, type what you’re paying and see your savings instantly.' },
+  { title: 'Show the Green Screen', body: 'The cashier checks the live screen and applies your discount. You earn XP! 🎉' },
 ];
 
 export function HowItWorks({ visible, onClose }: { visible: boolean; onClose: () => void }) {

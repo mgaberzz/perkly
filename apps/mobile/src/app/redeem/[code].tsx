@@ -112,7 +112,7 @@ export default function Redeem() {
     return (
       <Screen edges={[]}>
         <Empty emoji="🫣" title={t('Hmm, that didn’t work 🔄')} subtitle={friendlyError(lookup.error)} />
-        <Button title={t('Scan again')} onPress={() => router.back()} />
+        <Button title={t('Scan Again')} onPress={() => router.back()} />
       </Screen>
     );
   }
@@ -130,8 +130,8 @@ export default function Redeem() {
   };
 
   const cta = inApp
-    ? (bill ? t('Pay {amount} in app', { amount: egp(toPay) }) : t('Pay in app'))
-    : saving != null ? t('Redeem • save {amount}', { amount: egp(saving) }) : t('Redeem now');
+    ? (bill ? t('Pay {amount} in App', { amount: egp(toPay) }) : t('Pay in App'))
+    : saving != null ? t('Redeem • Save {amount}', { amount: egp(saving) }) : t('Redeem Now');
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -162,15 +162,15 @@ export default function Redeem() {
           </View>
           {saving != null ? (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 6, backgroundColor: '#12B76A14', borderRadius: 14, padding: 12 }}>
-              <T color={brand.success} style={{ fontWeight: '800' }}>{t('You save {amount} 🎉', { amount: egp(saving) })}</T>
+              <T color={brand.success} style={{ fontWeight: '800' }}>{t('You Save {amount} 🎉', { amount: egp(saving) })}</T>
               <T style={{ fontWeight: '800' }}>{t('Pay {amount}', { amount: egp(toPay) })}</T>
             </View>
           ) : (
-            <T v="small">{needsAmount ? (inApp ? t('Enter your bill to pay in the app.') : t('Minimum spend {amount}', { amount: egp(perk?.min_spend) })) : t('Optional — add it to track your savings')}</T>
+            <T v="small">{needsAmount ? (inApp ? t('Enter your bill to pay in the app.') : t('Minimum Spend {amount}', { amount: egp(perk?.min_spend) })) : t('Optional — add it to track your savings')}</T>
           )}
 
-          <T v="label" style={{ marginTop: 6 }}>{t('Your perk')}</T>
-          {lookup.perks.length === 0 && <Empty emoji="😴" title={t('No perks here rn 👀')} subtitle={t('Check back later today.')} />}
+          <T v="label" style={{ marginTop: 6 }}>{t('Your Perk')}</T>
+          {lookup.perks.length === 0 && <Empty emoji="😴" title={t('No Perks Here rn 👀')} subtitle={t('Check back later today.')} />}
           {lookup.perks.map((p) => {
             const on = p.id === perkId;
             return (
@@ -181,7 +181,7 @@ export default function Redeem() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <T v="h3">{p.title}</T>
-                  <T v="small">{Number(p.min_spend) > 0 ? t('Min {amount}', { amount: egp(p.min_spend) }) : t('No minimum')}{p.max_discount_amount ? ` · ${t('Max {amount} off', { amount: egp(p.max_discount_amount) })}` : ''}</T>
+                  <T v="small">{Number(p.min_spend) > 0 ? t('Min {amount}', { amount: egp(p.min_spend) }) : t('No Minimum')}{p.max_discount_amount ? ` · ${t('Max {amount} Off', { amount: egp(p.max_discount_amount) })}` : ''}</T>
                 </View>
                 <Text style={{ color: p.is_flash ? brand.pink : brand.purple, fontWeight: '900', flexShrink: 1 }}>{p.is_flash ? '⚡' : ''}{discountLabel(p)}</Text>
               </Pressable>
@@ -192,15 +192,15 @@ export default function Redeem() {
             <>
               <T v="label" style={{ marginTop: 6 }}>{t('How do you want to pay?')}</T>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                <PayOption value="merchant" icon="🧾" title={t('At the cashier')} sub={t('Cash or card, as usual')} />
-                <PayOption value="in_app" icon="📲" title={t('In the app')} sub={payMode === 'test' ? t('Test mode — no real charge') : t('Pay now with Perkly')} />
+                <PayOption value="merchant" icon="🧾" title={t('At the Cashier')} sub={t('Cash or card, as usual')} />
+                <PayOption value="in_app" icon="📲" title={t('In the App')} sub={payMode === 'test' ? t('Test mode — no real charge') : t('Pay Now with Perkly')} />
               </View>
             </>
           )}
 
           {error && <View style={{ backgroundColor: '#F044381A', borderRadius: 14, padding: 12 }}><T color={brand.danger}>{error}</T></View>}
-          {needsVerify && <Button title={t('Verify my student ID')} icon="🎓" variant="secondary" onPress={() => { router.back(); router.push('/student-verification'); }} />}
-          <Button title={retrying ? t('Try again') : cta} icon={inApp ? '💳' : '✨'} onPress={redeem} loading={submitting} disabled={!perk} />
+          {needsVerify && <Button title={t('Verify My Student ID')} icon="🎓" variant="secondary" onPress={() => { router.back(); router.push('/student-verification'); }} />}
+          <Button title={retrying ? t('Try Again') : cta} icon={inApp ? '💳' : '✨'} onPress={redeem} loading={submitting} disabled={!perk} />
           <T v="small" style={{ textAlign: 'center' }}>
             {inApp ? t('You pay now in the app — then show the green screen so the cashier knows it is paid.') : t('Tap when you’re paying — then show the green screen to the cashier.')}
           </T>

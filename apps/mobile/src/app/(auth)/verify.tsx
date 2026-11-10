@@ -45,7 +45,7 @@ export default function Verify() {
   return (
     <Screen edges={['top', 'bottom']}>
       <View style={{ gap: 8, marginTop: 24 }}>
-        <T v="h1">{t('Enter your code')}</T>
+        <T v="h1">{t('Enter Your Code')}</T>
         <T v="muted">{t('Sent to {target}', { target })}</T>
       </View>
       <TextInput
@@ -63,7 +63,7 @@ export default function Verify() {
       />
       {error && <T v="small" color={brand.danger}>{error}</T>}
       <Button title={t('Verify')} onPress={() => verify()} loading={loading} disabled={code.length < 6} />
-      <Button variant="ghost" title={cooldown > 0 ? t('Resend in {n}s', { n: cooldown }) : t('Resend code')} disabled={cooldown > 0} onPress={resend} />
+      <Button variant="ghost" title={cooldown > 0 ? t('Resend in {n}s', { n: cooldown }) : t('Resend Code')} disabled={cooldown > 0} onPress={resend} />
     </Screen>
   );
 }

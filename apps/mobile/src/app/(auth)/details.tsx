@@ -10,7 +10,7 @@ export default function Details() {
       <Screen edges={['top', 'bottom']}>
         <View style={{ gap: 8, marginTop: 12 }}>
           <T v="label">{t('Step 1 of 2')}</T>
-          <T v="h1">{t('Complete your profile')}</T>
+          <T v="h1">{t('Complete Your Profile')}</T>
           <T v="muted">{t('So we can show perks near your campus and keep your account safe.')}</T>
         </View>
         <ProfileForm submitLabel={t('Continue')} showInvite onDone={() => router.replace('/consent')} />

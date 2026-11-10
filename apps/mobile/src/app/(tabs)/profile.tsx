@@ -42,7 +42,7 @@ export default function Me() {
         </Pressable>
         <EditableAvatar size={96} />
         <T v="h2" style={{ textAlign: 'center' }}>{profile?.full_name ?? t('Student')}</T>
-        <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'xp' } })}><T v="muted" style={{ textAlign: 'center' }}>🎓 {campus?.short_name ?? campus?.name ?? t('No campus')} · {t('Lv {n} · {name}', { n: cur.level, name: cur.name })}</T></Pressable>
+        <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'xp' } })}><T v="muted" style={{ textAlign: 'center' }}>🎓 {campus?.short_name ?? campus?.name ?? t('No Campus')} · {t('Lv {n} · {name}', { n: cur.level, name: cur.name })}</T></Pressable>
       </View>
 
       {/* Student ID card */}
@@ -63,8 +63,8 @@ export default function Me() {
         <Card onPress={() => router.push('/student-verification')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderColor: profile.verification_status === 'rejected' ? brand.danger : brand.purple }}>
           <Text style={{ fontSize: 26 }}>{profile.verification_status === 'pending' ? '⏳' : profile.verification_status === 'rejected' ? '❌' : '🎓'}</Text>
           <View style={{ flex: 1 }}>
-            <T style={{ fontWeight: '800' }}>{profile.verification_status === 'pending' ? t('We’re checking your student ID') : profile.verification_status === 'rejected' ? t('Your ID wasn’t approved') : t('Verify you’re a student')}</T>
-            <T v="small">{profile.verification_status === 'pending' ? t('Usually less than a day') : profile.verification_status === 'rejected' ? t('Tap to see why and send a new photo') : t('Snap your student ID. Takes a minute.')}</T>
+            <T style={{ fontWeight: '800' }}>{profile.verification_status === 'pending' ? t('We’re Checking Your Student ID') : profile.verification_status === 'rejected' ? t('Your ID Wasn’t Approved') : t('Verify You’re a Student')}</T>
+            <T v="small">{profile.verification_status === 'pending' ? t('Usually Less Than a Day') : profile.verification_status === 'rejected' ? t('Tap to see why and send a new photo') : t('Snap your student ID. Takes a minute.')}</T>
           </View>
           <T v="muted">{fwdChevron()}</T>
         </Card>
@@ -87,7 +87,7 @@ export default function Me() {
         </Card>
       )}
 
-      <SectionHeader title={`🧾 ${t('My redemptions')}`} action={`${t('View all')} ${fwdChevron()}`} onAction={() => router.push('/history')} />
+      <SectionHeader title={`🧾 ${t('My Redemptions')}`} action={`${t('View All')} ${fwdChevron()}`} onAction={() => router.push('/history')} />
       <Card style={{ gap: 0, paddingVertical: recent.length ? 4 : 24 }}>
         {recent.length === 0 ? (
           <T v="muted" style={{ textAlign: 'center' }}>{t('No perks used yet. Scan your first QR and start saving 💜')}</T>
@@ -103,7 +103,7 @@ export default function Me() {
       </Card>
 
       <GradientCard style={{ gap: 10 }}>
-        <Text style={{ color: '#fff', fontSize: 20, fontWeight: '900' }}>{t('Invite & earn XP 💜')}</Text>
+        <Text style={{ color: '#fff', fontSize: 20, fontWeight: '900' }}>{t('Invite & Earn XP 💜')}</Text>
         <Text style={{ color: '#ffffffdd', fontWeight: '600' }}>{t('You get +50 XP when a friend redeems their first perk.')}</Text>
         <Pressable onPress={() => Share.share({ message: t('Bestie… why are you paying full price? 😭 Get student perks on Perkly — use my code {code} 💜', { code: profile?.referral_code }) })}
           style={{ backgroundColor: '#fff', borderRadius: 16, padding: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -112,7 +112,7 @@ export default function Me() {
         </Pressable>
       </GradientCard>
 
-      <SectionHeader title={`♥ ${t('My faves')}`} />
+      <SectionHeader title={`♥ ${t('My Favs')}`} />
       {favMerchants.length ? favMerchants.map((m) => <MerchantRow key={m.id} m={m} />)
         : <Card style={{ paddingVertical: 24 }}><T v="muted" style={{ textAlign: 'center' }}>{t('Tap ♡ on any perk to save your fave spots here.')}</T></Card>}
     </Screen>

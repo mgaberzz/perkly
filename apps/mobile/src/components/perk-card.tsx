@@ -57,7 +57,7 @@ export function PerkCard({ item, width = 230 }: { item: PerkItem; width?: number
             <Heart merchantId={merchant.id} />
           </View>
           <View style={{ height: 1, backgroundColor: c.border, marginVertical: 6 }} />
-          <T v="small">{Number(perk.min_spend) > 0 ? t('Min spend {amount}', { amount: `${Number(perk.min_spend)} ${t('EGP')}` }) : t('No minimum spend')}</T>
+          <T v="small">{Number(perk.min_spend) > 0 ? t('Min Spend {amount}', { amount: `${Number(perk.min_spend)} ${t('EGP')}` }) : t('No Minimum Spend')}</T>
         </View>
       </View>
     </Pressable>

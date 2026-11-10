@@ -57,7 +57,7 @@ export function AreaSheet({ visible, onClose }: { visible: boolean; onClose: () 
       </View>
       <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
         <Quick icon="🧭" label={t('Nearby')} onPress={async () => { setArea({ kind: 'nearby' }); onClose(); await refreshLocation(true); }} />
-        {campus && <Quick icon="🎓" label={campus.short_name ?? t('My campus')} onPress={() => pick(campus)} />}
+        {campus && <Quick icon="🎓" label={campus.short_name ?? t('My Campus')} onPress={() => pick(campus)} />}
       </View>
       <ScrollView style={{ flexGrow: 0 }} keyboardShouldPersistTaps="handled">
         {q ? (
@@ -68,13 +68,13 @@ export function AreaSheet({ visible, onClose }: { visible: boolean; onClose: () 
               <View style={{ marginTop: 8 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <T v="h3">{t('Recent')}</T>
-                  <Pressable onPress={clearRecentAreas}><T v="small" color={brand.pink} style={{ fontWeight: '800' }}>{t('Clear all')}</T></Pressable>
+                  <Pressable onPress={clearRecentAreas}><T v="small" color={brand.pink} style={{ fontWeight: '800' }}>{t('Clear All')}</T></Pressable>
                 </View>
                 {recentAreas.map((x) => <Row key={x.id} x={x} />)}
                 <View style={{ height: 1, backgroundColor: c.border, marginVertical: 8 }} />
               </View>
             )}
-            <T v="h3" style={{ marginTop: 8 }}>{t('Popular spots')}</T>
+            <T v="h3" style={{ marginTop: 8 }}>{t('Popular Spots')}</T>
             {campuses.map((x) => <Row key={x.id} x={x} />)}
           </>
         )}

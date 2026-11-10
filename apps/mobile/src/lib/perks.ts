@@ -39,11 +39,11 @@ export function applySortFilter(items: PerkItem[], sort: SortKey, f: Filters) {
 
 /** Curated collections (client-side rules). */
 export const COLLECTIONS = [
-  { key: 'flash', title: 'Ending soon', emoji: '⏳', tag: 'Flash', colors: ['#FF3EA5', '#FF7A59'] as const, match: (x: PerkItem) => x.perk.is_flash },
-  { key: 'hero', title: 'Hero deals 20%+', emoji: '🦸', tag: 'Trending', colors: ['#7B2FF7', '#FF3EA5'] as const, match: (x: PerkItem) => x.perk.discount_type === 'percentage' && Number(x.perk.discount_value) >= 20 },
-  { key: 'nomin', title: 'No minimum spend', emoji: '🪙', tag: 'Easy', colors: ['#2F80FF', '#7B2FF7'] as const, match: (x: PerkItem) => !Number(x.perk.min_spend) },
-  { key: 'coffee', title: 'Coffee runs', emoji: '☕', tag: 'Study fuel', colors: ['#8B5CF6', '#F59E0B'] as const, match: (x: PerkItem) => x.merchant.category === 'Coffee' },
-  { key: 'fun', title: 'Weekend plans', emoji: '🎳', tag: 'Fun', colors: ['#10B981', '#2F80FF'] as const, match: (x: PerkItem) => ['Entertainment', 'Fitness'].includes(x.merchant.category) },
-  { key: 'popular', title: 'Campus favorites', emoji: '💜', tag: 'Trending', colors: ['#FF3EA5', '#7B2FF7'] as const, match: (x: PerkItem) => x.redeemed > 0 },
+  { key: 'flash', title: 'Ending Soon', emoji: '⏳', tag: 'Flash', colors: ['#FF3EA5', '#FF7A59'] as const, match: (x: PerkItem) => x.perk.is_flash },
+  { key: 'hero', title: 'Hero Deals 20%+', emoji: '🦸', tag: 'Trending', colors: ['#7B2FF7', '#FF3EA5'] as const, match: (x: PerkItem) => x.perk.discount_type === 'percentage' && Number(x.perk.discount_value) >= 20 },
+  { key: 'nomin', title: 'No Minimum Spend', emoji: '🪙', tag: 'Easy', colors: ['#2F80FF', '#7B2FF7'] as const, match: (x: PerkItem) => !Number(x.perk.min_spend) },
+  { key: 'coffee', title: 'Coffee Runs', emoji: '☕', tag: 'Study fuel', colors: ['#8B5CF6', '#F59E0B'] as const, match: (x: PerkItem) => x.merchant.category === 'Coffee' },
+  { key: 'fun', title: 'Weekend Plans', emoji: '🎳', tag: 'Fun', colors: ['#10B981', '#2F80FF'] as const, match: (x: PerkItem) => ['Entertainment', 'Fitness'].includes(x.merchant.category) },
+  { key: 'popular', title: 'Campus Faves', emoji: '💜', tag: 'Trending', colors: ['#FF3EA5', '#7B2FF7'] as const, match: (x: PerkItem) => x.redeemed > 0 },
 ] as const;
 export type CollectionKey = (typeof COLLECTIONS)[number]['key'];

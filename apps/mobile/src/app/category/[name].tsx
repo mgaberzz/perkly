@@ -76,29 +76,29 @@ export default function CategoryScreen() {
                   </View>
                 )}
                 <View style={{ gap: 4 }}>
-                  <SectionHeader title={t('Trending perks')} action={`${t('See all')} ${fwdChevron()}`} onAction={() => setMode('Places')} />
-                  <T v="muted">{t('Most redeemed by students this month')}</T>
+                  <SectionHeader title={t('Trending Perks')} action={`${t('See All')} ${fwdChevron()}`} onAction={() => setMode('Places')} />
+                  <T v="muted">{t('Most Redeemed by Students This Month')}</T>
                 </View>
                 {trending.length ? (
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
                     {trending.map((x) => <PerkCard key={x.perk.id} item={x} />)}
                   </ScrollView>
-                ) : <Empty emoji="🔍" title={t('No perks here yet')} subtitle={t('Try another subcategory or area.')} />}
+                ) : <Empty emoji="🔍" title={t('No Perks Here Yet')} subtitle={t('Try another subcategory or area.')} />}
               </View>
             )}
             {mode !== 'Perks' && <T v="label">{t('{n} result(s)', { n: list.length })}</T>}
           </View>
         }
         renderItem={({ item }) => <PerkRow item={item} />}
-        ListEmptyComponent={mode !== 'Perks' ? <Empty emoji="😴" title={mode === 'Flash' ? t('No flash perks rn ⚡') : t('No matches, bestie')} subtitle={t('New perks drop every week. Stay tuned 👀')} /> : undefined}
+        ListEmptyComponent={mode !== 'Perks' ? <Empty emoji="😴" title={mode === 'Flash' ? t('No Flash Perks rn ⚡') : t('No matches, bestie')} subtitle={t('New perks drop every week. Stay tuned 👀')} /> : undefined}
         ListFooterComponent={mode === 'Places' ? (
           <View style={{ gap: 10, marginTop: 20 }}>
             <T v="h3">{t('Try these filters:')}</T>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
               <Chip label={t('Nearest')} active={sort === 'nearest'} onPress={() => setSort('nearest')} />
-              <Chip label={t('Most redeemed')} active={sort === 'popular'} onPress={() => setSort('popular')} />
-              <Chip label={t('Biggest discount')} active={sort === 'discount'} onPress={() => setSort('discount')} />
-              <Chip label={t('No min spend')} active={filters.noMinSpend} onPress={() => setFilters({ ...filters, noMinSpend: !filters.noMinSpend })} />
+              <Chip label={t('Most Redeemed')} active={sort === 'popular'} onPress={() => setSort('popular')} />
+              <Chip label={t('Biggest Discount')} active={sort === 'discount'} onPress={() => setSort('discount')} />
+              <Chip label={t('No Min Spend')} active={filters.noMinSpend} onPress={() => setFilters({ ...filters, noMinSpend: !filters.noMinSpend })} />
             </ScrollView>
           </View>
         ) : undefined}
@@ -106,7 +106,7 @@ export default function CategoryScreen() {
       {mode !== 'Perks' && (
         <Pressable onPress={() => setFilterOpen(true)} style={{ position: 'absolute', bottom: 36, alignSelf: 'center', backgroundColor: brand.pink, borderRadius: 999, paddingHorizontal: 24, paddingVertical: 14, flexDirection: 'row', gap: 8,
           shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 }}>
-          <Text style={{ color: '#fff', fontWeight: '900', fontSize: 16 }}>{t('Filter & sort')}{filtered ? ' •' : ''}</Text>
+          <Text style={{ color: '#fff', fontWeight: '900', fontSize: 16 }}>{t('Filter & Sort')}{filtered ? ' •' : ''}</Text>
           <Text style={{ color: '#fff', fontSize: 16 }}>⏷</Text>
         </Pressable>
       )}

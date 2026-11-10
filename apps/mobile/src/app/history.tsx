@@ -32,9 +32,9 @@ export default function History() {
   }, []);
 
   const OPTIONS: { key: keyof Filters; label: string; options: [string, string][] }[] = [
-    { key: 'period', label: t('Period'), options: [['7', t('Last 7 days')], ['30', t('Last 30 days')], ['90', t('Last 90 days')]] },
-    { key: 'payment', label: t('Payment'), options: [['merchant', t('At the cashier')], ['in_app', t('Paid in app')]] },
-    { key: 'channel', label: t('Where'), options: [['in_store', t('In-store')], ['online', t('Online')]] },
+    { key: 'period', label: t('Period'), options: [['7', t('Last 7 Days')], ['30', t('Last 30 Days')], ['90', t('Last 90 Days')]] },
+    { key: 'payment', label: t('Payment'), options: [['merchant', t('At the Cashier')], ['in_app', t('Paid in App')]] },
+    { key: 'channel', label: t('Where'), options: [['in_store', t('In-Store')], ['online', t('Online')]] },
     { key: 'status', label: t('Status'), options: [['success', t('Success')], ['reversed', t('Reversed')]] },
   ];
   const active = OPTIONS.filter((o) => f[o.key]);
@@ -88,9 +88,9 @@ export default function History() {
             </View>
           ))}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: c.border, paddingTop: 10 }}>
-            <Pressable onPress={() => { animate(); setF(NONE); }} hitSlop={8}><T v="small" style={{ fontWeight: '800' }}>{t('Clear all')}</T></Pressable>
+            <Pressable onPress={() => { animate(); setF(NONE); }} hitSlop={8}><T v="small" style={{ fontWeight: '800' }}>{t('Clear All')}</T></Pressable>
             <Pressable onPress={() => { animate(); setPanel(false); }} style={{ backgroundColor: brand.purple, borderRadius: 12, paddingHorizontal: 18, paddingVertical: 9 }}>
-              <Text style={{ color: '#fff', fontWeight: '800' }}>{t('Show {n} results', { n: list.length })}</Text>
+              <Text style={{ color: '#fff', fontWeight: '800' }}>{t('Show {n} Results', { n: list.length })}</Text>
             </Pressable>
           </View>
         </View>
@@ -123,7 +123,7 @@ export default function History() {
       keyboardShouldPersistTaps="handled"
       ListEmptyComponent={rows ? (rows.length
         ? <Empty emoji="🔎" title={t('No matches, bestie')} subtitle={t('Try another search or clear the filters.')} />
-        : <Empty emoji="🧾" title={t('No redemptions yet')} subtitle={t('Scan a Perkly QR at the cashier to start saving.')} />) : undefined}
+        : <Empty emoji="🧾" title={t('No Redemptions Yet')} subtitle={t('Scan a Perkly QR at the cashier to start saving.')} />) : undefined}
       renderItem={({ item: r }) => {
         const isOpen = open === r.id;
         const reversed = r.status === 'reversed';
@@ -134,10 +134,10 @@ export default function History() {
           [t('Date'), new Date(r.created_at).toLocaleString(locale(), { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })],
           [t('Branch'), r.branch_name === 'Online' ? t('Online') : r.branch_name],
           [t('Bill'), egp(r.original_amount)],
-          [t('Perkly discount'), r.discount_amount != null ? `−${egp(r.discount_amount)}` : t('Applied by cashier')],
-          [t('You paid'), egp(r.final_amount ?? r.original_amount)],
-          [t('Payment'), r.payment_method === 'in_app' ? t('Paid in app') : t('At the cashier')],
-          [t('XP earned'), `+${r.xp_awarded} XP`],
+          [t('Perkly Discount'), r.discount_amount != null ? `−${egp(r.discount_amount)}` : t('Applied by Cashier')],
+          [t('You Paid'), egp(r.final_amount ?? r.original_amount)],
+          [t('Payment'), r.payment_method === 'in_app' ? t('Paid in App') : t('At the Cashier')],
+          [t('XP Earned'), `+${r.xp_awarded} XP`],
         ];
         return (
           <View style={{ backgroundColor: c.card, borderRadius: 18, borderWidth: 1, borderColor: isOpen ? '#7B2FF755' : c.border, overflow: 'hidden',
@@ -160,7 +160,7 @@ export default function History() {
                 </View>
                 <View style={{ flexDirection: 'row', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                   <Tag label={r.perk_title} />
-                  {r.payment_method === 'in_app' && <Tag label={`💳 ${t('Paid in app')}`} tone="green" />}
+                  {r.payment_method === 'in_app' && <Tag label={`💳 ${t('Paid in App')}`} tone="green" />}
                   {r.channel === 'online' && <Tag label={`🌐 ${t('Online')}`} />}
                 </View>
               </View>
@@ -178,7 +178,7 @@ export default function History() {
                   <View style={{ flex: 1 }}><ShareReceiptButton data={r} variant="outline" label={t('Share')} /></View>
                   <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'redemption', id: r.id } })}
                     style={{ flex: 1.4, borderRadius: 14, backgroundColor: brand.purple, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ color: '#fff', fontWeight: '800' }}>{t('Full breakdown')} {fwdChevron()}</Text>
+                    <Text style={{ color: '#fff', fontWeight: '800' }}>{t('Full Breakdown')} {fwdChevron()}</Text>
                   </Pressable>
                 </View>
               </View>

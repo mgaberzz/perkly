@@ -73,7 +73,7 @@ export default function Success() {
           </Animated.View>
 
           <Text style={{ color: '#fff', fontSize: 16, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 }}>
-            {stale ? t('Expired — redeem again') : r.channel === 'online' ? t('Online order confirmed') : t('Valid Perkly discount')}
+            {stale ? t('Expired — redeem again') : r.channel === 'online' ? t('Online Order Confirmed') : t('Valid Perkly Discount')}
           </Text>
           <Text style={{ color: '#fff', fontSize: 30, fontWeight: '900', textAlign: 'center' }} numberOfLines={2} adjustsFontSizeToFit>{r.merchant_name}</Text>
           <Text style={{ color: '#ffffffdd', fontSize: 15, fontWeight: '600', marginTop: -12 }}>{r.branch_name === 'Online' ? t('Online') : r.branch_name}</Text>
@@ -121,9 +121,9 @@ export default function Success() {
             {[
               [t('Perk'), r.perk_title],
               [t('Bill'), egp(r.original_amount)],
-              [t('Perkly discount'), r.discount_amount != null ? `− ${egp(r.discount_amount)}` : t('Applied by cashier')],
-              [t('Payment'), r.payment_method === 'in_app' ? `${t('Paid in app')}${r.payment_ref ? ` · ${r.payment_ref}` : ''}` : t('At the cashier')],
-              [t('XP earned'), `+${r.xp_awarded} XP`],
+              [t('Perkly Discount'), r.discount_amount != null ? `− ${egp(r.discount_amount)}` : t('Applied by Cashier')],
+              [t('Payment'), r.payment_method === 'in_app' ? `${t('Paid in App')}${r.payment_ref ? ` · ${r.payment_ref}` : ''}` : t('At the Cashier')],
+              [t('XP Earned'), `+${r.xp_awarded} XP`],
             ].map(([k, v]) => (
               <View key={k} style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
                 <Text style={{ color: '#6B6680', fontWeight: '600' }}>{k}</Text>
@@ -136,7 +136,7 @@ export default function Success() {
               <Text style={{ color: brand.ink, fontWeight: '900', fontSize: 18 }}>{r.final_amount != null ? egp(r.final_amount) : '—'}</Text>
             </View>
             <Text style={{ color: '#6B6680', fontSize: 12, textAlign: 'center', marginTop: 4 }}>
-              <Text style={{ color: brand.pink, fontWeight: '800' }} onPress={() => Linking.openURL('https://wa.me/')}>{t('Need help')}</Text> {t('with this redemption? Tell us within 24 hours.')}
+              <Text style={{ color: brand.pink, fontWeight: '800' }} onPress={() => Linking.openURL('https://wa.me/')}>{t('Need Help')}</Text> {t('with this redemption? Tell us within 24 hours.')}
             </Text>
           </View>
 
@@ -147,10 +147,10 @@ export default function Success() {
             )}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               <Pill onPress={() => router.push({ pathname: '/explain', params: { metric: 'redemption', id: r.redemption_id } })} big={`+${r.xp_awarded} XP ⚡`} small={r.leveled_up ? t('Level up! You’re {name} now 🚀', { name: t(r.level_name) }) : t('Lv {n} · {name}', { n: r.level, name: t(r.level_name) })} />
-              <Pill onPress={() => router.push({ pathname: '/explain', params: { metric: 'streak' } })} big={`${r.streak} 🔥`} small={r.used_freeze_token ? t('Streak saved by freeze ❄️') : t('Day streak')} />
+              <Pill onPress={() => router.push({ pathname: '/explain', params: { metric: 'streak' } })} big={`${r.streak} 🔥`} small={r.used_freeze_token ? t('Streak Saved by Freeze ❄️') : t('Day Streak')} />
             </View>
-            {r.first_time_at_merchant && <Pill big={t('New spot unlocked 🧭')} small={t('+25 XP for trying somewhere new')} />}
-            {r.quests_completed.map((q) => <Pill key={q.title} big={`${q.emoji} ${t(q.title)}`} small={t('Quest complete · +{n} XP', { n: q.xp_reward })} />)}
+            {r.first_time_at_merchant && <Pill big={t('New Spot Unlocked 🧭')} small={t('+25 XP for trying somewhere new')} />}
+            {r.quests_completed.map((q) => <Pill key={q.title} big={`${q.emoji} ${t(q.title)}`} small={t('Quest Complete · +{n} XP', { n: q.xp_reward })} />)}
             {r.badges_unlocked.map((b) => <Pill key={b.code} big={`${b.emoji} ${t(b.name)}`} small={t('New badge unlocked! 🏆')} />)}
           </Animated.View>
 
