@@ -18,6 +18,7 @@ export default function Settings() {
   const { c } = useTheme();
   const { session, profile, refreshProfile, signOut } = useSession();
   const [drops, setDrops] = useState(profile?.marketing_opt_in ?? false);
+  const [reminders, setReminders] = useState(profile?.reminders_opt_in ?? true);
   const [deleting, setDeleting] = useState(false);
   const [push, setPush] = useState<PushResult | 'checking'>('checking');
   useEffect(() => { registerPush(false).then(setPush); }, []);
@@ -37,6 +38,12 @@ export default function Settings() {
         { text: t('Not now'), style: 'cancel' }, { text: t('Open Settings'), onPress: () => Linking.openSettings() },
       ]);
     }
+    refreshProfile();
+  }
+  async function toggleReminders(v: boolean) {
+    setReminders(v);
+    if (session) await supabase.from('profiles').update({ reminders_opt_in: v }).eq('id', session.user.id);
+    if (v) registerPush(true).then(setPush);
     refreshProfile();
   }
   async function toggleBio(v: boolean) {
@@ -143,6 +150,7 @@ export default function Settings() {
       <T v="label">{t('Notifications')}</T>
       <Card style={{ gap: 0, paddingVertical: 0 }}>
         <Row label={`🔥 ${t('Perk drops & flash deals')}`} right={<Switch value={drops} onValueChange={toggleDrops} trackColor={{ true: brand.purple }} />} />
+        <Row label={`⏰ ${t('Reminders (saved perks ending, levels)')}`} right={<Switch value={reminders} onValueChange={toggleReminders} trackColor={{ true: brand.purple }} />} />
         <Row label={`🔔 ${t('Notifications on this phone')}`} onPress={push === 'ok' || push === 'checking' ? undefined : fixPush}
           right={<T v="small" color={PUSH_LABEL[push].color}>{PUSH_LABEL[push].text}</T>} />
         <Row label={`📬 ${t('Notifications')}`} onPress={() => router.push('/notifications')} />

@@ -167,6 +167,28 @@ export async function sendBroadcast(_: ActionState, fd: FormData): Promise<Actio
   return { ok: "Sent! Students get it within a few seconds; see the count under Sent." };
 }
 
+// ───────── Automatic notifications ─────────
+export async function saveAutoNotifications(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireStaff("broadcasts");
+  const { data, error } = await supabase.rpc("set_auto_notifications", {
+    p_ending_soon: fd.get("ending_soon") === "on", p_almost_level: fd.get("almost_level") === "on",
+    p_new_near_campus: fd.get("new_near_campus") === "on", p_max_per_week: Number(str(fd, "max_per_week")) || 3,
+  });
+  const res = data as { ok: boolean; error?: string } | null;
+  if (error || !res?.ok) return { error: res?.error === "not_allowed" ? "You don't have permission to change this." : "Could not save." };
+  revalidatePath("/admin/broadcasts");
+  return { ok: "Saved." };
+}
+
+export async function runAutoNotificationsNow(): Promise<ActionState> {
+  const { supabase } = await requireStaff("broadcasts");
+  const { data, error } = await supabase.rpc("run_auto_notifications", { p_dry_run: false });
+  const res = data as { ok: boolean; total?: number } | null;
+  if (error || !res?.ok) return { error: "Could not send." };
+  revalidatePath("/admin/broadcasts");
+  return { ok: res.total ? `Sent to ${res.total} students.` : "Nobody is due a message right now." };
+}
+
 // ───────── Perks ─────────
 export async function reviewPerk(fd: FormData) {
   const { supabase } = await requireStaff("perks");

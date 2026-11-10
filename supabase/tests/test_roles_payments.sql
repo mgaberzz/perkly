@@ -848,3 +848,63 @@ do $$ declare r jsonb; begin
   begin perform count(*) from merchant_applications; raise exception 'anon read allowed'; exception when insufficient_privilege then null; end;
 end $$;
 reset role;
+
+
+-- ── Automatic notifications: one a day, the most useful first, never repeated ──
+insert into auth.users (id, email, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000a7', 'auto@perkly.test', '{"full_name":"Aya Auto"}');
+select set_config('test.auto_m', (select m.id::text from merchants m join merchant_branches b on b.merchant_id = m.id
+  where m.status = 'live' and b.is_active and b.campus_id is not null order by m.merchant_code limit 1), false);
+update profiles set campus_id = (select campus_id from merchant_branches where merchant_id = current_setting('test.auto_m')::uuid and campus_id is not null limit 1),
+                    marketing_opt_in = true, lang = 'ar'
+ where id = '00000000-0000-0000-0000-0000000000a7';
+insert into favorites (user_id, merchant_id) values ('00000000-0000-0000-0000-0000000000a7', current_setting('test.auto_m')::uuid);
+insert into perks (merchant_id, title, discount_type, discount_value, status, end_at)
+  values (current_setting('test.auto_m')::uuid, 'Auto test perk', 'percentage', 10, 'active', now() + interval '24 hours');
+update user_stats set total_xp = 590, level = 2 where user_id = '00000000-0000-0000-0000-0000000000a7';
+select set_config('request.jwt.claim.sub', '', false);
+do $$ declare r jsonb; n notifications; begin
+  r := run_auto_notifications(true);
+  assert (r->>'ok')::boolean and (r->>'total')::int >= 1, 'dry run counts: ' || r::text;
+  assert (select count(*) from notifications where user_id = '00000000-0000-0000-0000-0000000000a7') = 0, 'dry run sends nothing';
+  r := run_auto_notifications(false);
+  select * into n from notifications where user_id = '00000000-0000-0000-0000-0000000000a7';
+  assert n.kind = 'reminder' and n.data->>'auto' like 'ending_soon:%', 'ending soon goes first: ' || coalesce(n.data::text, 'none');
+  assert n.body like '%Auto test perk%' and n.title like '%بكرة%', 'Arabic text with the perk: ' || n.title || ' / ' || n.body;
+  r := run_auto_notifications(false);
+  assert (select count(*) from notifications where user_id = '00000000-0000-0000-0000-0000000000a7') = 1, 'only one a day';
+  -- next day: the next most useful message, and never the same one again
+  update notifications set created_at = now() - interval '1 day' where user_id = '00000000-0000-0000-0000-0000000000a7';
+  r := run_auto_notifications(false);
+  assert (select count(*) from notifications where user_id = '00000000-0000-0000-0000-0000000000a7' and data->>'auto' = 'almost_level:3') = 1, 'almost level next';
+  update notifications set created_at = created_at - interval '1 day' where user_id = '00000000-0000-0000-0000-0000000000a7';
+  r := run_auto_notifications(false);
+  assert (select count(*) from notifications where user_id = '00000000-0000-0000-0000-0000000000a7' and data->>'auto' like 'new_near_campus:%') = 1, 'then the new perk near campus';
+  -- weekly cap (3) reached
+  update notifications set created_at = created_at - interval '1 day' where user_id = '00000000-0000-0000-0000-0000000000a7';
+  update perks set created_at = now() where title = 'Auto test perk';
+  r := run_auto_notifications(false);
+  assert (select count(*) from notifications where user_id = '00000000-0000-0000-0000-0000000000a7') = 3, 'weekly cap';
+end $$;
+-- Students can switch reminders off; only Admin / Operations can run or change it from the portal
+update notifications set created_at = now() - interval '30 days' where user_id = '00000000-0000-0000-0000-0000000000a7';
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000a7', false);
+do $$ begin
+  assert run_auto_notifications(true)->>'error' = 'not_allowed', 'students cannot run it';
+  assert set_auto_notifications(true, true, true, 3)->>'error' = 'not_allowed', 'students cannot change it';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ begin
+  assert (set_auto_notifications(true, false, false, 2)->>'ok')::boolean, 'operations can change it';
+  assert (auto_notification_stats()->>'total') is not null, 'operations can see the stats';
+end $$;
+reset role;
+update profiles set reminders_opt_in = false where id = '00000000-0000-0000-0000-0000000000a7';
+update perks set end_at = now() + interval '20 hours', title = 'Auto test perk 2' where title = 'Auto test perk';
+insert into perks (merchant_id, title, discount_type, discount_value, status, end_at)
+  values (current_setting('test.auto_m')::uuid, 'Auto test perk 3', 'percentage', 10, 'active', now() + interval '20 hours');
+select set_config('request.jwt.claim.sub', '', false);
+do $$ begin
+  perform run_auto_notifications(false);
+  assert (select count(*) from notifications where user_id = '00000000-0000-0000-0000-0000000000a7') = 3, 'opted out: nothing new';
+end $$;
