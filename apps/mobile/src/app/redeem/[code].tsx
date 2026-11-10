@@ -23,7 +23,7 @@ type PayMethod = 'merchant' | 'in_app';
 export default function Redeem() {
   const { c } = useTheme();
   const { code } = useLocalSearchParams<{ code: string }>();
-  const { refreshLocation, refreshProfile, coords, merchants } = useSession();
+  const { refreshLocation, refreshProfile, coords, merchants, feature } = useSession();
   const [lookup, setLookup] = useState<Lookup | null>(null);
   const [perkId, setPerkId] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
@@ -67,7 +67,7 @@ export default function Redeem() {
   }, [lookup, coords, merchants]);
 
   const payMode = lookup?.ok ? lookup.payments_mode ?? 'off' : 'off';
-  const canPayInApp = payMode === 'test' || payMode === 'live';
+  const canPayInApp = (payMode === 'test' || payMode === 'live') && feature('pay_in_app');
   const inApp = pay === 'in_app' && canPayInApp;
   const needsAmount = (!!perk && Number(perk.min_spend) > 0) || inApp;
   const belowMin = !!perk && bill > 0 && bill < Number(perk.min_spend);

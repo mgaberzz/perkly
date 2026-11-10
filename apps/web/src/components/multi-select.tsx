@@ -7,11 +7,12 @@ import type { SearchOption } from "./search-select";
  * Pick several items from a long list: type to search (name or hidden keyword, e.g. an ID), tick as many as needed.
  * Each choice is sent as a repeated form field (`name`). Chosen items show as removable chips.
  */
-export function MultiSelect({ name, options, placeholder, onChange, allLabel }: {
+export function MultiSelect({ name, options, placeholder, onChange, allLabel, defaultValues }: {
   name: string; options: (SearchOption & { hint?: string })[]; placeholder: string; onChange?: (values: string[]) => void; allLabel?: string;
+  /** Already chosen when the form opens */ defaultValues?: string[];
 }) {
   const t = useT();
-  const [values, setValues] = useState<string[]>([]);
+  const [values, setValues] = useState<string[]>(defaultValues ?? []);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);

@@ -908,3 +908,33 @@ do $$ begin
   perform run_auto_notifications(false);
   assert (select count(*) from notifications where user_id = '00000000-0000-0000-0000-0000000000a7') = 3, 'opted out: nothing new';
 end $$;
+
+
+-- ── Feature switches ──
+do $$ begin
+  assert feature_enabled('arcade', '00000000-0000-0000-0000-0000000000a7'), 'on by default';
+  assert feature_enabled('something_new', '00000000-0000-0000-0000-0000000000a7'), 'unknown features count as on';
+end $$;
+update app_settings set value = jsonb_set(value, '{arcade}', '{"on": false, "campuses": []}') where key = 'features';
+do $$ begin
+  assert not feature_enabled('arcade', '00000000-0000-0000-0000-0000000000a7'), 'switched off';
+  begin
+    insert into spins (user_id, segment, reward_type, amount) values ('00000000-0000-0000-0000-0000000000a7', 1, 'xp', 10);
+    raise exception 'spin allowed while arcade is off';
+  exception when raise_exception then
+    if sqlerrm not like 'feature_off%' then raise; end if;
+  end;
+end $$;
+-- only some campuses
+update app_settings set value = jsonb_set(value, '{arcade}', jsonb_build_object('on', true, 'campuses',
+  jsonb_build_array((select campus_id from profiles where id = '00000000-0000-0000-0000-0000000000a7')))) where key = 'features';
+do $$ begin
+  assert feature_enabled('arcade', '00000000-0000-0000-0000-0000000000a7'), 'on at the chosen campus';
+  assert not feature_enabled('arcade', '00000000-0000-0000-0000-0000000000b9'), 'off elsewhere';
+end $$;
+-- verification switched off → no one is asked to verify
+update app_settings set value = '{"required": true, "free_redemptions": 0}' where key = 'student_verification';
+do $$ begin assert not student_can_redeem('00000000-0000-0000-0000-0000000000a7'), 'verification required'; end $$;
+update app_settings set value = jsonb_set(value, '{verification}', '{"on": false, "campuses": []}') where key = 'features';
+do $$ begin assert student_can_redeem('00000000-0000-0000-0000-0000000000a7'), 'verification switched off'; end $$;
+update app_settings set value = '{"required": false, "free_redemptions": 0}' where key = 'student_verification';

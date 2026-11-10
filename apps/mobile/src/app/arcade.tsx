@@ -59,7 +59,7 @@ const TOUR = [
 type SpinResult = { ok: true; segment: number; label: string; reward_type: 'xp' | 'freeze'; amount: number; tickets_left: number } | { ok: false; error: string };
 
 export default function Arcade() {
-  const { stats, refreshProfile } = useSession();
+  const { stats, refreshProfile, feature } = useSession();
   const [tickets, setTickets] = useState(stats?.spin_tickets ?? 0);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<SpinResult | null>(null);
@@ -99,6 +99,8 @@ export default function Arcade() {
 
   const rotate = rotation.interpolate({ inputRange: [0, 360], outputRange: ['0deg', '360deg'] });
   const stars = useMemo(() => Array.from({ length: 40 }, (_, i) => ({ left: `${(i * 37) % 100}%`, top: `${(i * 53) % 100}%`, s: (i % 3) + 1 })), []);
+  // Switched off by the Perkly team (e.g. a notification link opened it)
+  useEffect(() => { if (!feature('arcade')) router.back(); }, [feature]);
 
   return (
     <LinearGradient colors={['#1B0B3A', '#3A1078', '#5B1FA8']} style={{ flex: 1 }}>

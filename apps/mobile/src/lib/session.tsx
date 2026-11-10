@@ -40,7 +40,16 @@ type Ctx = {
   /** A parked session exists → the login screen offers "Log in with Face ID" */
   quickLogin: { available: boolean; email: string | null };
   biometricLogin: () => Promise<{ ok: boolean; error?: string }>;
+  /** Feature switches set by the Perkly team (portal → Settings → App features). Unknown = on. */
+  feature: (key: FeatureKey) => boolean;
+  /** Language the app must use when the language switch is off */
+  forcedLang: 'en' | 'ar' | null;
 };
+
+export type FeatureKey = 'arcade' | 'quests' | 'leaderboard' | 'badges' | 'streaks' | 'invite' | 'pay_in_app' | 'shop_online'
+  | 'flash_perks' | 'collections' | 'avatar_builder' | 'verification' | 'language';
+type FeatureCfg = Partial<Record<FeatureKey, { on?: boolean; campuses?: string[]; default?: 'en' | 'ar' }>>;
+const FEATURES_CACHE = 'perkly.cache.features';
 
 const SessionContext = createContext<Ctx | null>(null);
 
@@ -70,6 +79,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [area, setAreaState] = useState<Area>({ kind: 'nearby' });
   const [recentAreas, setRecentAreas] = useState<Campus[]>([]);
   const [popularity, setPopularity] = useState<Record<string, number>>({});
+  const [featureCfg, setFeatureCfg] = useState<FeatureCfg>({});
+
+  // Feature switches: saved copy first, then the latest from the server (also before login, for the language switch)
+  const refreshFeatures = useCallback(async () => {
+    const { data, error } = await supabase.from('app_settings').select('value').eq('key', 'features').maybeSingle<{ value: FeatureCfg }>();
+    if (error || !data) return;
+    setFeatureCfg(data.value ?? {});
+    AsyncStorage.setItem(FEATURES_CACHE, JSON.stringify(data.value ?? {})).catch(() => {});
+  }, []);
+  useEffect(() => {
+    AsyncStorage.getItem(FEATURES_CACHE).then((v) => { if (v) setFeatureCfg((cur) => (Object.keys(cur).length ? cur : JSON.parse(v))); }).catch(() => {});
+    refreshFeatures();
+  }, [refreshFeatures]);
 
   useEffect(() => {
     AsyncStorage.getItem('perkly.recentAreas').then((v) => { if (v) setRecentAreas(JSON.parse(v)); }).catch(() => {});
@@ -118,6 +140,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => { if (userId) registerPush(false); setSentryUser(userId ?? null); }, [userId]);
 
   const refreshMerchants = useCallback(async () => {
+    refreshFeatures();
     const [{ data, error }, { data: pop }] = await Promise.all([
       supabase.from('merchants').select(MERCHANT_SELECT).eq('status', 'live').order('name').returns<Merchant[]>(),
       supabase.rpc('perk_popularity'),
@@ -131,7 +154,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       .filter((m) => m.perks.length > 0);
     setMerchants(live);
     AsyncStorage.setItem(MERCHANTS_CACHE, JSON.stringify({ merchants: live, popularity: popular })).catch(() => {});
-  }, []);
+  }, [refreshFeatures]);
 
   const refreshLocation = useCallback(async (ask = false): Promise<Coords> => {
     try {
@@ -241,12 +264,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const quickLogin = useMemo(() => ({ available: parked && Boolean(authSession), email: authSession?.user.email ?? authSession?.user.phone ?? null }), [parked, authSession]);
 
+  const feature = useCallback((key: FeatureKey) => {
+    const f = featureCfg[key];
+    if (!f) return true;
+    if (f.on === false) return false;
+    if (!f.campuses?.length || !profile) return true;
+    return Boolean(profile.campus_id && f.campuses.includes(profile.campus_id));
+  }, [featureCfg, profile]);
+  const forcedLang = feature('language') ? null : (featureCfg.language?.default === 'ar' ? 'ar' : 'en');
+
+  const shopOnline = feature('shop_online');
+  const visibleMerchants = useMemo(() => (shopOnline ? merchants : merchants.filter((m) => m.channel !== 'online')), [merchants, shopOnline]);
+
   const value = useMemo<Ctx>(() => ({
-    ready, session, quickLogin, biometricLogin, profile, stats, campus, merchants, coords, favorites,
+    feature, forcedLang,
+    ready, session, quickLogin, biometricLogin, profile, stats, campus, merchants: visibleMerchants, coords, favorites,
     area, setArea, origin, areaLabel, recentAreas, clearRecentAreas, popularity,
     refreshProfile, refreshMerchants, refreshLocation, toggleFavorite, signOut,
-  }), [ready, session, profile, stats, campus, merchants, coords, favorites, area, setArea, origin, areaLabel, recentAreas, clearRecentAreas, popularity,
-    refreshProfile, refreshMerchants, refreshLocation, toggleFavorite, signOut, quickLogin, biometricLogin]);
+  }), [ready, session, profile, stats, campus, visibleMerchants, coords, favorites, area, setArea, origin, areaLabel, recentAreas, clearRecentAreas, popularity,
+    refreshProfile, refreshMerchants, refreshLocation, toggleFavorite, signOut, quickLogin, biometricLogin, feature, forcedLang]);
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

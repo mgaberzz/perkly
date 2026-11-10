@@ -42,7 +42,7 @@ export function Avatar({ profile, size = 40 }: { profile: AvatarSource; size?: n
 
 /** Tap: create/edit the cartoon avatar, take or choose a photo, switch between them, or remove. */
 export function EditableAvatar({ size = 96 }: { size?: number }) {
-  const { session, profile, refreshProfile } = useSession();
+  const { session, profile, refreshProfile, feature } = useSession();
   const [busy, setBusy] = useState(false);
   const uid = session?.user.id;
   const path = profile?.avatar_path ?? null;
@@ -65,11 +65,11 @@ export function EditableAvatar({ size = 96 }: { size?: number }) {
   function open() {
     if (!uid || busy) return;
     Alert.alert(t('Profile Picture'), undefined, [
-      { text: hasCartoon ? `🧑‍🎨 ${t('Edit My Avatar')}` : `🧑‍🎨 ${t('Create My Avatar')}`, onPress: () => router.push('/avatar') },
+      ...(feature('avatar_builder') ? [{ text: hasCartoon ? `🧑‍🎨 ${t('Edit My Avatar')}` : `🧑‍🎨 ${t('Create My Avatar')}`, onPress: () => router.push('/avatar') }] : []),
       { text: `📷 ${t('Take Photo')}`, onPress: () => run(() => changeAvatar(uid, 'camera', path)) },
       { text: `🖼️ ${t('Choose from Photos')}`, onPress: () => run(() => changeAvatar(uid, 'library', path)) },
       ...(kind === 'cartoon' && path ? [{ text: t('Show My Photo Instead'), onPress: () => run(() => showAvatarKind(uid, 'photo')) }] : []),
-      ...(kind === 'photo' && hasCartoon ? [{ text: t('Show My Avatar Instead'), onPress: () => run(() => showAvatarKind(uid, 'cartoon')) }] : []),
+      ...(kind === 'photo' && hasCartoon && feature('avatar_builder') ? [{ text: t('Show My Avatar Instead'), onPress: () => run(() => showAvatarKind(uid, 'cartoon')) }] : []),
       ...(kind === 'photo' ? [{ text: t('Remove Photo'), style: 'destructive' as const, onPress: () => run(() => removeAvatar(uid, path, hasCartoon)) }] : []),
       ...(kind === 'cartoon' ? [{ text: t('Remove Avatar'), style: 'destructive' as const, onPress: () => run(() => removeCartoon(uid, !!path)) }] : []),
       { text: t('Cancel'), style: 'cancel' as const },

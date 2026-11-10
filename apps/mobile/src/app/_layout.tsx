@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BiometricGate } from '@/components/biometric-gate';
 import { OfflineBar } from '@/components/offline-bar';
 import { biometricAvailable, biometricEnabled, setBiometricEnabled } from '@/lib/biometric';
-import { initLanguage, t } from '@/lib/i18n';
+import { initLanguage, lang, setLanguage, t } from '@/lib/i18n';
 import { useNotificationTaps } from '@/lib/push';
 import { Sentry } from '@/lib/sentry';
 import { SessionProvider, useSession } from '@/lib/session';
@@ -18,7 +18,9 @@ import { brand } from '@/lib/theme';
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function RootStack() {
-  const { ready, session, profile, quickLogin, signOut } = useSession();
+  const { ready, session, profile, quickLogin, signOut, forcedLang } = useSession();
+  // Language switch turned off by the Perkly team → use their chosen language (restarts once)
+  useEffect(() => { if (forcedLang && lang() !== forcedLang) setLanguage(forcedLang); }, [forcedLang]);
   const segments = useSegments();
   useNotificationTaps(ready && !!session);
   useEffect(() => { if (ready) SplashScreen.hideAsync().catch(() => {}); }, [ready]);

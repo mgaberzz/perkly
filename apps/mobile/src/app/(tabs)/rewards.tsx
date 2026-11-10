@@ -28,7 +28,7 @@ const STREAK_MILESTONES = [3, 5, 7, 14, 30];
 
 export default function Rewards() {
   const { c } = useTheme();
-  const { session, stats, refreshProfile } = useSession();
+  const { session, stats, refreshProfile, feature } = useSession();
   const [quests, setQuests] = useState<Quest[]>([]);
   const [progress, setProgress] = useState<UserQuest[]>([]);
   const [badges, setBadges] = useState<Badge[]>([]);
@@ -69,31 +69,31 @@ export default function Rewards() {
             <Text style={{ color: '#fff', fontWeight: '900', fontSize: 26 }}>{cur.name}</Text>
             <Text onPress={() => router.push({ pathname: '/explain', params: { metric: 'xp' } })} style={{ color: '#ffffffdd', fontWeight: '700', textDecorationLine: 'underline' }}>{t('{n} XP Total', { n: stats?.total_xp ?? 0 })}</Text>
           </View>
-          <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'streak' } })} style={{ backgroundColor: '#ffffff26', borderRadius: 20, padding: 12, alignItems: 'center' }}>
+          {feature('streaks') && <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'streak' } })} style={{ backgroundColor: '#ffffff26', borderRadius: 20, padding: 12, alignItems: 'center' }}>
             <StreakFlame days={streak} size={34} />
             <Text style={{ color: '#fff', fontWeight: '700', fontSize: 11 }}>{t('Day Streak')}</Text>
-          </Pressable>
+          </Pressable>}
         </View>
         <View style={{ backgroundColor: '#ffffff', borderRadius: 16, padding: 12 }}><XPBar totalXp={stats?.total_xp ?? 0} /></View>
-        <Text style={{ color: '#fff', fontWeight: '700' }}>
+        {feature('streaks') && <Text style={{ color: '#fff', fontWeight: '700' }}>
           {streak === 0 ? t('Use a perk today to start your streak 🔥')
             : nextMilestone ? t('{n} more day(s) to your {m}-day bonus!', { n: nextMilestone - streak, m: nextMilestone })
               : t('Legendary streak. You’re on fire 👑')}
           {stats?.freeze_tokens ? `  ·  ❄️ ${t('{n} Freeze', { n: stats.freeze_tokens })}` : ''}
-        </Text>
+        </Text>}
       </GradientCard>
 
-      <Card onPress={() => router.push('/arcade')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderColor: '#FFD25A', borderWidth: 2 }}>
+      {feature('arcade') && <Card onPress={() => router.push('/arcade')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderColor: '#FFD25A', borderWidth: 2 }}>
         <Text style={{ fontSize: 40 }}>🎡</Text>
         <View style={{ flex: 1 }}>
           <T v="h3">{t('Arcade · Spin the Wheel')}</T>
           <T v="small">{t('{n} Ticket(s) · Every Spin Wins XP or a Streak Freeze', { n: stats?.spin_tickets ?? 0 })}</T>
         </View>
         <T v="h3" color={brand.purple}>{t('Play')} {fwdChevron()}</T>
-      </Card>
+      </Card>}
 
-      <SectionHeader title={`${t('Quests')} 🎯`} />
-      {(['daily', 'weekly', 'monthly'] as const).map((type) => {
+      {feature('quests') && <SectionHeader title={`${t('Quests')} 🎯`} />}
+      {feature('quests') && (['daily', 'weekly', 'monthly'] as const).map((type) => {
         const list = quests.filter((q) => q.quest_type === type);
         if (!list.length) return null;
         return (
@@ -124,8 +124,8 @@ export default function Rewards() {
         );
       })}
 
-      <SectionHeader title={`${t('Badges')} 🏅`} />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+      {feature('badges') && <SectionHeader title={`${t('Badges')} 🏅`} />}
+      {feature('badges') && <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {badges.map((b) => {
           const got = mine.has(b.id);
           return (
@@ -135,8 +135,9 @@ export default function Rewards() {
             </View>
           );
         })}
-      </View>
+      </View>}
 
+      {feature('leaderboard') && <>
       <SectionHeader title={`${t("This week's leaderboard")} 🥇`} />
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <Chip label={t('My Campus')} active={scope === 'campus'} onPress={() => setScope('campus')} />
@@ -156,6 +157,7 @@ export default function Rewards() {
         ))}
       </Card>
       <T v="small" style={{ textAlign: 'center' }}>{t('Leaderboards reset every Monday.')}</T>
+      </>}
     </Screen>
   );
 }

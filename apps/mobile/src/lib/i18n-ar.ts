@@ -1,5 +1,6 @@
 // Arabic translations for the student app. Keys are the English text used in the code (see lib/i18n.ts).
 export const AR: Record<string, string> = {
+  "Paying in the app is off right now. Pay at the cashier as usual 💜": "الدفع من التطبيق مقفول دلوقتي. ادفع عند الكاشير عادي 💜",
   "20%+ Off": "خصم 20٪+",
   "Mobile Number": "رقم الموبايل",
   "Add": "إضافة",
@@ -258,7 +259,7 @@ export const AR: Record<string, string> = {
   "Invalid code. Check and try again.": "الكود غلط. راجعه وجرّب تاني.",
   "Invite & Earn XP 💜": "ادعُ واكسب XP 💜",
   "Invite Code (Optional)": "كود الدعوة (اختياري)",
-  "Invite friends, earn XP": "ادعُ أصحابك واكسب XP",
+  "Invite Friends, Earn XP": "ادعُ أصحابك واكسب XP",
   "It's printed under the QR (starts with PK-).": "مكتوب تحت الكود (بيبدأ بـ PK-).",
   "LEVEL {n}": "المستوى {n}",
   "Language": "اللغة",

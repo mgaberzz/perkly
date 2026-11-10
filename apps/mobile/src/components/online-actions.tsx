@@ -7,6 +7,7 @@ import { Text } from './text';
 import { Button, Card, T } from './ui';
 import { friendlyError } from '@/lib/errors';
 import { t } from '@/lib/i18n';
+import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { brand } from '@/lib/theme';
 import type { Merchant, Perk } from '@/lib/types';
@@ -20,7 +21,8 @@ export function OnlineActions({ merchant, perk }: { merchant: Merchant; perk?: P
   const [code, setCode] = useState<{ code: string; expires_at: string } | null>(null);
   const [busy, setBusy] = useState<'code' | 'link' | null>(null);
   const [error, setError] = useState<string | null>(null);
-  if (merchant.channel === 'in_store') return null;
+  const { feature } = useSession();
+  if (merchant.channel === 'in_store' || !feature('shop_online')) return null;
   const hasLink = Boolean(merchant.affiliate_url ?? merchant.website_url);
 
   async function getCode() {

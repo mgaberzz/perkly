@@ -10,7 +10,7 @@ import { t } from '@/lib/i18n';
 
 /** Shared by onboarding ("Complete your profile") and Edit profile. */
 export function ProfileForm({ submitLabel, onDone, showInvite }: { submitLabel: string; onDone: () => void; showInvite?: boolean }) {
-  const { session, profile, refreshProfile } = useSession();
+  const { session, profile, refreshProfile, feature } = useSession();
   const campuses = useCampuses();
   const [name, setName] = useState(profile?.full_name ?? '');
   const [email, setEmail] = useState(profile?.email ?? session?.user.email ?? '');
@@ -71,7 +71,7 @@ export function ProfileForm({ submitLabel, onDone, showInvite }: { submitLabel: 
         <PickerField label={t('Campus')} value={campus ? campus.name : null} placeholder={t('Choose Your Campus')} icon="🎓" onPress={() => setPicker(true)} />
         {errors.campus ? <T v="small" color={brand.danger} style={{ marginTop: 6 }}>{errors.campus}</T> : null}
       </View>
-      {showInvite && !profile?.referred_by && (
+      {showInvite && feature('invite') && !profile?.referred_by && (
         <TextField label={t('Invite Code (Optional)')} value={invite} onChangeText={setInvite} placeholder="FRIEND12" autoCapitalize="characters" error={errors.invite}
           hint={t('Your friend earns XP when you redeem your first perk')} />
       )}

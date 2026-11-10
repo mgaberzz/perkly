@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin, requireStaff } from "@/lib/auth";
 import { addMember, addPartnerMember } from "@/lib/members";
 import { parsePerkForm } from "@/lib/perk-form";
+import { APP_FEATURES } from "@/lib/features";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { SITE_URL } from "@/lib/env";
 import { BRAND_TYPES, STAFF_ROLES, type ActionState, type MemberRole } from "@/lib/types";
@@ -149,6 +150,24 @@ export async function setVerificationRules(_: ActionState, fd: FormData): Promis
   if (error || !(data as { ok: boolean } | null)?.ok) return { error: error?.message ?? "Could not save." };
   revalidatePath("/admin/settings");
   return { ok: "Saved." };
+}
+
+// ───────── App feature switches ─────────
+export async function saveAppFeatures(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireStaff("settings");
+  const uuid = /^[0-9a-f-]{36}$/i;
+  const value: Record<string, { on: boolean; campuses: string[]; default?: "en" | "ar" }> = {};
+  for (const f of APP_FEATURES) {
+    value[f.key] = {
+      on: fd.get(`on_${f.key}`) === "on",
+      campuses: [...new Set(fd.getAll(`campuses_${f.key}`).map(String).filter((c) => uuid.test(c)))],
+    };
+  }
+  value.language.default = str(fd, "language_default") === "ar" ? "ar" : "en";
+  const { error } = await supabase.from("app_settings").upsert({ key: "features", value, updated_at: new Date().toISOString() });
+  if (error) return { error: error.message };
+  revalidatePath("/admin/settings");
+  return { ok: "Saved. Students see the change the next time they open or refresh the app." };
 }
 
 // ───────── Push notifications ─────────

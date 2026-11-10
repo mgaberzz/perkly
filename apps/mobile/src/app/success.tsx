@@ -12,6 +12,7 @@ import { getLastRedemption } from '@/lib/redemption-store';
 import { supabase } from '@/lib/supabase';
 import { brand } from '@/lib/theme';
 import { locale, t } from '@/lib/i18n';
+import { useSession } from '@/lib/session';
 
 const CONFETTI = ['🎉', '✨', '💜', '🎊', '⭐', '💸'];
 
@@ -20,6 +21,7 @@ const CONFETTI = ['🎉', '✨', '💜', '🎊', '⭐', '💸'];
  * Anti-screenshot: live ticking clock, pulsing ring and a moving shimmer — a photo looks frozen.
  */
 export default function Success() {
+  const { feature } = useSession();
   const r = getLastRedemption();
   const [now, setNow] = useState(() => new Date());
   const pulse = useRef(new Animated.Value(0)).current;
@@ -147,7 +149,7 @@ export default function Success() {
             )}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               <Pill onPress={() => router.push({ pathname: '/explain', params: { metric: 'redemption', id: r.redemption_id } })} big={`+${r.xp_awarded} XP ⚡`} small={r.leveled_up ? t('Level up! You’re {name} now 🚀', { name: t(r.level_name) }) : t('Lv {n} · {name}', { n: r.level, name: t(r.level_name) })} />
-              <Pill onPress={() => router.push({ pathname: '/explain', params: { metric: 'streak' } })} big={`${r.streak} 🔥`} small={r.used_freeze_token ? t('Streak Saved by Freeze ❄️') : t('Day Streak')} />
+              {feature('streaks') && <Pill onPress={() => router.push({ pathname: '/explain', params: { metric: 'streak' } })} big={`${r.streak} 🔥`} small={r.used_freeze_token ? t('Streak Saved by Freeze ❄️') : t('Day Streak')} />}
             </View>
             {r.first_time_at_merchant && <Pill big={t('New Spot Unlocked 🧭')} small={t('+25 XP for Trying Somewhere New')} />}
             {r.quests_completed.map((q) => <Pill key={q.title} big={`${q.emoji} ${t(q.title)}`} small={t('Quest Complete · +{n} XP', { n: q.xp_reward })} />)}

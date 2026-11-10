@@ -18,7 +18,7 @@ const COLLECTIONS = [
 
 export default function Explore() {
   const { c } = useTheme();
-  const { merchants, origin: coords, favorites } = useSession();
+  const { merchants, origin: coords, favorites, feature } = useSession();
   const { fav } = useLocalSearchParams<{ fav?: string }>();
   const [q, setQ] = useState('');
   const [cat, setCat] = useState<string | null>(null);
@@ -62,7 +62,7 @@ export default function Explore() {
         })}
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-        {COLLECTIONS.map((x) => <Chip key={x.key} label={`${x.icon} ${t(x.label)}`} active={collection === x.key} onPress={() => setCollection(collection === x.key ? null : x.key)} />)}
+        {COLLECTIONS.filter((x) => x.key !== 'flash' || feature('flash_perks')).map((x) => <Chip key={x.key} label={`${x.icon} ${t(x.label)}`} active={collection === x.key} onPress={() => setCollection(collection === x.key ? null : x.key)} />)}
         <View style={{ width: 8 }} />
         {coords && <Chip label={t('Nearest')} active={sort === 'near'} onPress={() => setSort('near')} />}
         <Chip label={t('Best Deal')} active={sort === 'best'} onPress={() => setSort('best')} />

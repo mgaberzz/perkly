@@ -15,7 +15,7 @@ type Recent = { id: string; created_at: string; merchant_name: string; perk_titl
 
 export default function Me() {
   const { c } = useTheme();
-  const { session, profile, stats, campus, merchants, favorites, refreshProfile } = useSession();
+  const { session, profile, stats, campus, merchants, favorites, refreshProfile, feature } = useSession();
   const [recent, setRecent] = useState<Recent[]>([]);
   const [unread, setUnread] = useState(0);
 
@@ -59,7 +59,7 @@ export default function Me() {
           </View>
         ) : null}
       </GradientCard>
-      {profile?.role === 'student' && profile.verification_status !== 'verified' && (
+      {feature('verification') && profile?.role === 'student' && profile.verification_status !== 'verified' && (
         <Card onPress={() => router.push('/student-verification')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderColor: profile.verification_status === 'rejected' ? brand.danger : brand.purple }}>
           <Text style={{ fontSize: 26 }}>{profile.verification_status === 'pending' ? '⏳' : profile.verification_status === 'rejected' ? '❌' : '🎓'}</Text>
           <View style={{ flex: 1 }}>
@@ -76,7 +76,7 @@ export default function Me() {
         <Card style={{ flex: 1, minWidth: 100 }} onPress={() => router.push('/arcade')}><T v="label">{t('Spins')}</T><T v="h2">🎟️ {stats?.spin_tickets ?? 0}</T></Card>
       </View>
 
-      {(Number(stats?.cashback_balance ?? 0) > 0 || Number(stats?.cashback_pending ?? 0) > 0) && (
+      {feature('shop_online') && (Number(stats?.cashback_balance ?? 0) > 0 || Number(stats?.cashback_pending ?? 0) > 0) && (
         <Card onPress={() => router.push({ pathname: '/explain', params: { metric: 'cashback' } })} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Text style={{ fontSize: 28 }}>💸</Text>
           <View style={{ flex: 1 }}>
@@ -102,7 +102,7 @@ export default function Me() {
         ))}
       </Card>
 
-      <GradientCard style={{ gap: 10 }}>
+      {feature('invite') && <GradientCard style={{ gap: 10 }}>
         <Text style={{ color: '#fff', fontSize: 20, fontWeight: '900' }}>{t('Invite & Earn XP 💜')}</Text>
         <Text style={{ color: '#ffffffdd', fontWeight: '600' }}>{t('You get +50 XP when a friend redeems their first perk.')}</Text>
         <Pressable onPress={() => Share.share({ message: t('Bestie… why are you paying full price? 😭 Get student perks on Perkly — use my code {code} 💜', { code: profile?.referral_code }) })}
@@ -110,7 +110,7 @@ export default function Me() {
           <Text style={{ fontWeight: '900', fontSize: 18, letterSpacing: 2, color: brand.ink }}>{profile?.referral_code}</Text>
           <Text style={{ fontWeight: '900', color: brand.purple }}>{t('Share')} ↗</Text>
         </Pressable>
-      </GradientCard>
+      </GradientCard>}
 
       <SectionHeader title={`♥ ${t('My Favs')}`} />
       {favMerchants.length ? favMerchants.map((m) => <MerchantRow key={m.id} m={m} />)

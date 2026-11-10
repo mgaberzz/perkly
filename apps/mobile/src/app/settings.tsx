@@ -16,7 +16,7 @@ const VERIFY_LABEL: Record<string, string> = { unverified: 'Not verified', pendi
 
 export default function Settings() {
   const { c } = useTheme();
-  const { session, profile, refreshProfile, signOut } = useSession();
+  const { session, profile, refreshProfile, signOut, feature } = useSession();
   const [drops, setDrops] = useState(profile?.marketing_opt_in ?? false);
   const [reminders, setReminders] = useState(profile?.reminders_opt_in ?? true);
   const [deleting, setDeleting] = useState(false);
@@ -134,8 +134,8 @@ export default function Settings() {
         <Row label={`👤 ${t('Edit Profile & Campus')}`} onPress={() => router.push('/edit-profile')} />
         <Row label={`🧾 ${t('Savings History')}`} onPress={() => router.push('/history')} />
         {profile?.student_code ? <Row label={`🎓 ${t('Student ID')}`} right={<T v="small" style={{ writingDirection: 'ltr', fontWeight: '800' }}>{profile.student_code}</T>} /> : null}
-        <Row label={`🎓 ${t('Student Verification')}`} onPress={() => router.push('/student-verification')}
-          right={<T v="small" color={profile?.verification_status === 'verified' ? brand.success : profile?.verification_status === 'rejected' ? brand.danger : brand.purple}>{t(VERIFY_LABEL[profile?.verification_status ?? 'unverified'])} {fwdChevron()}</T>} />
+        {feature('verification') && <Row label={`🎓 ${t('Student Verification')}`} onPress={() => router.push('/student-verification')}
+          right={<T v="small" color={profile?.verification_status === 'verified' ? brand.success : profile?.verification_status === 'rejected' ? brand.danger : brand.purple}>{t(VERIFY_LABEL[profile?.verification_status ?? 'unverified'])} {fwdChevron()}</T>} />}
         <Row label={`🆔 ${t('User ID')}`} right={<T v="small" style={{ writingDirection: 'ltr', fontWeight: '800' }}>{profile?.user_code}</T>} />
         <Row label={`📞 ${t('Mobile Number')}`} onPress={() => router.push('/edit-profile')}
           right={<T v="small" style={{ writingDirection: 'ltr' }}>{profile?.phone ? profile.phone.replace(/^\+20/, '0') : t('Add')}</T>} />
@@ -147,7 +147,7 @@ export default function Settings() {
           ? <Row label={`🔐 ${t('Log In with {method}', { method: bio.label })}`} right={<Switch value={bio.on} onValueChange={toggleBio} trackColor={{ true: brand.purple }} />} />
           : <Row label={`🔐 ${t('Biometric Login')}`} right={<T v="small">{Platform.OS === 'web' ? t('Phone Only') : t('Set up Face ID / fingerprint on your phone first')}</T>} />}
         {bio.ok && faceIdLimitedHere && <T v="small" style={{ paddingVertical: 10 }}>{t('Testing in Expo Go: iPhone asks for your passcode instead of Face ID. Face ID works in the real Perkly app.')}</T>}
-        <Row label={`🌐 ${t('Language')}`} onPress={switchLanguage} right={<T v="small" color={brand.purple}>{lang() === 'ar' ? 'العربية ⇄ English' : 'English ⇄ العربية'}</T>} />
+        {feature('language') && <Row label={`🌐 ${t('Language')}`} onPress={switchLanguage} right={<T v="small" color={brand.purple}>{lang() === 'ar' ? 'العربية ⇄ English' : 'English ⇄ العربية'}</T>} />}
       </Card>
       <T v="label">{t('Notifications')}</T>
       <Card style={{ gap: 0, paddingVertical: 0 }}>

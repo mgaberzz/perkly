@@ -1,10 +1,12 @@
 import { requireStaff } from "@/lib/auth";
-import { Badge, Card, Input, PageHeader } from "@/components/ui";
+import { Badge, Card, Input, PageHeader, Select } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/action-form";
 import { AccountSettings } from "@/components/account-settings";
 import { SentryTest } from "@/components/sentry-test";
 import { getT } from "@/lib/i18n/server";
-import { setPaymentsMode, setRedemptionRules, setVatRate, setVerificationRules } from "../actions";
+import { MultiSelect } from "@/components/multi-select";
+import { APP_FEATURES, type FeatureCfg } from "@/lib/features";
+import { saveAppFeatures, setPaymentsMode, setRedemptionRules, setVatRate, setVerificationRules } from "../actions";
 
 export const metadata = { title: "Settings" };
 
@@ -13,7 +15,7 @@ export default async function SettingsPage() {
   const t = await getT();
   const platform = can("settings");
   const { data: rows } = platform
-    ? await supabase.from("app_settings").select("key, value").in("key", ["tax", "payments", "redemption_rules", "student_verification"])
+    ? await supabase.from("app_settings").select("key, value").in("key", ["tax", "payments", "redemption_rules", "student_verification", "features"])
     : { data: [] };
   const get = (k: string) => ((rows ?? []).find((r) => r.key === k)?.value ?? {}) as Record<string, unknown>;
   const vat = Number(get("tax").vat_pct ?? 14);
@@ -21,6 +23,9 @@ export default async function SettingsPage() {
   const limit = Number(get("redemption_rules").max_per_merchant_per_day ?? 4);
   const verifyRequired = get("student_verification").required === true;
   const freeRedemptions = Number(get("student_verification").free_redemptions ?? 0);
+  const features = get("features") as FeatureCfg;
+  const { data: campuses } = platform ? await supabase.from("campuses").select("id, name").order("name") : { data: [] };
+  const campusOptions = (campuses ?? []).map((c) => ({ value: c.id, label: c.name }));
 
   return (
     <>
@@ -73,6 +78,38 @@ export default async function SettingsPage() {
           </div>
         )}
       </div>
+      {platform && (
+        <Card className="mt-6" title={t("App features")}>
+          <p className="-mt-1 mb-4 text-sm text-zinc-500">
+            {t("Show or hide parts of the student app. No new app version needed: students see the change the next time they open or refresh the app. Leave campuses empty for everyone, or pick campuses to turn a feature on only there.")}
+          </p>
+          <ActionForm action={saveAppFeatures} className="space-y-3">
+            {APP_FEATURES.map((f) => {
+              const cfg = features[f.key] ?? {};
+              return (
+                <div key={f.key} className="grid gap-3 rounded-xl border border-zinc-200 p-3 md:grid-cols-[1fr_minmax(0,22rem)] md:items-center">
+                  <label className="flex items-start gap-3">
+                    <input type="checkbox" name={`on_${f.key}`} defaultChecked={cfg.on !== false} className="mt-1 h-4 w-4 accent-perk-purple" />
+                    <span><span className="block text-sm font-semibold">{t(f.label)}</span><span className="block text-xs text-zinc-500">{t(f.hint)}</span></span>
+                  </label>
+                  <div className="space-y-2">
+                    <MultiSelect name={`campuses_${f.key}`} options={campusOptions} defaultValues={cfg.campuses ?? []} placeholder={t("All campuses")} allLabel={t("All campuses")} />
+                    {f.key === "language" && (
+                      <label className="flex items-center gap-2 text-xs text-zinc-500">
+                        {t("When off, everyone uses")}
+                        <Select name="language_default" defaultValue={cfg.default ?? "en"} className="w-36">
+                          <option value="en">English</option><option value="ar">العربية</option>
+                        </Select>
+                      </label>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            <SubmitButton>{t("Save app features")}</SubmitButton>
+          </ActionForm>
+        </Card>
+      )}
     </>
   );
 }

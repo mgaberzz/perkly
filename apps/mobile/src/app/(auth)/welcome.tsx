@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui';
 import { brand } from '@/lib/theme';
 import { lang, setLanguage, t } from '@/lib/i18n';
+import { useSession } from '@/lib/session';
 
 const SLIDES = [
   { emoji: '💸', title: 'Save on everything you’re obsessed with.', body: 'Coffee, food, fashion, gyms — student perks around your campus.' },
@@ -15,6 +16,7 @@ const SLIDES = [
 ];
 
 export default function Welcome() {
+  const { feature } = useSession();
   const { width, height } = useWindowDimensions();
   const [i, setI] = useState(0);
   const list = useRef<FlatList>(null);
@@ -22,10 +24,10 @@ export default function Welcome() {
   return (
     <LinearGradient colors={[brand.purple, brand.pink]} style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
-        <Pressable onPress={() => setLanguage(lang() === 'ar' ? 'en' : 'ar')} hitSlop={10}
+        {feature('language') ? <Pressable onPress={() => setLanguage(lang() === 'ar' ? 'en' : 'ar')} hitSlop={10}
           style={{ alignSelf: 'flex-end', marginEnd: 20, marginTop: 8, backgroundColor: '#ffffff26', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6 }}>
           <Text style={{ color: '#fff', fontWeight: '800' }}>🌐 {lang() === 'ar' ? 'English' : 'العربية'}</Text>
-        </Pressable>
+        </Pressable> : <View style={{ height: 40 }} />}
         <Text style={{ color: '#fff', fontSize: 28, fontWeight: '900', textAlign: 'center', marginTop: 8 }}>Perkly</Text>
         <Text style={{ color: '#ffffffcc', textAlign: 'center', fontWeight: '600' }}>{t('Unlock Perks. Live Smart.')}</Text>
         <FlatList

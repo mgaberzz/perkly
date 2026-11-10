@@ -17,7 +17,7 @@ const MODES = ['Perks', 'Flash', 'Places'] as const;
 export default function CategoryScreen() {
   const { name } = useLocalSearchParams<{ name: string }>();
   const { c } = useTheme();
-  const { areaLabel } = useSession();
+  const { areaLabel, feature } = useSession();
   const all = usePerkItems();
   const [mode, setMode] = useState<(typeof MODES)[number]>('Perks');
   const [sub, setSub] = useState('All');
@@ -37,7 +37,7 @@ export default function CategoryScreen() {
   }, [inCat, sub, mode, q]);
   const list = useMemo(() => applySortFilter(scoped, sort, filters), [scoped, sort, filters]);
   const trending = useMemo(() => applySortFilter(scoped, 'popular', NO_FILTERS).slice(0, 8), [scoped]);
-  const collections = COLLECTIONS.filter((col) => scoped.some(col.match));
+  const collections = feature('collections') ? COLLECTIONS.filter((col) => (col.key !== 'flash' || feature('flash_perks')) && scoped.some(col.match)) : [];
   const filtered = filters.flashOnly || filters.noMinSpend || filters.big;
 
   return (
