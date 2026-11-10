@@ -90,7 +90,7 @@ export default function Me() {
       <SectionHeader title={`🧾 ${t('My redemptions')}`} action={`${t('View all')} ${fwdChevron()}`} onAction={() => router.push('/history')} />
       <Card style={{ gap: 0, paddingVertical: recent.length ? 4 : 24 }}>
         {recent.length === 0 ? (
-          <T v="muted" style={{ textAlign: 'center' }}>{t('You haven’t redeemed a perk yet — scan your first QR 💜')}</T>
+          <T v="muted" style={{ textAlign: 'center' }}>{t('No perks used yet. Scan your first QR and start saving 💜')}</T>
         ) : recent.map((r, i) => (
           <Pressable key={r.id} onPress={() => router.push({ pathname: '/explain', params: { metric: 'redemption', id: r.id } })} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: i < recent.length - 1 ? 1 : 0, borderBottomColor: c.border }}>
             <View style={{ flex: 1 }}>
@@ -103,7 +103,7 @@ export default function Me() {
       </Card>
 
       <GradientCard style={{ gap: 10 }}>
-        <Text style={{ color: '#fff', fontSize: 20, fontWeight: '900' }}>{t('Invite & Earn XP 💜')}</Text>
+        <Text style={{ color: '#fff', fontSize: 20, fontWeight: '900' }}>{t('Invite & earn XP 💜')}</Text>
         <Text style={{ color: '#ffffffdd', fontWeight: '600' }}>{t('You get +50 XP when a friend redeems their first perk.')}</Text>
         <Pressable onPress={() => Share.share({ message: t('Bestie… why are you paying full price? 😭 Get student perks on Perkly — use my code {code} 💜', { code: profile?.referral_code }) })}
           style={{ backgroundColor: '#fff', borderRadius: 16, padding: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -114,7 +114,7 @@ export default function Me() {
 
       <SectionHeader title={`♥ ${t('My faves')}`} />
       {favMerchants.length ? favMerchants.map((m) => <MerchantRow key={m.id} m={m} />)
-        : <Card style={{ paddingVertical: 24 }}><T v="muted" style={{ textAlign: 'center' }}>{t('Tap ♡ on any perk to save the place here.')}</T></Card>}
+        : <Card style={{ paddingVertical: 24 }}><T v="muted" style={{ textAlign: 'center' }}>{t('Tap ♡ on any perk to save your fave spots here.')}</T></Card>}
     </Screen>
   );
 }

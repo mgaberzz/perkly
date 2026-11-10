@@ -76,9 +76,9 @@ export default function Rewards() {
         </View>
         <View style={{ backgroundColor: '#ffffff', borderRadius: 16, padding: 12 }}><XPBar totalXp={stats?.total_xp ?? 0} /></View>
         <Text style={{ color: '#fff', fontWeight: '700' }}>
-          {streak === 0 ? t('Redeem a perk today to start a streak 🔥')
+          {streak === 0 ? t('Use a perk today to start your streak 🔥')
             : nextMilestone ? t('{n} more day(s) to your {m}-day bonus!', { n: nextMilestone - streak, m: nextMilestone })
-              : t('Legendary streak. Keep it alive 👑')}
+              : t('Legendary streak. You’re on fire 👑')}
           {stats?.freeze_tokens ? `  ·  ❄️ ${t('{n} freeze', { n: stats.freeze_tokens })}` : ''}
         </Text>
       </GradientCard>

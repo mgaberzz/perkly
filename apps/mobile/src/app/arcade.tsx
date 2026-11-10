@@ -121,7 +121,7 @@ export default function Arcade() {
                 <Text>⚡</Text><Text style={{ color: '#fff', fontWeight: '900' }}>{stats?.total_xp ?? 0}</Text>
               </View>
               <View style={{ flex: 1 }} />
-              <Pressable onPress={() => setTour(0)}><Text style={{ color: '#fff', fontWeight: '800' }}>{t('How it works?')}</Text></Pressable>
+              <Pressable onPress={() => setTour(0)}><Text style={{ color: '#fff', fontWeight: '800' }}>{t('How it works')}</Text></Pressable>
             </View>
             <Text style={{ color: '#fff', fontSize: 26, fontWeight: '900', lineHeight: 30 }}>{t('SPIN\nTHE WHEEL')}</Text>
             <Text style={{ color: '#ffffffcc', fontWeight: '600' }}>{t('Every spin wins · 1 🎟️ per spin')}</Text>
@@ -203,7 +203,7 @@ export default function Arcade() {
             ) : (
               <>
                 <Text style={{ fontSize: 60 }}>🎟️</Text>
-                <Text style={{ fontSize: 24, fontWeight: '900', color: brand.ink }}>{result?.error === 'no_tickets' ? t('Out of tickets') : t('Oops!')}</Text>
+                <Text style={{ fontSize: 24, fontWeight: '900', color: brand.ink }}>{result?.error === 'no_tickets' ? t('Out of tickets 😭') : t('Oops!')}</Text>
                 <Text style={{ color: '#6B6680', fontWeight: '600', textAlign: 'center' }}>
                   {result?.error === 'no_tickets' ? t('Redeem a perk today or finish a quest to earn another spin.') : t('Wi-Fi acting up? Try again in a sec 💜')}
                 </Text>

@@ -143,15 +143,15 @@ export default function Success() {
           {/* Rewards */}
           <Animated.View style={{ width: '100%', gap: 10, opacity: xp, transform: [{ translateY: xp.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
             {r.discount_amount != null && (
-              <Text style={{ color: '#fff', fontSize: 24, fontWeight: '900', textAlign: 'center' }}>{t('Success! You saved {amount} 🎉', { amount: egp(r.discount_amount) })}</Text>
+              <Text style={{ color: '#fff', fontSize: 24, fontWeight: '900', textAlign: 'center' }}>{t('Slay! You saved {amount} 🎉', { amount: egp(r.discount_amount) })}</Text>
             )}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-              <Pill onPress={() => router.push({ pathname: '/explain', params: { metric: 'redemption', id: r.redemption_id } })} big={`+${r.xp_awarded} XP ⚡`} small={r.leveled_up ? t('Level up! {name}', { name: t(r.level_name) }) : t('Lv {n} · {name}', { n: r.level, name: t(r.level_name) })} />
+              <Pill onPress={() => router.push({ pathname: '/explain', params: { metric: 'redemption', id: r.redemption_id } })} big={`+${r.xp_awarded} XP ⚡`} small={r.leveled_up ? t('Level up! You’re {name} now 🚀', { name: t(r.level_name) }) : t('Lv {n} · {name}', { n: r.level, name: t(r.level_name) })} />
               <Pill onPress={() => router.push({ pathname: '/explain', params: { metric: 'streak' } })} big={`${r.streak} 🔥`} small={r.used_freeze_token ? t('Streak saved by freeze ❄️') : t('day streak')} />
             </View>
             {r.first_time_at_merchant && <Pill big={t('New spot unlocked 🧭')} small={t('+25 XP for trying somewhere new')} />}
             {r.quests_completed.map((q) => <Pill key={q.title} big={`${q.emoji} ${t(q.title)}`} small={t('Quest complete · +{n} XP', { n: q.xp_reward })} />)}
-            {r.badges_unlocked.map((b) => <Pill key={b.code} big={`${b.emoji} ${t(b.name)}`} small={t('New badge unlocked!')} />)}
+            {r.badges_unlocked.map((b) => <Pill key={b.code} big={`${b.emoji} ${t(b.name)}`} small={t('New badge unlocked! 🏆')} />)}
           </Animated.View>
 
           <View style={{ alignSelf: 'stretch', marginTop: 8, gap: 10 }}>

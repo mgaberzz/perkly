@@ -64,14 +64,14 @@ export default function StudentVerification() {
   const freeLeft = v ? Math.max(0, v.free_redemptions - v.used) : 0;
 
   const banner = {
-    verified: { icon: '✅', title: t("You're a verified student"), body: t('Valid until {date}.', { date: v?.verified_until ? shortDate(v.verified_until, { day: 'numeric', month: 'short', year: 'numeric' }) : '—' }), tone: brand.success },
+    verified: { icon: '✅', title: t("You’re verified ✅"), body: t('Valid until {date}.', { date: v?.verified_until ? shortDate(v.verified_until, { day: 'numeric', month: 'short', year: 'numeric' }) : '—' }), tone: brand.success },
     pending: { icon: '⏳', title: t('We’re checking your student ID'), body: t('This usually takes less than a day. You’ll see the result here.'), tone: '#B54708' },
     rejected: { icon: '❌', title: t('Your ID wasn’t approved'), body: v?.reject_reason ? t(v.reject_reason) : t('Please send a clearer photo.'), tone: brand.danger },
     expired: { icon: '📅', title: t('Your verification has expired'), body: t('Send a photo of this year’s student ID to keep your perks.'), tone: brand.danger },
     unverified: {
       icon: '🎓', title: t('Verify you’re a student'),
       body: v?.required
-        ? (freeLeft > 0 ? t('You have {n} free uses left. Verify to keep using Perkly after that.', { n: freeLeft }) : t('Perks are for verified students. It only takes a minute.'))
+        ? (freeLeft > 0 ? t('You have {n} free uses left. Verify to keep using Perkly after that.', { n: freeLeft }) : t('Perks are for verified students only. Takes like a minute.'))
         : t('Get verified once and you’re set for the whole year.'),
       tone: brand.purple,
     },

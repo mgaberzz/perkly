@@ -59,7 +59,7 @@ export default function Scan() {
         <View style={{ gap: 6 }}>
           <Text style={{ color: '#fff', fontSize: 28, fontWeight: '900' }}>{t('Scan to save 💜')}</Text>
           <Text style={{ color: '#ffffffcc', fontWeight: '600' }}>{t('Point your camera at the Perkly QR on the cashier table.')}</Text>
-          <Text onPress={() => setGuide(true)} style={{ color: '#fff', fontWeight: '800', textDecorationLine: 'underline', marginTop: 4 }}>{t('How it works?')}</Text>
+          <Text onPress={() => setGuide(true)} style={{ color: '#fff', fontWeight: '800', textDecorationLine: 'underline', marginTop: 4 }}>{t('How it works')}</Text>
         </View>
 
         {!showManual && permission?.granted && (

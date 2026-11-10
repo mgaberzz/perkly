@@ -122,7 +122,7 @@ export default function History() {
       ListHeaderComponent={header}
       keyboardShouldPersistTaps="handled"
       ListEmptyComponent={rows ? (rows.length
-        ? <Empty emoji="🔎" title={t('Nothing matches')} subtitle={t('Try another search or clear the filters.')} />
+        ? <Empty emoji="🔎" title={t('No matches, bestie')} subtitle={t('Try another search or clear the filters.')} />
         : <Empty emoji="🧾" title={t('No redemptions yet')} subtitle={t('Scan a Perkly QR at the cashier to start saving.')} />) : undefined}
       renderItem={({ item: r }) => {
         const isOpen = open === r.id;

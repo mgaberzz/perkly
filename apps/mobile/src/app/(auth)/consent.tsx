@@ -38,7 +38,7 @@ export default function Consent() {
           {t('Perkly keeps the minimum it needs to run your account: your phone or email, name, campus and the perks you redeem. Your location is used only to show nearby perks and to confirm you’re in-store when you redeem. We never sell your data.')}
         </T>
         <T v="h3">{t('Perk drops')}</T>
-        <T v="muted">{t('Want a heads-up when new perks, flash deals and Boost Weeks drop on your campus? Tick the box below. You can switch it off any time in Settings.')}</T>
+        <T v="muted">{t('Wanna know first when new perks and flash deals drop on your campus? Tick the box below. You can turn it off anytime in Settings.')}</T>
       </Card>
       <T v="muted">
         {t('To use Perkly you need to agree to our')}{' '}

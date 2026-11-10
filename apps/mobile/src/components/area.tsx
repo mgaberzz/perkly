@@ -74,7 +74,7 @@ export function AreaSheet({ visible, onClose }: { visible: boolean; onClose: () 
                 <View style={{ height: 1, backgroundColor: c.border, marginVertical: 8 }} />
               </View>
             )}
-            <T v="h3" style={{ marginTop: 8 }}>{t('Popular places')}</T>
+            <T v="h3" style={{ marginTop: 8 }}>{t('Popular spots')}</T>
             {campuses.map((x) => <Row key={x.id} x={x} />)}
           </>
         )}

@@ -9,9 +9,9 @@ import { brand } from '@/lib/theme';
 import { lang, setLanguage, t } from '@/lib/i18n';
 
 const SLIDES = [
-  { emoji: '💸', title: 'Save money on everything you love.', body: 'Coffee, food, fashion, gyms — student perks around your campus.' },
-  { emoji: '📲', title: 'Find perks → Scan → Save instantly', body: 'Scan the Perkly QR on the cashier table, show the green screen, done.' },
-  { emoji: '🔥', title: 'Earn XP, streaks & badges', body: 'Every redemption levels you up. Keep your streak alive!' },
+  { emoji: '💸', title: 'Save on everything you’re obsessed with.', body: 'Coffee, food, fashion, gyms — student perks around your campus.' },
+  { emoji: '📲', title: 'Find perks → scan → save instantly', body: 'Scan the Perkly QR on the cashier table, show the green screen, done.' },
+  { emoji: '🔥', title: 'Stack XP, streaks & badges', body: 'Every perk levels you up. Don’t break the streak 🔥' },
 ];
 
 export default function Welcome() {
@@ -52,7 +52,7 @@ export default function Welcome() {
         <View style={{ paddingHorizontal: 24, paddingBottom: 24, gap: 12 }}>
           <Button
             variant="white"
-            title={last ? t('Get Started') : t('Next')}
+            title={last ? t('Let’s go') : t('Next')}
             onPress={() => {
               if (last) router.push('/login');
               else { list.current?.scrollToIndex({ index: i + 1 }); setI(i + 1); }

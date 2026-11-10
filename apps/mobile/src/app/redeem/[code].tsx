@@ -111,7 +111,7 @@ export default function Redeem() {
   if (!lookup.ok) {
     return (
       <Screen edges={[]}>
-        <Empty emoji="🫣" title={t('Oops! Try again 🔄')} subtitle={friendlyError(lookup.error)} />
+        <Empty emoji="🫣" title={t('Hmm, that didn’t work 🔄')} subtitle={friendlyError(lookup.error)} />
         <Button title={t('Scan again')} onPress={() => router.back()} />
       </Screen>
     );
@@ -170,7 +170,7 @@ export default function Redeem() {
           )}
 
           <T v="label" style={{ marginTop: 6 }}>{t('Your perk')}</T>
-          {lookup.perks.length === 0 && <Empty emoji="😴" title={t('No perks running right now')} subtitle={t('Check back later today.')} />}
+          {lookup.perks.length === 0 && <Empty emoji="😴" title={t('No perks here rn 👀')} subtitle={t('Check back later today.')} />}
           {lookup.perks.map((p) => {
             const on = p.id === perkId;
             return (

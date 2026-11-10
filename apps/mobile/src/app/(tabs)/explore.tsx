@@ -45,7 +45,7 @@ export default function Explore() {
     <Screen>
       <T v="h1">{t('Explore')} 🧭</T>
       <TextInput
-        value={q} onChangeText={setQ} placeholder={t('Search cafes, restaurants, fashion…')} placeholderTextColor={c.textMuted}
+        value={q} onChangeText={setQ} placeholder={t('Search cafés, restaurants, fashion…')} placeholderTextColor={c.textMuted}
         style={{ backgroundColor: c.card, borderRadius: 18, borderWidth: 1, borderColor: c.border, padding: 16, fontSize: 16, fontWeight: '600', color: c.text }}
       />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>

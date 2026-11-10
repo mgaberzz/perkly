@@ -107,7 +107,7 @@ export default function Home() {
       <Card onPress={() => router.push('/rewards')}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Pressable onPress={() => router.push('/profile')} hitSlop={8}><Avatar profile={profile} size={40} /></Pressable>
-          <T v="h3" style={{ flex: 1 }}>{t('Hey {name} 👋 keep levelling up', { name: firstName(profile?.full_name) })}</T>
+          <T v="h3" style={{ flex: 1 }}>{t('Hey {name} 👋 let’s level up', { name: firstName(profile?.full_name) })}</T>
         </View>
         <XPBar totalXp={stats?.total_xp ?? 0} />
       </Card>
@@ -131,7 +131,7 @@ export default function Home() {
       <View style={{ gap: 12 }}>
         <View style={{ gap: 2 }}>
           <SectionHeader title={t('Trending at {place} 🔥', { place: campus?.short_name ?? t('your campus') })} />
-          <T v="muted">{t('Handpicked perks students love this week')}</T>
+          <T v="muted">{t('The perks everyone’s obsessed with this week')}</T>
         </View>
         {trending.length ? (
           <FlatList horizontal data={trending} keyExtractor={(x) => x.perk.id} showsHorizontalScrollIndicator={false}

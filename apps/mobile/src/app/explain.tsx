@@ -101,7 +101,7 @@ export default function Explain() {
              <Row key="s" label={t('You saved')} value={egp(saved)} onPress={() => router.setParams({ metric: 'saved' })} />],
         extra: top.length > 0 && (
           <Card style={{ gap: 4 }}>
-            <T v="label">{metric === 'saved' ? t('Where you saved the most') : t('Your favourite places')}</T>
+            <T v="label">{metric === 'saved' ? t('Where you saved the most') : t('Your fave spots')}</T>
             {top.map(([name, p]) => <Row key={name} label={name} value={metric === 'saved' ? egp(p.saved) : t('{n}×', { n: p.n })} />)}
           </Card>
         ),
@@ -154,7 +154,7 @@ export default function Explain() {
               <T v="small">{t('{n}×', { n: that.length })}</T>
             </Pressable>
           );
-        }) : <Empty emoji="🔥" title={t('No streak yet')} subtitle={t('Redeem a perk today to start a streak 🔥')} />,
+        }) : <Empty emoji="🔥" title={t('No streak yet')} subtitle={t('Use a perk today to start your streak 🔥')} />,
       };
     }
     if (metric === 'cashback') {

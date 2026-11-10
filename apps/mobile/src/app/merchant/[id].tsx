@@ -111,7 +111,7 @@ export default function MerchantScreen() {
       </Pressable>
       {m.channel !== 'online' && (
         <View style={{ position: 'absolute', left: 20, right: 20, bottom: 30 }}>
-          <Button title={t('Scan to Redeem')} icon="📷" onPress={() => router.push('/scan')} />
+          <Button title={t('Scan to redeem')} icon="📷" onPress={() => router.push('/scan')} />
         </View>
       )}
     </View>

@@ -90,7 +90,7 @@ export default function CategoryScreen() {
           </View>
         }
         renderItem={({ item }) => <PerkRow item={item} />}
-        ListEmptyComponent={mode !== 'Perks' ? <Empty emoji="😴" title={mode === 'Flash' ? t('No flash perks right now') : t('Nothing matches')} subtitle={t('Check back soon — new perks drop every week.')} /> : undefined}
+        ListEmptyComponent={mode !== 'Perks' ? <Empty emoji="😴" title={mode === 'Flash' ? t('No flash perks rn ⚡') : t('No matches, bestie')} subtitle={t('New perks drop every week. Stay tuned 👀')} /> : undefined}
         ListFooterComponent={mode === 'Places' ? (
           <View style={{ gap: 10, marginTop: 20 }}>
             <T v="h3">{t('Try these filters:')}</T>
@@ -106,7 +106,7 @@ export default function CategoryScreen() {
       {mode !== 'Perks' && (
         <Pressable onPress={() => setFilterOpen(true)} style={{ position: 'absolute', bottom: 36, alignSelf: 'center', backgroundColor: brand.pink, borderRadius: 999, paddingHorizontal: 24, paddingVertical: 14, flexDirection: 'row', gap: 8,
           shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 }}>
-          <Text style={{ color: '#fff', fontWeight: '900', fontSize: 16 }}>{t('Filter & Sort')}{filtered ? ' •' : ''}</Text>
+          <Text style={{ color: '#fff', fontWeight: '900', fontSize: 16 }}>{t('Filter & sort')}{filtered ? ' •' : ''}</Text>
           <Text style={{ color: '#fff', fontSize: 16 }}>⏷</Text>
         </Pressable>
       )}
