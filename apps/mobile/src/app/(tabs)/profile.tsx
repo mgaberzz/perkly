@@ -83,7 +83,7 @@ export default function Me() {
             <T v="label">{t('Cashback')}</T>
             <T v="h2" color={brand.success}>{egp(stats?.cashback_balance ?? 0)}</T>
           </View>
-          {Number(stats?.cashback_pending ?? 0) > 0 && <T v="small">{t('{amount} pending', { amount: egp(stats?.cashback_pending) })}</T>}
+          {Number(stats?.cashback_pending ?? 0) > 0 && <T v="small">{t('{amount} Pending', { amount: egp(stats?.cashback_pending) })}</T>}
         </Card>
       )}
 

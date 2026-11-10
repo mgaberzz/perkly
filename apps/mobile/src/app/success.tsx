@@ -149,7 +149,7 @@ export default function Success() {
               <Pill onPress={() => router.push({ pathname: '/explain', params: { metric: 'redemption', id: r.redemption_id } })} big={`+${r.xp_awarded} XP ⚡`} small={r.leveled_up ? t('Level up! You’re {name} now 🚀', { name: t(r.level_name) }) : t('Lv {n} · {name}', { n: r.level, name: t(r.level_name) })} />
               <Pill onPress={() => router.push({ pathname: '/explain', params: { metric: 'streak' } })} big={`${r.streak} 🔥`} small={r.used_freeze_token ? t('Streak Saved by Freeze ❄️') : t('Day Streak')} />
             </View>
-            {r.first_time_at_merchant && <Pill big={t('New Spot Unlocked 🧭')} small={t('+25 XP for trying somewhere new')} />}
+            {r.first_time_at_merchant && <Pill big={t('New Spot Unlocked 🧭')} small={t('+25 XP for Trying Somewhere New')} />}
             {r.quests_completed.map((q) => <Pill key={q.title} big={`${q.emoji} ${t(q.title)}`} small={t('Quest Complete · +{n} XP', { n: q.xp_reward })} />)}
             {r.badges_unlocked.map((b) => <Pill key={b.code} big={`${b.emoji} ${t(b.name)}`} small={t('New badge unlocked! 🏆')} />)}
           </Animated.View>

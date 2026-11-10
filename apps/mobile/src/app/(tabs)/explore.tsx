@@ -68,7 +68,7 @@ export default function Explore() {
         <Chip label={t('Best Deal')} active={sort === 'best'} onPress={() => setSort('best')} />
         <Chip label="A–Z" active={sort === 'az'} onPress={() => setSort('az')} />
       </ScrollView>
-      <T v="label">{t('{n} places', { n: list.length })}</T>
+      <T v="label">{t('{n} Places', { n: list.length })}</T>
       <View style={{ gap: 10 }}>
         {list.map(({ m, d }) => <MerchantRow key={m.id} m={m} distance={d} />)}
         {list.length === 0 && <Empty emoji="🔍" title={t('No Perks Here Yet')} subtitle={t('Want us to add some? Tell your ambassador 👇')} />}

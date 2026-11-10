@@ -86,7 +86,7 @@ export default function CategoryScreen() {
                 ) : <Empty emoji="🔍" title={t('No Perks Here Yet')} subtitle={t('Try another subcategory or area.')} />}
               </View>
             )}
-            {mode !== 'Perks' && <T v="label">{t('{n} result(s)', { n: list.length })}</T>}
+            {mode !== 'Perks' && <T v="label">{t('{n} Result(s)', { n: list.length })}</T>}
           </View>
         }
         renderItem={({ item }) => <PerkRow item={item} />}

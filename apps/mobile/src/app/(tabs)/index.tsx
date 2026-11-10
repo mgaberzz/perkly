@@ -40,7 +40,7 @@ export default function Home() {
   const trending = useMemo(() => applySortFilter(items.filter((x) => x.merchant.branches.some((b) => b.campus_id === campus?.id)), 'popular', NO_FILTERS).slice(0, 10), [items, campus]);
 
   const BANNERS = [
-    { colors: ['#7B2FF7', '#FF3EA5'] as const, emoji: '🎡', title: t('Spin the Wheel'), body: t('{n} ticket(s) waiting — win XP & streak freezes', { n: stats?.spin_tickets ?? 0 }), onPress: () => router.push('/arcade') },
+    { colors: ['#7B2FF7', '#FF3EA5'] as const, emoji: '🎡', title: t('Spin the Wheel'), body: t('{n} Ticket(s) Waiting · Win XP & Streak Freezes', { n: stats?.spin_tickets ?? 0 }), onPress: () => router.push('/arcade') },
     { colors: ['#2F80FF', '#7B2FF7'] as const, emoji: '📷', title: t('How Perkly Works'), body: t('Scan the QR at the cashier → save instantly'), onPress: () => setHowOpen(true) },
     { colors: ['#FF3EA5', '#FF7A59'] as const, emoji: '💜', title: t('Invite friends, earn XP'), body: t('Share Code {code} · +50 XP Each', { code: profile?.referral_code ?? '' }), onPress: () => router.push('/profile') },
   ];
@@ -61,7 +61,7 @@ export default function Home() {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8 }}>
         {[
           { icon: '💸', value: egp(stats?.total_saved ?? 0), label: t('Saved'), to: { pathname: '/explain' as const, params: { metric: 'saved' } } },
-          { icon: '🔥', value: t('{n} days', { n: stats?.current_streak ?? 0 }), label: t('Streak'), to: { pathname: '/explain' as const, params: { metric: 'streak' } } },
+          { icon: '🔥', value: t('{n} Days', { n: stats?.current_streak ?? 0 }), label: t('Streak'), to: { pathname: '/explain' as const, params: { metric: 'streak' } } },
           { icon: '🎟️', value: `x${stats?.spin_tickets ?? 0}`, label: t('Spins'), to: { pathname: '/arcade' as const, params: {} } },
           { icon: '⚡', value: `${stats?.total_xp ?? 0}`, label: 'XP', to: { pathname: '/explain' as const, params: { metric: 'xp' } } },
         ].map((s) => (
@@ -138,7 +138,7 @@ export default function Home() {
             contentContainerStyle={{ gap: 12 }} renderItem={({ item }) => <PerkCard item={item} />} />
         ) : <Empty emoji="💜" title={t('New Perks Coming Tomorrow')} subtitle={t("We're adding merchants around your campus.")} />}
       </View>
-      <T v="small" style={{ textAlign: 'center' }}>{t('{n} places on Perkly', { n: merchants.length })}</T>
+      <T v="small" style={{ textAlign: 'center' }}>{t('{n} Places on Perkly', { n: merchants.length })}</T>
       <HowItWorks visible={howOpen} onClose={() => setHowOpen(false)} />
     </Screen>
   );

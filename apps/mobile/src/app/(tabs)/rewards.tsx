@@ -67,7 +67,7 @@ export default function Rewards() {
           <View>
             <Text style={{ color: '#ffffffcc', fontWeight: '800', fontSize: 12, letterSpacing: 1 }}>{t('LEVEL {n}', { n: cur.level })}</Text>
             <Text style={{ color: '#fff', fontWeight: '900', fontSize: 26 }}>{cur.name}</Text>
-            <Text onPress={() => router.push({ pathname: '/explain', params: { metric: 'xp' } })} style={{ color: '#ffffffdd', fontWeight: '700', textDecorationLine: 'underline' }}>{t('{n} XP total', { n: stats?.total_xp ?? 0 })}</Text>
+            <Text onPress={() => router.push({ pathname: '/explain', params: { metric: 'xp' } })} style={{ color: '#ffffffdd', fontWeight: '700', textDecorationLine: 'underline' }}>{t('{n} XP Total', { n: stats?.total_xp ?? 0 })}</Text>
           </View>
           <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'streak' } })} style={{ backgroundColor: '#ffffff26', borderRadius: 20, padding: 12, alignItems: 'center' }}>
             <StreakFlame days={streak} size={34} />
@@ -79,7 +79,7 @@ export default function Rewards() {
           {streak === 0 ? t('Use a perk today to start your streak 🔥')
             : nextMilestone ? t('{n} more day(s) to your {m}-day bonus!', { n: nextMilestone - streak, m: nextMilestone })
               : t('Legendary streak. You’re on fire 👑')}
-          {stats?.freeze_tokens ? `  ·  ❄️ ${t('{n} freeze', { n: stats.freeze_tokens })}` : ''}
+          {stats?.freeze_tokens ? `  ·  ❄️ ${t('{n} Freeze', { n: stats.freeze_tokens })}` : ''}
         </Text>
       </GradientCard>
 
@@ -87,7 +87,7 @@ export default function Rewards() {
         <Text style={{ fontSize: 40 }}>🎡</Text>
         <View style={{ flex: 1 }}>
           <T v="h3">{t('Arcade · Spin the Wheel')}</T>
-          <T v="small">{t('{n} ticket(s) · every spin wins XP or a streak freeze', { n: stats?.spin_tickets ?? 0 })}</T>
+          <T v="small">{t('{n} Ticket(s) · Every Spin Wins XP or a Streak Freeze', { n: stats?.spin_tickets ?? 0 })}</T>
         </View>
         <T v="h3" color={brand.purple}>{t('Play')} {fwdChevron()}</T>
       </Card>

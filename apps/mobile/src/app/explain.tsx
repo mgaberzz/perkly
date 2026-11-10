@@ -137,10 +137,10 @@ export default function Explain() {
       if (!reds) return null;
       const days = [...new Set(ok.map((r) => new Date(r.created_at).toLocaleDateString('en-CA', { timeZone: 'Africa/Cairo' })))].slice(0, 30);
       return {
-        title: t('Streak'), big: t('{n} days', { n: stats?.current_streak ?? 0 }),
+        title: t('Streak'), big: t('{n} Days', { n: stats?.current_streak ?? 0 }),
         lines: [
-          <Row key="c" strong label={t('Current Streak')} value={t('{n} days', { n: stats?.current_streak ?? 0 })} />,
-          <Row key="l" label={t('Longest Streak')} value={t('{n} days', { n: stats?.longest_streak ?? 0 })} />,
+          <Row key="c" strong label={t('Current Streak')} value={t('{n} Days', { n: stats?.current_streak ?? 0 })} />,
+          <Row key="l" label={t('Longest Streak')} value={t('{n} Days', { n: stats?.longest_streak ?? 0 })} />,
           <Row key="f" label={`❄️ ${t('Streak Freezes')}`} value={String(stats?.freeze_tokens ?? 0)} onPress={() => router.push('/arcade')} />,
           <Row key="h" label={t('Redeem at least once a day to keep it going. A freeze saves one missed day.')} value="" />,
         ],

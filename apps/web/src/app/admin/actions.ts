@@ -9,6 +9,10 @@ import { SITE_URL } from "@/lib/env";
 import { BRAND_TYPES, STAFF_ROLES, type ActionState, type MemberRole } from "@/lib/types";
 
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
+const SMALL_WORDS = new Set(["a", "an", "the", "and", "or", "of", "to", "in", "on", "at", "for", "with", "by", "per"]);
+/** "weekly grind" → "Weekly Grind" (the app shows names in Title Case) */
+const titleCase = (s: string) => s.split(/(\s+)/).map((w, i, all) =>
+  !w.trim() || !/^[a-z]/.test(w) || (i > 0 && i < all.length - 1 && SMALL_WORDS.has(w)) ? w : w[0].toUpperCase() + w.slice(1)).join("");
 
 // ───────── Merchants ─────────
 function merchantRow(fd: FormData) {
@@ -356,7 +360,7 @@ export async function toggleCampus(fd: FormData) {
 // ───────── Quests ─────────
 export async function createQuest(_: ActionState, fd: FormData): Promise<ActionState> {
   const { supabase } = await requireStaff("quests");
-  const title = str(fd, "title");
+  const title = titleCase(str(fd, "title"));
   const target = Number(str(fd, "target")), xp = Number(str(fd, "xp_reward"));
   if (!title || !(target > 0) || !(xp > 0)) return { error: "Title, target and XP are required." };
   const { error } = await supabase.from("quests").insert({

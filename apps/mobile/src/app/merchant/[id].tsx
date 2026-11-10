@@ -57,7 +57,7 @@ export default function MerchantScreen() {
             {best && <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><T v="h3">{t('Save Up To')}</T><DiscountBadge perk={best} size="lg" /></View>}
             {m.description ? <T v="muted">{m.description}</T> : null}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {weekCount != null && weekCount > 0 && <Tag text={`🔥 ${t('{n} students redeemed this week', { n: weekCount })}`} />}
+              {weekCount != null && weekCount > 0 && <Tag text={`🔥 ${t('{n} Students Redeemed This Week', { n: weekCount })}`} />}
               {m.channel !== 'in_store' && <Tag text={`🌐 ${m.channel === 'online' ? t('Online Only') : t('In-Store + Online')}`} />}
               {onCampus && <Tag text={`🎓 ${t('Near {place}', { place: campus?.short_name ?? t('your campus') })}`} />}
             </View>

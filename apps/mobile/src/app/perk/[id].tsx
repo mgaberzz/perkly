@@ -82,7 +82,7 @@ export default function PerkDetail() {
             <View style={{ width: 1, height: 20, backgroundColor: c.border }} />
             <T v="h3" color={brand.pink}>{discountLabel(perk)}</T>
           </View>
-          {item.redeemed > 0 && <T v="small" color={brand.pink} style={{ marginTop: 4 }}>🔥 {t('{n} students redeemed this month', { n: item.redeemed })}</T>}
+          {item.redeemed > 0 && <T v="small" color={brand.pink} style={{ marginTop: 4 }}>🔥 {t('{n} Students Redeemed This Month', { n: item.redeemed })}</T>}
 
           <View style={{ marginTop: 8 }}>
             <Row icon="⏰" text={validity} />

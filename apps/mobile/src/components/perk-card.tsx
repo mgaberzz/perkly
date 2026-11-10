@@ -51,7 +51,7 @@ export function PerkCard({ item, width = 230 }: { item: PerkItem; width?: number
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
             <View style={{ backgroundColor: '#FF3EA51A', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 }}>
               <Text style={{ color: brand.pink, fontWeight: '800', fontSize: 12 }}>
-                {perk.is_flash && perk.end_at ? `⏳ ${timeLeft(perk.end_at)}` : item.redeemed ? t('{n} redeemed', { n: item.redeemed }) : t('New ✨')}
+                {perk.is_flash && perk.end_at ? `⏳ ${timeLeft(perk.end_at)}` : item.redeemed ? t('{n} Redeemed', { n: item.redeemed }) : t('New ✨')}
               </Text>
             </View>
             <Heart merchantId={merchant.id} />
@@ -81,7 +81,7 @@ export function PerkRow({ item }: { item: PerkItem }) {
         <T v="h3" numberOfLines={1}>{merchant.name}</T>
         <T v="muted" numberOfLines={1} style={{ fontSize: 13 }}>{perk.title}</T>
         <T v="small" numberOfLines={1}>{item.branchName ? `📍 ${item.branchName}` : `🌐 ${t('Online')}`}{item.distance != null ? ` (${distanceLabel(item.distance)})` : ''}</T>
-        {item.redeemed > 0 && <T v="small" color={brand.pink}>🔥 {t('{n} redeemed this month', { n: item.redeemed })}</T>}
+        {item.redeemed > 0 && <T v="small" color={brand.pink}>🔥 {t('{n} Redeemed This Month', { n: item.redeemed })}</T>}
       </View>
     </Pressable>
   );

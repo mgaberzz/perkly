@@ -108,7 +108,7 @@ export default function History() {
       )}
 
       {rows && rows.length > 0 && (
-        <T v="small">{t('{n} transactions · you saved {amount}', { n: list.length, amount: egp(saved) })}</T>
+        <T v="small">{t('{n} Transactions · You Saved {amount}', { n: list.length, amount: egp(saved) })}</T>
       )}
     </View>
   );

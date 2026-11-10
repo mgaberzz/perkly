@@ -26,7 +26,7 @@ export default function CollectionScreen() {
           <Pressable onPress={() => router.back()} hitSlop={12}><Text style={{ fontSize: 28, color: '#fff' }}>{backChevron()}</Text></Pressable>
           <Text style={{ fontSize: 56 }}>{col.emoji}</Text>
           <Text style={{ color: '#fff', fontSize: 30, fontWeight: '900' }}>{t(col.title)}</Text>
-          <Text style={{ color: '#ffffffdd', fontWeight: '700' }}>{t('{n} perks', { n: list.length })}{category && category !== 'All' ? ` · ${t(category)}` : ''}</Text>
+          <Text style={{ color: '#ffffffdd', fontWeight: '700' }}>{t('{n} Perks', { n: list.length })}{category && category !== 'All' ? ` · ${t(category)}` : ''}</Text>
         </SafeAreaView>
       </LinearGradient>
       <FlatList data={list} keyExtractor={(x) => x.perk.id} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 60 }}
