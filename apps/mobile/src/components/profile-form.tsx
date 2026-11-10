@@ -14,6 +14,7 @@ export function ProfileForm({ submitLabel, onDone, showInvite }: { submitLabel: 
   const campuses = useCampuses();
   const [name, setName] = useState(profile?.full_name ?? '');
   const [email, setEmail] = useState(profile?.email ?? session?.user.email ?? '');
+  const [phone, setPhone] = useState(toLocalPhone(profile?.phone));
   const [dob, setDob] = useState(isoToDob(profile?.birth_date));
   const [campusId, setCampusId] = useState<string | null>(profile?.campus_id ?? null);
   const [invite, setInvite] = useState('');
@@ -26,6 +27,7 @@ export function ProfileForm({ submitLabel, onDone, showInvite }: { submitLabel: 
     setName((n) => n || profile.full_name || '');
     setCampusId((c) => c ?? profile.campus_id);
     setDob((d) => d || isoToDob(profile.birth_date));
+    setPhone((p) => p || toLocalPhone(profile.phone));
   }, [profile]);
 
   const campus = campuses.find((c) => c.id === campusId);
@@ -36,12 +38,14 @@ export function ProfileForm({ submitLabel, onDone, showInvite }: { submitLabel: 
     const birth = dob ? dobToIso(dob) : null;
     if (dob && !birth) e.dob = t('Use DD / MM / YYYY (you must be 12+).');
     if (email && !/^\S+@\S+\.\S+$/.test(email.trim())) e.email = t('That email doesn’t look right.');
+    const phoneIntl = phone.trim() ? toIntlPhone(phone) : null;
+    if (phone.trim() && !phoneIntl) e.phone = t('That doesn’t look like an Egyptian mobile number. Try 01x xxxx xxxx.');
     if (!campusId) e.campus = t('Pick your campus.');
     setErrors(e);
     if (Object.keys(e).length || !session) return;
     setSaving(true);
     const { error } = await supabase.from('profiles').update({
-      full_name: name.trim(), campus_id: campusId, birth_date: birth, email: email.trim() || null,
+      full_name: name.trim(), campus_id: campusId, birth_date: birth, email: email.trim() || null, phone: phoneIntl,
     }).eq('id', session.user.id);
     if (error) { setSaving(false); setErrors({ form: error.message }); return; }
     if (invite.trim()) {
@@ -59,6 +63,8 @@ export function ProfileForm({ submitLabel, onDone, showInvite }: { submitLabel: 
       <TextField label={t('Full name')} value={name} onChangeText={setName} placeholder={t('First and last name')} autoComplete="name" error={errors.name} />
       <TextField label={t('Email')} value={email} onChangeText={setEmail} placeholder="you@university.edu.eg" keyboardType="email-address" autoCapitalize="none"
         editable={!session?.user.email} hint={session?.user.email ? t('From your sign-in account') : t('Optional — for receipts and account recovery')} error={errors.email} />
+      <TextField label={t('Mobile number')} value={phone} onChangeText={setPhone} placeholder="01x xxxx xxxx" keyboardType="phone-pad" autoComplete="tel" maxLength={16}
+        hint={t('Optional — so Perkly support can reach you. You can change it any time.')} error={errors.phone} />
       <TextField label={t('Date of birth')} value={dob} onChangeText={(v) => setDob(maskDob(v))} placeholder={t('DD / MM / YYYY')} keyboardType="number-pad" maxLength={14}
         hint={t('Optional — unlocks birthday perks 🎂')} error={errors.dob} />
       <View>
@@ -74,4 +80,19 @@ export function ProfileForm({ submitLabel, onDone, showInvite }: { submitLabel: 
       <CampusPicker visible={picker} onClose={() => setPicker(false)} onPick={(c) => setCampusId(c.id)} selectedId={campusId} />
     </View>
   );
+}
+
+/** +201012345678 → 01012345678 (what Egyptians type) */
+function toLocalPhone(p?: string | null) {
+  if (!p) return '';
+  const d = p.replace(/\D/g, '');
+  return d.startsWith('20') && d.length === 12 ? `0${d.slice(2)}` : p;
+}
+/** 01012345678 / +20 10 1234 5678 / 201012345678 → +201012345678, or null if it isn't an Egyptian mobile */
+export function toIntlPhone(input: string) {
+  let d = input.replace(/\D/g, '');
+  if (d.startsWith('0020')) d = d.slice(4);
+  else if (d.startsWith('20')) d = d.slice(2);
+  else if (d.startsWith('0')) d = d.slice(1);
+  return /^1[0125]\d{8}$/.test(d) ? `+20${d}` : null;
 }

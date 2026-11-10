@@ -1,5 +1,8 @@
 // Arabic translations for the student app. Keys are the English text used in the code (see lib/i18n.ts).
 export const AR: Record<string, string> = {
+  "Mobile number": "رقم الموبايل",
+  "Add": "إضافة",
+  "Optional — so Perkly support can reach you. You can change it any time.": "اختياري — عشان دعم Perkly يقدر يكلّمك. تقدر تغيّره في أي وقت.",
   "Reminders (saved perks ending, levels)": "تذكيرات (عروض محفوظة بتخلص، المستويات)",
   "Back online ✓": "عاد الاتصال ✓",
   "No connection: showing saved perks": "لا يوجد اتصال: نعرض العروض المحفوظة",

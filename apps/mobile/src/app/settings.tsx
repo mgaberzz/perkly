@@ -137,7 +137,9 @@ export default function Settings() {
         <Row label={`🎓 ${t('Student verification')}`} onPress={() => router.push('/student-verification')}
           right={<T v="small" color={profile?.verification_status === 'verified' ? brand.success : profile?.verification_status === 'rejected' ? brand.danger : brand.purple}>{t(VERIFY_LABEL[profile?.verification_status ?? 'unverified'])} {fwdChevron()}</T>} />
         <Row label={`🆔 ${t('User ID')}`} right={<T v="small" style={{ writingDirection: 'ltr', fontWeight: '800' }}>{profile?.user_code}</T>} />
-        <Row label={`📱 ${t('Signed in as')}`} right={<T v="small" numberOfLines={1} style={{ maxWidth: 180 }}>{profile?.phone ?? profile?.email ?? session?.user.email}</T>} />
+        <Row label={`📞 ${t('Mobile number')}`} onPress={() => router.push('/edit-profile')}
+          right={<T v="small" style={{ writingDirection: 'ltr' }}>{profile?.phone ? profile.phone.replace(/^\+20/, '0') : t('Add')}</T>} />
+        <Row label={`📱 ${t('Signed in as')}`} right={<T v="small" numberOfLines={1} style={{ maxWidth: 180 }}>{session?.user.email || (session?.user.phone ? `+${session.user.phone.replace(/^\+/, '')}` : profile?.email)}</T>} />
       </Card>
       <T v="label">{t('Security & language')}</T>
       <Card style={{ gap: 0, paddingVertical: 0 }}>
