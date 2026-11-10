@@ -23,7 +23,7 @@ export function ReceiptRefInput({ redemptionId }: { redemptionId: string }) {
       <Text style={{ color: '#ffffffcc', fontSize: 12, fontWeight: '700' }}>{t('Shop receipt / order no. (optional)')}</Text>
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <TextInput value={value} onChangeText={(v) => { setValue(v); if (state === 'error') setState('idle'); }} maxLength={40} autoCapitalize="characters"
-          placeholder={t('e.g. INV-0042')} placeholderTextColor="#ffffff88"
+          placeholder={t('E.g. INV-0042')} placeholderTextColor="#ffffff88"
           style={{ flex: 1, backgroundColor: '#ffffff22', color: '#fff', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontWeight: '700', writingDirection: 'ltr' }} />
         <Pressable onPress={save} disabled={!value.trim() || state === 'saving'} style={{ backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 16, justifyContent: 'center', opacity: value.trim() ? 1 : 0.5 }}>
           <Text style={{ color: brand.purple, fontWeight: '800' }}>{state === 'saving' ? '…' : t('Save')}</Text>

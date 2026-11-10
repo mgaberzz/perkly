@@ -71,7 +71,7 @@ export default function Rewards() {
           </View>
           <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'streak' } })} style={{ backgroundColor: '#ffffff26', borderRadius: 20, padding: 12, alignItems: 'center' }}>
             <StreakFlame days={streak} size={34} />
-            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 11 }}>{t('day streak')}</Text>
+            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 11 }}>{t('Day streak')}</Text>
           </Pressable>
         </View>
         <View style={{ backgroundColor: '#ffffff', borderRadius: 16, padding: 12 }}><XPBar totalXp={stats?.total_xp ?? 0} /></View>
@@ -148,7 +148,7 @@ export default function Rewards() {
           <View key={l.user_id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: c.border, backgroundColor: l.is_me ? '#7B2FF712' : undefined, borderRadius: 12, paddingHorizontal: 6 }}>
             <T v="h3" style={{ width: 32 }}>{l.rank <= 3 ? ['🥇', '🥈', '🥉'][l.rank - 1] : `#${l.rank}`}</T>
             <View style={{ flex: 1 }}>
-              <T v="h3">{l.display_name}{l.is_me ? ` (${t('you')})` : ''}</T>
+              <T v="h3">{l.display_name}{l.is_me ? ` (${t('You')})` : ''}</T>
               {scope === 'all' && l.campus_name ? <T v="small">{l.campus_name}</T> : null}
             </View>
             <T v="h3" color={brand.purple} onPress={l.is_me ? () => router.push({ pathname: '/explain', params: { metric: 'xp' } }) : undefined}>{l.xp} XP</T>

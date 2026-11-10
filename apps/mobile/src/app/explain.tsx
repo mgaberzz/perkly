@@ -195,7 +195,7 @@ export default function Explain() {
             <T v="small">{r.perk_title}</T>
             <T v="small">{r.branch_name === 'Online' ? t('Online') : r.branch_name} · {new Date(r.created_at).toLocaleString(locale(), { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</T>
             {r.tx_code ? <T v="small">{t('Transaction ID')}: <Text style={{ fontWeight: '900' }}>{r.tx_code}</Text></T> : null}
-            <T v="small">{t('Code')}: <Text style={{ fontWeight: '900', letterSpacing: 2 }}>{r.verification_code}</Text>{r.status === 'reversed' ? ` · ${t('reversed')}` : ''}</T>
+            <T v="small">{t('Code')}: <Text style={{ fontWeight: '900', letterSpacing: 2 }}>{r.verification_code}</Text>{r.status === 'reversed' ? ` · ${t('Reversed')}` : ''}</T>
             <View style={{ marginTop: 10 }}><ShareReceiptButton data={r} /></View>
           </Card>
         ),

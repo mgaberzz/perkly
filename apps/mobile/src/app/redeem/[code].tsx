@@ -181,7 +181,7 @@ export default function Redeem() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <T v="h3">{p.title}</T>
-                  <T v="small">{Number(p.min_spend) > 0 ? t('Min {amount}', { amount: egp(p.min_spend) }) : t('No minimum')}{p.max_discount_amount ? ` · ${t('max {amount} off', { amount: egp(p.max_discount_amount) })}` : ''}</T>
+                  <T v="small">{Number(p.min_spend) > 0 ? t('Min {amount}', { amount: egp(p.min_spend) }) : t('No minimum')}{p.max_discount_amount ? ` · ${t('Max {amount} off', { amount: egp(p.max_discount_amount) })}` : ''}</T>
                 </View>
                 <Text style={{ color: p.is_flash ? brand.pink : brand.purple, fontWeight: '900', flexShrink: 1 }}>{p.is_flash ? '⚡' : ''}{discountLabel(p)}</Text>
               </Pressable>

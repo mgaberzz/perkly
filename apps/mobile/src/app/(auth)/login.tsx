@@ -132,10 +132,10 @@ export default function Login() {
           {quickLogin.available && (
             <View style={{ gap: 6 }}>
               <Button icon="🔐" title={t('Log in with {method}', { method: bioLabel })} onPress={bioLogin} loading={loading === 'bio'} />
-              {quickLogin.email && <T v="small" style={{ textAlign: 'center' }}>{t('as {who}', { who: quickLogin.email })}</T>}
+              {quickLogin.email && <T v="small" style={{ textAlign: 'center' }}>{t('Signed in as {who}', { who: quickLogin.email })}</T>}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 }}>
                 <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
-                <T v="small">{t('or use another way')}</T>
+                <T v="small">{t('Or use another way')}</T>
                 <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
               </View>
             </View>
@@ -167,7 +167,7 @@ export default function Login() {
 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 }}>
             <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
-            <T v="small">{t('or continue with')}</T>
+            <T v="small">{t('Or continue with')}</T>
             <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>

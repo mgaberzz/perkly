@@ -12,7 +12,7 @@ const ICON: Record<Item['kind'], string> = { verification: 'ðŸŽ“', payment: 'ðŸ’
 
 function ago(iso: string) {
   const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-  if (m < 1) return t('now');
+  if (m < 1) return t('Now');
   if (m < 60) return t('{n}m', { n: m });
   if (m < 1440) return t('{n}h', { n: Math.round(m / 60) });
   return t('{n}d', { n: Math.round(m / 1440) });

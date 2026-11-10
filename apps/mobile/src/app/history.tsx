@@ -35,7 +35,7 @@ export default function History() {
     { key: 'period', label: t('Period'), options: [['7', t('Last 7 days')], ['30', t('Last 30 days')], ['90', t('Last 90 days')]] },
     { key: 'payment', label: t('Payment'), options: [['merchant', t('At the cashier')], ['in_app', t('Paid in app')]] },
     { key: 'channel', label: t('Where'), options: [['in_store', t('In-store')], ['online', t('Online')]] },
-    { key: 'status', label: t('Status'), options: [['success', t('success')], ['reversed', t('reversed')]] },
+    { key: 'status', label: t('Status'), options: [['success', t('Success')], ['reversed', t('Reversed')]] },
   ];
   const active = OPTIONS.filter((o) => f[o.key]);
 
@@ -156,7 +156,7 @@ export default function History() {
                   <T v="small" numberOfLines={1} style={{ flex: 1 }}>
                     <Text style={{ color: brand.purple, fontWeight: '800', writingDirection: 'ltr' }}>{r.tx_code ?? r.verification_code}</Text> · {shortDate(r.created_at)}
                   </T>
-                  <T v="small">{reversed ? t('reversed') : `+${r.xp_awarded} XP`}</T>
+                  <T v="small">{reversed ? t('Reversed') : `+${r.xp_awarded} XP`}</T>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                   <Tag label={r.perk_title} />
