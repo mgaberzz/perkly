@@ -7,8 +7,8 @@ import { t } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { brand, useTheme } from '@/lib/theme';
 
-type Item = { id: string; kind: 'verification' | 'payment' | 'broadcast' | 'reminder'; title: string; body: string; data: { url?: string }; read_at: string | null; created_at: string };
-const ICON: Record<Item['kind'], string> = { verification: '🎓', payment: '💳', broadcast: '🔥', reminder: '⏰' };
+type Item = { id: string; kind: 'verification' | 'payment' | 'broadcast' | 'reminder' | 'refund'; title: string; body: string; data: { url?: string }; read_at: string | null; created_at: string };
+const ICON: Record<Item['kind'], string> = { verification: '🎓', payment: '💳', broadcast: '🔥', reminder: '⏰', refund: '↩️' };
 
 function ago(iso: string) {
   const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);

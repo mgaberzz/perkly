@@ -34,7 +34,7 @@ const ICON: Record<string, string> = { redemption: '🧾', new_merchant: '🧭',
 export default function Explain() {
   const { c } = useTheme();
   const { metric = 'saved', id } = useLocalSearchParams<{ metric?: string; id?: string }>();
-  const { session, stats } = useSession();
+  const { session, stats, feature } = useSession();
   const [reds, setReds] = useState<Red[] | null>(null);
   const [xp, setXp] = useState<Xp[] | null>(null);
   const [orders, setOrders] = useState<Order[] | null>(null);
@@ -197,13 +197,17 @@ export default function Explain() {
             {r.tx_code ? <T v="small">{t('Transaction ID')}: <Text style={{ fontWeight: '900' }}>{r.tx_code}</Text></T> : null}
             <T v="small">{t('Code')}: <Text style={{ fontWeight: '900', letterSpacing: 2 }}>{r.verification_code}</Text>{r.status === 'reversed' ? ` · ${t('Reversed')}` : ''}</T>
             <View style={{ marginTop: 10 }}><ShareReceiptButton data={r} /></View>
+            {(feature('refunds') || r.status === 'reversed') && Number(r.final_amount ?? 0) > 0 && (
+              <T v="small" color={brand.purple} style={{ fontWeight: '800', marginTop: 10, textAlign: 'center' }}
+                onPress={() => router.push({ pathname: '/refund', params: { id: r.id } })}>{r.status === 'reversed' ? t('Refund Status') : t('Request a Refund')}</T>
+            )}
           </Card>
         ),
         list: null,
       };
     }
     return null;
-  }, [metric, id, reds, xp, orders, stats, c]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [metric, id, reds, xp, orders, stats, c, feature]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>

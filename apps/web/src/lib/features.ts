@@ -11,6 +11,7 @@ export const APP_FEATURES = [
   { key: "flash_perks", label: "Flash perks", hint: "The “Ending soon” shelf and the Flash perks filter." },
   { key: "collections", label: "Collections", hint: "Themed shelves such as Coffee runs and Hero deals." },
   { key: "avatar_builder", label: "Avatar builder", hint: "The cartoon avatar. Profile photos still work." },
+  { key: "refunds", label: "Refund requests", hint: "The “Request a refund” button on transactions. Also blocked on the server; open requests can still be decided." },
   { key: "verification", label: "Student verification", hint: "The verify screens. While off, nobody is asked to verify, even if “Require verification” is on." },
   { key: "language", label: "Language switch", hint: "The English ⇄ العربية switch. While off, everyone uses the language chosen here." },
 ] as const;

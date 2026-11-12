@@ -938,3 +938,70 @@ do $$ begin assert not student_can_redeem('00000000-0000-0000-0000-0000000000a7'
 update app_settings set value = jsonb_set(value, '{verification}', '{"on": false, "campuses": []}') where key = 'features';
 do $$ begin assert student_can_redeem('00000000-0000-0000-0000-0000000000a7'), 'verification switched off'; end $$;
 update app_settings set value = '{"required": false, "free_redemptions": 0}' where key = 'student_verification';
+
+
+-- ── Refunds: student asks → merchant decides → transaction reversed, XP taken back ──
+insert into auth.users (id, email, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000c5', 'refund-owner@perkly.test', '{"full_name":"Omar Owner"}');
+select set_config('test.rf_rx', (select id::text from redemptions where user_id = '00000000-0000-0000-0000-0000000000b9' and status = 'success' limit 1), false);
+insert into merchant_members (merchant_id, user_id, member_role)
+  select merchant_id, '00000000-0000-0000-0000-0000000000c5', 'owner' from redemptions where id = current_setting('test.rf_rx')::uuid;
+select set_config('test.rf_xp', (select total_xp::text from user_stats where user_id = '00000000-0000-0000-0000-0000000000b9'), false);
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000a7', false);
+do $$ begin
+  assert request_refund(current_setting('test.rf_rx')::uuid, 'wrong_amount')->>'error' = 'not_found', 'only your own transactions';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000b9', false);
+do $$ declare r jsonb; begin
+  assert request_refund(current_setting('test.rf_rx')::uuid, 'other')->>'error' = 'note_required', 'other needs a note';
+  r := request_refund(current_setting('test.rf_rx')::uuid, 'wrong_amount', 'Charged 500 instead of 50');
+  assert (r->>'ok')::boolean and r->>'refund_code' ~ '^7[0-9]{7}$', 'student can ask: ' || r::text;
+  assert request_refund(current_setting('test.rf_rx')::uuid, 'wrong_amount')->>'error' = 'already_requested', 'one request per transaction';
+  assert decide_refund((r->>'id')::uuid, true)->>'error' = 'not_allowed', 'students cannot approve their own refund';
+  perform set_config('test.rf_id', r->>'id', false);
+end $$;
+-- another merchant's people can't see or decide it
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000a7', false);
+do $$ begin assert (select count(*) from refund_requests) = 0, 'other students cannot see it'; end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c5', false);
+do $$ declare r jsonb; begin
+  assert (select count(*) from refund_requests where status = 'pending') = 1, 'the merchant sees it';
+  assert decide_refund(current_setting('test.rf_id')::uuid, false)->>'error' = 'note_required', 'rejecting needs a reason';
+  r := decide_refund(current_setting('test.rf_id')::uuid, true, 'Our mistake');
+  assert (r->>'ok')::boolean and r->>'payout_status' = 'by_merchant', 'merchant approves a cashier payment: ' || r::text;
+  assert decide_refund(current_setting('test.rf_id')::uuid, true)->>'error' = 'already_decided', 'decided once';
+end $$;
+reset role;
+do $$ begin
+  assert (select status from redemptions where id = current_setting('test.rf_rx')::uuid) = 'reversed', 'transaction reversed';
+  assert (select total_xp from user_stats where user_id = '00000000-0000-0000-0000-0000000000b9')
+         = greatest(0, current_setting('test.rf_xp')::int - (select xp_awarded from redemptions where id = current_setting('test.rf_rx')::uuid)), 'XP taken back';
+  assert (select count(*) from notifications where user_id = '00000000-0000-0000-0000-0000000000b9' and kind = 'refund') = 1, 'student is told';
+end $$;
+-- in-app payment: approved → Perkly owes the money → Finance marks it paid
+insert into redemptions (user_id, perk_id, merchant_id, branch_id, original_amount, discount_amount, final_amount, xp_awarded, verification_code, payment_method, payment_status, commission_amount)
+  select user_id, perk_id, merchant_id, branch_id, 200, 20, 180, 0, 'RF0001', 'in_app', 'paid', 9 from redemptions where id = current_setting('test.rf_rx')::uuid;
+select set_config('test.rf_rx2', (select id::text from redemptions where verification_code = 'RF0001'), false);
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000b9', false);
+do $$ declare r jsonb; begin
+  r := request_refund(current_setting('test.rf_rx2')::uuid, 'order_cancelled');
+  assert (r->>'ok')::boolean, 'ask for an in-app refund: ' || r::text;
+  perform set_config('test.rf_id2', r->>'id', false);
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ declare r jsonb; begin
+  r := decide_refund(current_setting('test.rf_id2')::uuid, true);
+  assert r->>'payout_status' = 'due', 'operations can decide; Perkly owes the money: ' || r::text;
+  assert mark_refund_paid(current_setting('test.rf_id2')::uuid, 'BANK-1')->>'error' = 'not_allowed', 'only finance marks it paid';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e3', false);
+do $$ begin
+  assert mark_refund_paid(current_setting('test.rf_id2')::uuid, '')->>'error' = 'reference_required', 'needs a reference';
+  assert (mark_refund_paid(current_setting('test.rf_id2')::uuid, 'BANK-1')->>'ok')::boolean, 'finance marks it paid';
+  assert mark_refund_paid(current_setting('test.rf_id2')::uuid, 'BANK-2')->>'error' = 'not_due', 'paid once';
+end $$;
+reset role;
+do $$ begin
+  assert (select payment_status from redemptions where id = current_setting('test.rf_rx2')::uuid) = 'refunded', 'payment marked refunded';
+end $$;

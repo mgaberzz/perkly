@@ -20,6 +20,7 @@ Ask Claude: **"launch checklist"** to walk through it.
 - [ ] SMS provider for students' login codes (Supabase Auth → Phone)
 - [ ] Email provider: Resend is connected but in **test mode** (only emails m.gaberz@hotmail.com). Verify the domain at resend.com/domains, then change the sender in Supabase → Auth → SMTP to e.g. `no-reply@<domain>`. Until then students can't get email login codes and portal invites don't arrive. This also enables university-email verification.
 - [ ] Paymob merchant account → switch in-app payments from **test** to **live** (Settings)
+  - After Paymob: make approved in-app refunds go back to the student's card automatically (today Finance returns the money by hand and marks the refund paid)
 
 ## Analytics & CRM
 - [ ] **PostHog** (analytics, free up to 1M events/month, EU servers): create the account, save the project key in Expo/Vercel (not in chat). Claude then adds:

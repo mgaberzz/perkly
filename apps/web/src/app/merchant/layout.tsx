@@ -8,12 +8,17 @@ import { MEMBER_ROLE_LABEL } from "@/lib/labels";
 import { switchMerchant } from "./actions";
 
 export default async function MerchantLayout({ children }: LayoutProps<"/merchant">) {
-  const { merchant, memberships, profile, user, memberRole, branchScope } = await requireMerchant();
+  const { merchant, memberships, profile, user, memberRole, branchScope, supabase } = await requireMerchant();
   const t = await getT();
   const online = merchant.channel !== "in_store";
+  // Refund requests waiting for this merchant (RLS limits branch managers to their branch)
+  const { count: refunds } = merchantCan(memberRole, "refunds")
+    ? await supabase.from("refund_requests").select("*", { count: "exact", head: true }).eq("merchant_id", merchant.id).eq("status", "pending")
+    : { count: 0 };
   const items: (NavItem & { area: MerchantArea })[] = [
     { area: "dashboard", href: "/merchant", label: branchScope ? t("My branch dashboard") : t("Dashboard"), icon: "home", group: 0, exact: true },
     { area: "transactions", href: "/merchant/redemptions", label: t("Transactions"), icon: "receipt", group: 0 },
+    { area: "refunds", href: "/merchant/refunds", label: t("Refunds"), icon: "undo", group: 0, count: refunds || undefined },
     ...(online ? [{ area: "online" as const, href: "/merchant/online", label: t("Online orders"), icon: "globe", group: 0 }] : []),
     { area: "perks", href: "/merchant/perks", label: t("Perks"), icon: "gift", group: 1 },
     { area: "branches", href: "/merchant/branches", label: branchScope ? t("My branch & QR") : t("Branches & QR"), icon: "qr", group: 1 },
@@ -22,7 +27,7 @@ export default async function MerchantLayout({ children }: LayoutProps<"/merchan
     { area: "profile", href: "/merchant/profile", label: t("Business profile"), icon: "building", group: 2 },
   ];
   // Each staff role sees only its own areas
-  const nav: NavItem[] = [...items.filter((i) => merchantCan(memberRole, i.area)).map((i) => ({ href: i.href, label: i.label, exact: i.exact, icon: i.icon, group: i.group })),
+  const nav: NavItem[] = [...items.filter((i) => merchantCan(memberRole, i.area)).map((i) => ({ href: i.href, label: i.label, exact: i.exact, icon: i.icon, group: i.group, count: i.count })),
     { href: "/merchant/settings", label: t("Settings"), icon: "settings", group: 3 }];
   const top = (
     <div className="mb-2 rounded-2xl bg-zinc-50 p-3">

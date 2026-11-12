@@ -14,6 +14,7 @@ const NAV: (NavItem & { perm: Perm })[] = [
   { href: "/admin/broadcasts", label: "Push notifications", icon: "send", group: 1, perm: "broadcasts" },
   { href: "/admin/redemptions", label: "Transactions", icon: "receipt", group: 1, perm: "redemptions_view" },
   { href: "/admin/finance", label: "Finance", icon: "wallet", group: 2, perm: "finance" },
+  { href: "/admin/refunds", label: "Refunds", icon: "undo", group: 2, perm: "refunds" },
   { href: "/admin/verifications", label: "Student verification", icon: "shield", group: 3, perm: "verifications" },
   { href: "/admin/users", label: "Users & roles", icon: "users", group: 3, perm: "users" },
   { href: "/admin/team", label: "Team & assignments", icon: "team", group: 3, perm: "users" },
@@ -26,17 +27,18 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const { profile, user, role, supabase } = await requireStaff();
   const t = await getT();
   // Open requests this person can act on (RLS scopes the count)
-  const [{ count }, { count: toVerify }, { count: applications }] = await Promise.all([
+  const [{ count }, { count: toVerify }, { count: applications }, { count: refundsOpen }] = await Promise.all([
     supabase.from("admin_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
     can(role, "verifications") ? supabase.from("student_verifications").select("*", { count: "exact", head: true }).eq("status", "pending") : Promise.resolve({ count: 0 }),
     can(role, "merchants_create") ? supabase.from("merchant_applications").select("*", { count: "exact", head: true }).eq("status", "pending") : Promise.resolve({ count: 0 }),
+    can(role, "refunds") ? supabase.from("refund_requests").select("*", { count: "exact", head: true }).or(can(role, "finance") ? "status.eq.pending,payout_status.eq.due" : "status.eq.pending") : Promise.resolve({ count: 0 }),
   ]);
   // Account managers see "My …" because they only ever see their own merchants and campuses
   const mine: Record<string, string> = role === "account_manager"
     ? { "/admin/merchants": "My merchants", "/admin/campuses": "My campuses", "/admin/perks": "My campaigns", "/admin/redemptions": "My transactions" }
     : role === "finance" ? { "/admin/merchants": "Merchants (view)" } : {};
   const nav = NAV.filter((n) => can(role, n.perm)).map((n) => ({
-    href: n.href, icon: n.icon, group: n.group, exact: n.exact, label: t(mine[n.href] ?? n.label), count: n.href === "/admin/notifications" ? count ?? 0 : n.href === "/admin/verifications" ? toVerify ?? 0 : n.href === "/admin/merchants" ? applications || undefined : undefined,
+    href: n.href, icon: n.icon, group: n.group, exact: n.exact, label: t(mine[n.href] ?? n.label), count: n.href === "/admin/notifications" ? count ?? 0 : n.href === "/admin/verifications" ? toVerify ?? 0 : n.href === "/admin/merchants" ? applications || undefined : n.href === "/admin/refunds" ? refundsOpen || undefined : undefined,
   }));
   return <Shell nav={nav} user={profile.full_name ?? user.email ?? ""} badge={`Perkly · ${t(ROLE_LABEL[role])}`}><SentryUser id={user.id} role={role} />{children}</Shell>;
 }

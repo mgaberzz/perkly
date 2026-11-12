@@ -6,6 +6,7 @@ import { MERCHANT_COOKIE, requireMerchant, requireMerchantArea } from "@/lib/aut
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addMember } from "@/lib/members";
 import { parsePerkForm } from "@/lib/perk-form";
+import { REFUND_ERRORS } from "@/lib/refunds";
 import type { ActionState, MemberRole } from "@/lib/types";
 
 async function manager() {
@@ -240,4 +241,17 @@ export async function removeStaff(fd: FormData) {
   if (memberRole !== "owner" || userId === user.id) return;
   await createAdminClient().from("merchant_members").delete().eq("merchant_id", merchant.id).eq("user_id", userId);
   revalidatePath("/merchant/team");
+}
+
+// ───────── Refunds ─────────
+/** Approve or reject a student's refund request (the database checks the role and the branch). */
+export async function decideRefund(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireMerchantArea("refunds");
+  const approve = str(fd, "decision") === "approve";
+  const { data, error } = await supabase.rpc("decide_refund", { p_id: str(fd, "id"), p_approve: approve, p_note: str(fd, "note") || null });
+  const res = data as { ok: boolean; error?: string; payout_status?: string } | null;
+  if (error || !res?.ok) return { error: REFUND_ERRORS[res?.error ?? ""] ?? "Could not save." };
+  revalidatePath("/merchant", "layout");
+  return { ok: !approve ? "Refund rejected. The student was told why."
+    : res.payout_status === "by_merchant" ? "Approved. Give the student the money back at the cashier." : "Approved. Perkly returns the money to the student." };
 }

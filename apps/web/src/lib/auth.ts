@@ -41,6 +41,7 @@ export const PERMS = {
   redemptions_view: ["admin", "operations", "account_manager", "finance"],
   redemptions_review: ["admin", "operations"],
   finance: ["admin", "finance"],
+  refunds: ["admin", "operations", "finance"],          // operations decide, finance pays back
   partners_view: ["admin", "operations", "finance"],
   partners_manage: ["admin", "operations"],          // create partners, set deals, link merchants
   partner_payouts: ["admin", "finance"],
@@ -88,6 +89,7 @@ export const requireAdmin = () => requireStaff("users");
 export const MERCHANT_AREAS = {
   dashboard: ["owner", "manager", "branch_manager"],
   transactions: ["owner", "manager", "branch_manager", "cashier"],
+  refunds: ["owner", "manager", "branch_manager"],
   online: ["owner", "manager", "cashier"],
   perks: ["owner", "manager"],
   branches: ["owner", "manager", "branch_manager"],

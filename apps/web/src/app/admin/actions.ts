@@ -5,6 +5,7 @@ import { requireAdmin, requireStaff } from "@/lib/auth";
 import { addMember, addPartnerMember } from "@/lib/members";
 import { parsePerkForm } from "@/lib/perk-form";
 import { APP_FEATURES } from "@/lib/features";
+import { REFUND_ERRORS } from "@/lib/refunds";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { SITE_URL } from "@/lib/env";
 import { BRAND_TYPES, STAFF_ROLES, type ActionState, type MemberRole } from "@/lib/types";
@@ -533,4 +534,24 @@ export async function rejectApplication(_: ActionState, fd: FormData): Promise<A
   if (!data?.length) return { error: "This application was already handled." };
   revalidatePath("/admin/merchants", "layout");
   return { ok: "Application rejected." };
+}
+
+// ───────── Refunds ─────────
+export async function adminDecideRefund(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireStaff("redemptions_review");
+  const approve = str(fd, "decision") === "approve";
+  const { data, error } = await supabase.rpc("decide_refund", { p_id: str(fd, "id"), p_approve: approve, p_note: str(fd, "note") || null });
+  const res = data as { ok: boolean; error?: string } | null;
+  if (error || !res?.ok) return { error: REFUND_ERRORS[res?.error ?? ""] ?? "Could not save." };
+  revalidatePath("/admin", "layout");
+  return { ok: approve ? "Refund approved." : "Refund rejected. The student was told why." };
+}
+
+export async function markRefundPaid(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireStaff("finance");
+  const { data, error } = await supabase.rpc("mark_refund_paid", { p_id: str(fd, "id"), p_reference: str(fd, "reference") });
+  const res = data as { ok: boolean; error?: string } | null;
+  if (error || !res?.ok) return { error: REFUND_ERRORS[res?.error ?? ""] ?? "Could not save." };
+  revalidatePath("/admin", "layout");
+  return { ok: "Marked as paid. The student was notified." };
 }

@@ -47,7 +47,7 @@ type Ctx = {
 };
 
 export type FeatureKey = 'arcade' | 'quests' | 'leaderboard' | 'badges' | 'streaks' | 'invite' | 'pay_in_app' | 'shop_online'
-  | 'flash_perks' | 'collections' | 'avatar_builder' | 'verification' | 'language';
+  | 'flash_perks' | 'collections' | 'avatar_builder' | 'verification' | 'language' | 'refunds';
 type FeatureCfg = Partial<Record<FeatureKey, { on?: boolean; campuses?: string[]; default?: 'en' | 'ar' }>>;
 const FEATURES_CACHE = 'perkly.cache.features';
 
