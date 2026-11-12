@@ -5,7 +5,8 @@ import { useRef, useState, type ComponentRef } from 'react';
 import { ActivityIndicator, Modal, Pressable, Share, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import { Text } from '@/components/text';
-import { egp } from '@/lib/format';
+import { discountPct, egp, vatIncluded } from '@/lib/format';
+import { useSession } from '@/lib/session';
 import { locale, t } from '@/lib/i18n';
 import { brand, gradient } from '@/lib/theme';
 
@@ -36,13 +37,15 @@ export function ShareReceiptButton({ data, variant = 'solid', label }: { data: R
 function ShareSheet({ data, onClose }: { data: ReceiptData; onClose: () => void }) {
   const shot = useRef<ComponentRef<typeof View>>(null);
   const [busy, setBusy] = useState(false);
+  const { vatPct } = useSession();
 
   const text = () => [
     `🧾 ${t('Perkly Receipt')} ${data.tx_code ?? ''}`.trim(),
     `${data.merchant_name} · ${data.perk_title}`,
     `${t('Bill')}: ${egp(data.original_amount)}`,
-    data.discount_amount != null ? `${t('Perkly Discount')}: −${egp(data.discount_amount)}` : '',
+    data.discount_amount != null ? `${t('Perkly Discount')}${discountPct(data.discount_amount, data.original_amount) ? ` (${discountPct(data.discount_amount, data.original_amount)})` : ''}: −${egp(data.discount_amount)}` : '',
     `${t('You Paid')}: ${egp(data.final_amount ?? data.original_amount)}`,
+    vatIncluded(data.final_amount, vatPct) != null ? `${t('Incl. VAT ({n}%)', { n: vatPct })}: ${egp(vatIncluded(data.final_amount, vatPct))}` : '',
     new Date(data.created_at).toLocaleString(locale(), { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }),
     '',
     t('Students Save More with Perkly 💜'),
@@ -89,9 +92,12 @@ function ShareSheet({ data, onClose }: { data: ReceiptData; onClose: () => void 
 
 /** The image that gets shared: a plain, simple receipt */
 export function ReceiptCard({ data }: { data: ReceiptData }) {
+  const { vatPct } = useSession();
+  const pct = discountPct(data.discount_amount, data.original_amount);
+  const vat = vatIncluded(data.final_amount, vatPct);
   const rows: [string, string, boolean?][] = [
     [t('Bill'), egp(data.original_amount)],
-    [t('Perkly Discount'), data.discount_amount != null ? `−${egp(data.discount_amount)}` : t('Applied by Cashier'), true],
+    [pct ? `${t('Perkly Discount')} (${pct})` : t('Perkly Discount'), data.discount_amount != null ? `−${egp(data.discount_amount)}` : t('Applied by Cashier'), true],
     [t('Payment'), data.payment_method === 'in_app' ? t('Paid in App') : t('At the Cashier')],
   ];
   const line = <View style={{ height: 1, backgroundColor: '#ECE8F3' }} />;
@@ -128,6 +134,12 @@ export function ReceiptCard({ data }: { data: ReceiptData }) {
         <Text style={{ fontWeight: '900', fontSize: 16, color: brand.ink }}>{t('Total Paid')}</Text>
         <Text style={{ fontWeight: '900', fontSize: 16, color: brand.ink }}>{egp(data.final_amount ?? data.original_amount)}</Text>
       </View>
+      {vat != null && (
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Text style={{ color: '#6B6680', fontSize: 12 }}>{t('Incl. VAT ({n}%)', { n: vatPct })}</Text>
+          <Text style={{ fontWeight: '800', fontSize: 12, color: brand.ink }}>{egp(vat)}</Text>
+        </View>
+      )}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <Text style={{ color: '#6B6680', fontSize: 12 }}>{t('Transaction ID')}</Text>
         <Text style={{ fontWeight: '800', fontSize: 12, color: brand.ink, writingDirection: 'ltr' }}>{data.tx_code ?? '—'}</Text>

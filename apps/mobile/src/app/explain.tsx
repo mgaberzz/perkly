@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components/text';
 import { Card, Empty, MerchantLogo, T } from '@/components/ui';
-import { egp, levelProgress, shortDate } from '@/lib/format';
+import { discountPct, egp, levelProgress, shortDate, vatIncluded } from '@/lib/format';
 import { backChevron, fwdChevron, locale, t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
@@ -34,7 +34,7 @@ const ICON: Record<string, string> = { redemption: '🧾', new_merchant: '🧭',
 export default function Explain() {
   const { c } = useTheme();
   const { metric = 'saved', id } = useLocalSearchParams<{ metric?: string; id?: string }>();
-  const { session, stats, feature } = useSession();
+  const { session, stats, feature, vatPct } = useSession();
   const [reds, setReds] = useState<Red[] | null>(null);
   const [xp, setXp] = useState<Xp[] | null>(null);
   const [orders, setOrders] = useState<Order[] | null>(null);
@@ -184,8 +184,9 @@ export default function Explain() {
         title: r.merchant_name, big: r.discount_amount != null ? `−${egp(r.discount_amount)}` : t('Applied by Cashier'),
         lines: [
           <Row key="b" label={t('Bill')} value={egp(r.original_amount)} />,
-          <Row key="d" sign="−" label={t('Perkly Discount')} value={r.discount_amount != null ? egp(r.discount_amount) : t('Applied by Cashier')} />,
+          <Row key="d" sign="−" label={discountPct(r.discount_amount, r.original_amount) ? `${t('Perkly Discount')} (${discountPct(r.discount_amount, r.original_amount)})` : t('Perkly Discount')} value={r.discount_amount != null ? egp(r.discount_amount) : t('Applied by Cashier')} />,
           <Row key="p" sign="=" strong label={t('You Paid')} value={egp(r.final_amount ?? r.original_amount)} />,
+          ...(vatIncluded(r.final_amount, vatPct) != null ? [<Row key="v" label={t('Incl. VAT ({n}%)', { n: vatPct })} value={egp(vatIncluded(r.final_amount, vatPct))} />] : []),
           <Row key="m" label={t('Payment')} value={r.payment_method === 'in_app' ? t('Paid in App') : t('At the Cashier')} />,
           ...events.map((e) => <Row key={e.id} sign="+" label={`${ICON[e.reason] ?? '⚡'} ${t(REASON[e.reason] ?? e.reason)}`} value={`${e.amount} XP`} onPress={() => router.setParams({ metric: 'xp', id: undefined })} />),
           <Row key="x" sign="=" strong label={t('XP Earned')} value={`+${r.xp_awarded} XP`} onPress={() => router.setParams({ metric: 'xp', id: undefined })} />,
@@ -207,7 +208,7 @@ export default function Explain() {
       };
     }
     return null;
-  }, [metric, id, reds, xp, orders, stats, c, feature]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [metric, id, reds, xp, orders, stats, c, feature, vatPct]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>

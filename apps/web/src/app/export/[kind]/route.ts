@@ -83,6 +83,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
       { header: t("Payment ref"), value: (r) => r.payment_ref, width: 20 },
       { header: t("Total GMV (EGP)"), value: (r) => r.original_amount, money: true },
       { header: t("Discount (EGP)"), value: (r) => r.discount_amount, money: true },
+      { header: t("Discount %"), value: (r) => (r.discount_amount != null && Number(r.original_amount) > 0 ? Math.round((Number(r.discount_amount) / Number(r.original_amount)) * 1000) / 10 : null) },
       { header: t("Paid (EGP)"), value: (r) => r.final_amount, money: true },
       { header: t("Perkly commission (EGP)"), value: (r) => r.commission_amount, money: true },
       { header: t("VAT on commission (EGP)"), value: (r) => r.vat_amount, money: true, width: 18 },

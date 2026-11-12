@@ -44,6 +44,8 @@ type Ctx = {
   feature: (key: FeatureKey) => boolean;
   /** Language the app must use when the language switch is off */
   forcedLang: 'en' | 'ar' | null;
+  /** VAT rate (%) shown on receipts as "included in the total"; 0 hides the line */
+  vatPct: number;
 };
 
 export type FeatureKey = 'arcade' | 'quests' | 'leaderboard' | 'badges' | 'streaks' | 'invite' | 'pay_in_app' | 'shop_online'
@@ -80,13 +82,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [recentAreas, setRecentAreas] = useState<Campus[]>([]);
   const [popularity, setPopularity] = useState<Record<string, number>>({});
   const [featureCfg, setFeatureCfg] = useState<FeatureCfg>({});
+  const [vatPct, setVatPct] = useState(14);
 
   // Feature switches: saved copy first, then the latest from the server (also before login, for the language switch)
   const refreshFeatures = useCallback(async () => {
-    const { data, error } = await supabase.from('app_settings').select('value').eq('key', 'features').maybeSingle<{ value: FeatureCfg }>();
+    const { data, error } = await supabase.from('app_settings').select('key, value').in('key', ['features', 'tax']);
     if (error || !data) return;
-    setFeatureCfg(data.value ?? {});
-    AsyncStorage.setItem(FEATURES_CACHE, JSON.stringify(data.value ?? {})).catch(() => {});
+    const f = (data.find((r) => r.key === 'features')?.value ?? {}) as FeatureCfg;
+    const vat = Number((data.find((r) => r.key === 'tax')?.value as { vat_pct?: number } | undefined)?.vat_pct ?? 14);
+    setFeatureCfg(f);
+    setVatPct(Number.isFinite(vat) ? vat : 14);
+    AsyncStorage.setItem(FEATURES_CACHE, JSON.stringify(f)).catch(() => {});
   }, []);
   useEffect(() => {
     AsyncStorage.getItem(FEATURES_CACHE).then((v) => { if (v) setFeatureCfg((cur) => (Object.keys(cur).length ? cur : JSON.parse(v))); }).catch(() => {});
@@ -277,12 +283,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const visibleMerchants = useMemo(() => (shopOnline ? merchants : merchants.filter((m) => m.channel !== 'online')), [merchants, shopOnline]);
 
   const value = useMemo<Ctx>(() => ({
-    feature, forcedLang,
+    feature, forcedLang, vatPct,
     ready, session, quickLogin, biometricLogin, profile, stats, campus, merchants: visibleMerchants, coords, favorites,
     area, setArea, origin, areaLabel, recentAreas, clearRecentAreas, popularity,
     refreshProfile, refreshMerchants, refreshLocation, toggleFavorite, signOut,
   }), [ready, session, profile, stats, campus, visibleMerchants, coords, favorites, area, setArea, origin, areaLabel, recentAreas, clearRecentAreas, popularity,
-    refreshProfile, refreshMerchants, refreshLocation, toggleFavorite, signOut, quickLogin, biometricLogin, feature, forcedLang]);
+    refreshProfile, refreshMerchants, refreshLocation, toggleFavorite, signOut, quickLogin, biometricLogin, feature, forcedLang, vatPct]);
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

@@ -1,5 +1,6 @@
 // Arabic translations for the student app. Keys are the English text used in the code (see lib/i18n.ts).
 export const AR: Record<string, string> = {
+  "Incl. VAT ({n}%)": "شامل ضريبة القيمة المضافة ({n}%)",
   "Refund": "استرجاع",
   "Request a Refund": "اطلب استرجاع",
   "Refund Status": "حالة الاسترجاع",

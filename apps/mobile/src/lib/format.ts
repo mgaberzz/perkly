@@ -66,3 +66,16 @@ export function nearestBranch(m: Merchant, coords: { lat: number; lng: number } 
 /** Short date in the app language, e.g. "12 Nov" */
 export const shortDate = (iso: string, opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }) =>
   new Date(iso).toLocaleDateString(locale(), opts);
+
+/** "Perkly Discount (20%)": the discount as a share of the bill; plain label when it can't be worked out. */
+export function discountPct(discount: number | null | undefined, original: number | null | undefined) {
+  const d = Number(discount), o = Number(original);
+  if (discount == null || original == null || !(o > 0) || !(d > 0)) return '';
+  return `${Math.round((d / o) * 1000) / 10}%`;
+}
+/** VAT already inside a paid amount (Egyptian prices include VAT): amount × rate / (100 + rate). */
+export function vatIncluded(amount: number | null | undefined, ratePct: number) {
+  const a = Number(amount);
+  if (amount == null || !(a > 0) || !(ratePct > 0)) return null;
+  return Math.round(((a * ratePct) / (100 + ratePct)) * 100) / 100;
+}

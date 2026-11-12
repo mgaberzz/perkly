@@ -49,3 +49,10 @@ export const egpShort = (n: number | null | undefined) => (n == null ? "—" : `
 export function periodStart(days: number) {
   return new Date(Date.now() - (days - 1) * 86400000).toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
 }
+
+/** Discount as a share of the bill, e.g. "20%" (empty when either amount is missing). */
+export function discountPct(discount: number | null | undefined, original: number | null | undefined) {
+  const d = Number(discount), o = Number(original);
+  if (discount == null || original == null || !(o > 0) || !(d > 0)) return "";
+  return `${Math.round((d / o) * 1000) / 10}%`;
+}

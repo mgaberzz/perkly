@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "./i18n";
 import { Badge, Table, Td } from "./ui";
-import { dateTime, egp, shortDateTime } from "@/lib/format";
+import { dateTime, discountPct, egp, shortDateTime } from "@/lib/format";
 import { DetailRow, ExpandItem, ExpandList } from "./expand-list";
 
 export type FeedRow = {
@@ -59,7 +59,7 @@ export function LiveRedemptions({ merchantId, branchId, initial }: { merchantId:
                 </div>
                 <div className="flex items-center justify-between gap-2 text-xs text-zinc-500">
                   <span className="truncate"><span className="font-mono font-semibold text-zinc-600">{r.tx_code}</span> · {shortDateTime(r.created_at)}</span>
-                  <span className="shrink-0 font-semibold text-perk-purple">−{egp(r.discount_amount)}</span>
+                  <span className="shrink-0 font-semibold text-perk-purple">−{egp(r.discount_amount)}{discountPct(r.discount_amount, r.original_amount) && ` (${discountPct(r.discount_amount, r.original_amount)})`}</span>
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-1">
                   <Badge tone={r.status} className="!text-[10px]">{t(r.status)}</Badge>
@@ -73,7 +73,7 @@ export function LiveRedemptions({ merchantId, branchId, initial }: { merchantId:
             <DetailRow label={t("Shop receipt / order no.")}><ReceiptRefForm id={r.id} value={r.receipt_ref ?? null} /></DetailRow>
             <DetailRow label={t("Branch / cashier")}>{r.branch?.name ?? <><Icon name="globe" size={14} className="me-1 inline-block align-[-2px]" />{t("Online")}</>}{(r.qr?.cashier_name ?? r.qr?.label) && <span className="block text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</span>}</DetailRow>
             <DetailRow label={t("Bill")}>{egp(r.original_amount)}</DetailRow>
-            <DetailRow label={t("Discount")}>{egp(r.discount_amount)}</DetailRow>
+            <DetailRow label={t("Discount")}>{egp(r.discount_amount)}{discountPct(r.discount_amount, r.original_amount) && <span className="ms-1 text-xs font-semibold text-perk-purple">({discountPct(r.discount_amount, r.original_amount)})</span>}</DetailRow>
             <DetailRow label={t("Paid after discount")}>{egp(r.final_amount)}</DetailRow>
           </ExpandItem>
           </div>
@@ -88,7 +88,7 @@ export function LiveRedemptions({ merchantId, branchId, initial }: { merchantId:
             <Td>{r.perk?.title}</Td>
             <Td>{r.branch?.name ?? <><Icon name="globe" size={14} className="me-1 inline-block align-[-2px]" />{t("Online")}</>}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>
             <Td>{egp(r.original_amount)}</Td>
-            <Td className="font-semibold text-perk-purple">{egp(r.discount_amount)}</Td>
+            <Td className="font-semibold text-perk-purple">{egp(r.discount_amount)}{discountPct(r.discount_amount, r.original_amount) && <div className="text-xs font-normal text-zinc-500">{discountPct(r.discount_amount, r.original_amount)}</div>}</Td>
             <Td>{r.payment_method === "in_app"
               ? <Badge tone="active">{t("Paid in app")} · {egp(r.final_amount)}</Badge>
               : <Badge tone="paused">{t("Pay at cashier")}</Badge>}</Td>

@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui';
 import { ShareReceiptButton } from '@/components/share-receipt';
 import { ReceiptRefInput } from '@/components/receipt-ref-input';
-import { discountLabel, egp } from '@/lib/format';
+import { discountLabel, discountPct, egp, vatIncluded } from '@/lib/format';
 import { getLastRedemption } from '@/lib/redemption-store';
 import { supabase } from '@/lib/supabase';
 import { brand } from '@/lib/theme';
@@ -21,7 +21,7 @@ const CONFETTI = ['🎉', '✨', '💜', '🎊', '⭐', '💸'];
  * Anti-screenshot: live ticking clock, pulsing ring and a moving shimmer — a photo looks frozen.
  */
 export default function Success() {
-  const { feature } = useSession();
+  const { feature, vatPct } = useSession();
   const r = getLastRedemption();
   const [now, setNow] = useState(() => new Date());
   const pulse = useRef(new Animated.Value(0)).current;
@@ -123,7 +123,8 @@ export default function Success() {
             {[
               [t('Perk'), r.perk_title],
               [t('Bill'), egp(r.original_amount)],
-              [t('Perkly Discount'), r.discount_amount != null ? `− ${egp(r.discount_amount)}` : t('Applied by Cashier')],
+              [discountPct(r.discount_amount, r.original_amount) ? `${t('Perkly Discount')} (${discountPct(r.discount_amount, r.original_amount)})` : t('Perkly Discount'), r.discount_amount != null ? `− ${egp(r.discount_amount)}` : t('Applied by Cashier')],
+              ...(vatIncluded(r.final_amount, vatPct) != null ? [[t('Incl. VAT ({n}%)', { n: vatPct }), egp(vatIncluded(r.final_amount, vatPct))]] : []),
               [t('Payment'), r.payment_method === 'in_app' ? `${t('Paid in App')}${r.payment_ref ? ` · ${r.payment_ref}` : ''}` : t('At the Cashier')],
               [t('XP Earned'), `+${r.xp_awarded} XP`],
             ].map(([k, v]) => (

@@ -1,5 +1,6 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Discount %": "نسبة الخصم",
   "Refunds": "الاستردادات",
   "Students ask for a refund in the app. Check the transaction, then approve or reject. Approving cancels the transaction, so you pay no commission on it.": "يطلب الطلاب الاسترداد من التطبيق. راجع المعاملة ثم وافق أو ارفض. الموافقة تلغي المعاملة فلا تُحتسب عليها عمولة.",
   "Waiting": "قيد الانتظار",
