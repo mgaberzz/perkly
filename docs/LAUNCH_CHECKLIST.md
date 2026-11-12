@@ -21,6 +21,14 @@ Ask Claude: **"launch checklist"** to walk through it.
 - [ ] Email provider: Resend is connected but in **test mode** (only emails m.gaberz@hotmail.com). Verify the domain at resend.com/domains, then change the sender in Supabase → Auth → SMTP to e.g. `no-reply@<domain>`. Until then students can't get email login codes and portal invites don't arrive. This also enables university-email verification.
 - [ ] Paymob merchant account → switch in-app payments from **test** to **live** (Settings)
 
+## Analytics & CRM
+- [ ] **PostHog** (analytics, free up to 1M events/month, EU servers): create the account, save the project key in Expo/Vercel (not in chat). Claude then adds:
+  - app events (app opened, sign-up completed, perk viewed, QR scanned, redeemed, spin played, notification opened); sign-ups and redemptions also sent from the database
+  - analytics on the consent screen + a line in the Privacy Policy (no names, phones or emails sent; only an anonymous ID, campus, level, language)
+  - starter dashboard: sign-up funnel, weekly retention by campus, redemptions per notification
+- [ ] **HubSpot free** (CRM for the merchant pipeline): create the account, save the private app token in Supabase (not in chat). Claude then sends merchant applications in as leads and keeps status (live, monthly transactions) up to date
+- [ ] Lawyer review covers the analytics consent (Egypt data protection law 151/2020)
+
 ## Monitoring
 - [ ] **Sentry source maps**: create a Sentry auth token (secret) and add it to
   - Vercel: `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT=perkly-portal`
