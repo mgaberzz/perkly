@@ -199,7 +199,7 @@ export default function Arcade() {
                 <Text style={{ fontSize: 60 }}>{result.reward_type === 'freeze' ? '❄️' : '🎉'}</Text>
                 <Text style={{ fontSize: 28, fontWeight: '900', color: brand.ink }}>{result.reward_type === 'freeze' ? t('Streak freeze!') : `+${result.amount} XP`}</Text>
                 <Text style={{ color: '#6B6680', fontWeight: '600', textAlign: 'center' }}>
-                  {result.reward_type === 'freeze' ? t('Your streak is safe if you miss a day.') : t('Added to your level. Keep going!')} {t('{n} Ticket(s) Left', { n: result.tickets_left })}
+                  {result.reward_type === 'freeze' ? t('Your streak is safe if you miss a day.') : t('Added to your level. Keep going!')} {t(result.tickets_left === 1 ? '{n} Ticket Left' : '{n} Tickets Left', { n: result.tickets_left })}
                 </Text>
               </>
             ) : (

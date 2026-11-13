@@ -86,7 +86,7 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
               [t("Category"), `${t(merchant.category)}${merchant.subcategory ? ` · ${merchant.subcategory}` : ""}`],
               [t("Brand type"), t(BRAND_TYPE_LABEL[merchant.brand_type] ?? merchant.brand_type)],
               [t("Channel"), t(CHANNEL_LABEL[merchant.channel])],
-              [t("Plan"), merchant.plan === "pro" ? "Pro" : "Free"],
+              [t("Plan"), merchant.plan === "pro" ? "Pro" : t("Free")],
               [t("Commission"), `${merchant.commission_pct}%`],
               [t("VAT on commission"), merchant.vat_enabled ? t("Yes") : t("Exempt")],
               [t("Contact name"), merchant.contact_name],

@@ -37,7 +37,7 @@ export default async function ProfilePage() {
             {row(t("Category"), t(merchant.category))}
             {row(t("Brand type"), t(BRAND_TYPE_LABEL[merchant.brand_type] ?? merchant.brand_type))}
             {row(t("Sells"), t(CHANNEL_LABEL[merchant.channel]))}
-            {row(t("Plan"), merchant.plan === "pro" ? "Pro" : "Free")}
+            {row(t("Plan"), merchant.plan === "pro" ? "Pro" : t("Free"))}
             {row(t("Perkly commission"), `${merchant.commission_pct}%`)}
             {row(t("VAT on commission"), merchant.vat_enabled ? t("Yes") : t("No"))}
           </dl>

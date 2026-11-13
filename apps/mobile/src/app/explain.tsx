@@ -22,9 +22,9 @@ type Xp = { id: number; amount: number; reason: string; created_at: string; cont
 type Order = { id: string; order_ref: string; amount: number; cashback_amount: number; status: string; created_at: string; merchant: { name: string } | null };
 
 const REASON: Record<string, string> = {
-  redemption: 'Redeeming a perk', new_merchant: 'Trying a new place', streak: 'Streak bonus', streak_milestone: 'Streak milestone',
-  quest: 'Quest completed', referral: 'Friend joined with your code', daily_open: 'Opening the app', admin: 'Bonus from Perkly',
-  spin: 'Spin the Wheel', online_order: 'Online order',
+  redemption: 'Redeeming a Perk', new_merchant: 'Trying a New Place', streak: 'Streak Bonus', streak_milestone: 'Streak Milestone',
+  quest: 'Quest Completed', referral: 'Friend Joined with Your Code', daily_open: 'Opening the App', admin: 'Bonus from Perkly',
+  spin: 'Spin the Wheel', online_order: 'Online Order',
 };
 const ICON: Record<string, string> = { redemption: '🧾', new_merchant: '🧭', streak: '🔥', streak_milestone: '🏅', quest: '🎯', referral: '💜', daily_open: '☀️', admin: '🎁', spin: '🎡', online_order: '🌐' };
 
@@ -197,7 +197,7 @@ export default function Explain() {
             <T v="small">{r.perk_title}</T>
             <T v="small">{r.branch_name === 'Online' ? t('Online') : r.branch_name} · {new Date(r.created_at).toLocaleString(locale(), { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</T>
             {r.tx_code ? <T v="small">{t('Transaction ID')}: <Text style={{ fontWeight: '900' }}>{r.tx_code}</Text></T> : null}
-            <T v="small">{t('Code')}: <Text style={{ fontWeight: '900', letterSpacing: 2 }}>{r.verification_code}</Text>{r.status === 'reversed' ? ` · ${t('Reversed')}` : ''}</T>
+            <T v="small">{t('Code')}: <Text style={{ fontWeight: '900', letterSpacing: 2 }}>{r.verification_code}</Text>{r.status === 'reversed' ? ` · ${t('Refunded')}` : ''}</T>
             {r.status !== 'reversed' && <View style={{ marginTop: 12 }}><RateVisit redemptionId={r.id} /></View>}
             <View style={{ marginTop: 10 }}><ShareReceiptButton data={r} /></View>
             {(feature('refunds') || r.status === 'reversed') && Number(r.final_amount ?? 0) > 0 && (

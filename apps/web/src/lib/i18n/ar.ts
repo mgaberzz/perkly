@@ -1,5 +1,6 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Free": "مجاني",
   "Bank account & payout cycle": "الحساب البنكي ودورة الدفع",
   "Bank details sent. Perkly will review them.": "تم إرسال بيانات البنك. سيراجعها فريق Perkly.",
   "Cashier name saved.": "تم حفظ اسم الكاشير.",

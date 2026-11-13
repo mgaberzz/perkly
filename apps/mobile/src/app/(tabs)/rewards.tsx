@@ -87,7 +87,7 @@ export default function Rewards() {
         <Text style={{ fontSize: 40 }}>🎡</Text>
         <View style={{ flex: 1 }}>
           <T v="h3">{t('Arcade · Spin the Wheel')}</T>
-          <T v="small">{t('{n} Ticket(s) · Every Spin Wins XP or a Streak Freeze', { n: stats?.spin_tickets ?? 0 })}</T>
+          <T v="small">{t(stats?.spin_tickets === 1 ? '{n} Ticket · Every Spin Wins XP or a Streak Freeze' : '{n} Tickets · Every Spin Wins XP or a Streak Freeze', { n: stats?.spin_tickets ?? 0 })}</T>
         </View>
         <T v="h3" color={brand.purple}>{t('Play')} {fwdChevron()}</T>
       </Card>}
@@ -138,7 +138,7 @@ export default function Rewards() {
       </View>}
 
       {feature('leaderboard') && <>
-      <SectionHeader title={`${t("This week's leaderboard")} 🥇`} />
+      <SectionHeader title={`${t("This Week's Leaderboard")} 🥇`} />
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <Chip label={t('My Campus')} active={scope === 'campus'} onPress={() => setScope('campus')} />
         <Chip label={t('Nationwide')} active={scope === 'all'} onPress={() => setScope('all')} />

@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Linking, Pressable, ScrollView, View } from 'react-native';
+import { Animated, Easing, Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/components/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui';
@@ -139,9 +139,11 @@ export default function Success() {
               <Text style={{ color: brand.ink, fontWeight: '900', fontSize: 18 }}>{t('Total')}</Text>
               <Text style={{ color: brand.ink, fontWeight: '900', fontSize: 18 }}>{r.final_amount != null ? egp(r.final_amount) : '—'}</Text>
             </View>
-            <Text style={{ color: '#6B6680', fontSize: 12, textAlign: 'center', marginTop: 4 }}>
-              <Text style={{ color: brand.pink, fontWeight: '800' }} onPress={() => Linking.openURL('https://wa.me/')}>{t('Need Help')}</Text> {t('with this redemption? Tell us within 24 hours.')}
-            </Text>
+            {feature('refunds') && (
+              <Text style={{ color: '#6B6680', fontSize: 12, textAlign: 'center', marginTop: 4 }}>
+                {t('Something wrong with this purchase?')} <Text style={{ color: brand.pink, fontWeight: '800' }} onPress={() => router.push({ pathname: '/refund', params: { id: r.redemption_id } })}>{t('Request a Refund')}</Text>
+              </Text>
+            )}
           </View>
 
           {/* Rewards */}

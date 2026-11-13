@@ -35,7 +35,7 @@ export default function History() {
     { key: 'period', label: t('Period'), options: [['7', t('Last 7 Days')], ['30', t('Last 30 Days')], ['90', t('Last 90 Days')]] },
     { key: 'payment', label: t('Payment'), options: [['merchant', t('At the Cashier')], ['in_app', t('Paid in App')]] },
     { key: 'channel', label: t('Where'), options: [['in_store', t('In-Store')], ['online', t('Online')]] },
-    { key: 'status', label: t('Status'), options: [['success', t('Success')], ['reversed', t('Reversed')]] },
+    { key: 'status', label: t('Status'), options: [['success', t('Success')], ['reversed', t('Refunded')]] },
   ];
   const active = OPTIONS.filter((o) => f[o.key]);
 
@@ -108,7 +108,7 @@ export default function History() {
       )}
 
       {rows && rows.length > 0 && (
-        <T v="small">{t('{n} Transactions · You Saved {amount}', { n: list.length, amount: egp(saved) })}</T>
+        <T v="small">{t(list.length === 1 ? '{n} Transaction · You Saved {amount}' : '{n} Transactions · You Saved {amount}', { n: list.length, amount: egp(saved) })}</T>
       )}
     </View>
   );
@@ -156,7 +156,7 @@ export default function History() {
                   <T v="small" numberOfLines={1} style={{ flex: 1 }}>
                     <Text style={{ color: brand.purple, fontWeight: '800', writingDirection: 'ltr' }}>{r.tx_code ?? r.verification_code}</Text> · {shortDate(r.created_at)}
                   </T>
-                  <T v="small">{reversed ? t('Reversed') : `+${r.xp_awarded} XP`}</T>
+                  <T v="small">{reversed ? t('Refunded') : `+${r.xp_awarded} XP`}</T>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                   <Tag label={r.perk_title} />

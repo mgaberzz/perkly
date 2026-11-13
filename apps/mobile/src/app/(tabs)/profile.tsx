@@ -11,7 +11,7 @@ import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { brand, useTheme } from '@/lib/theme';
 
-type Recent = { id: string; created_at: string; merchant_name: string; perk_title: string; discount_amount: number | null; xp_awarded: number };
+type Recent = { id: string; created_at: string; merchant_name: string; perk_title: string; discount_amount: number | null; xp_awarded: number; status: string };
 
 export default function Me() {
   const { c } = useTheme();
@@ -23,7 +23,7 @@ export default function Me() {
     refreshProfile();
     if (!session) return;
     supabase.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null).then(({ count }) => setUnread(count ?? 0));
-    supabase.from('my_redemptions').select('id, created_at, merchant_name, perk_title, discount_amount, xp_awarded')
+    supabase.from('my_redemptions').select('id, created_at, merchant_name, perk_title, discount_amount, xp_awarded, status')
       .order('created_at', { ascending: false }).limit(3).then(({ data }) => setRecent((data ?? []) as Recent[]));
   }, [session, refreshProfile]));
 
@@ -97,7 +97,8 @@ export default function Me() {
               <T v="h3" numberOfLines={1}>{r.merchant_name}</T>
               <T v="small" numberOfLines={1}>{r.perk_title} · {shortDate(r.created_at)}</T>
             </View>
-            <T color={brand.success} style={{ fontWeight: '900' }}>{r.discount_amount != null ? `−${egp(r.discount_amount)}` : `+${r.xp_awarded} XP`}</T>
+            {r.status === 'reversed' ? <T v="small" style={{ fontWeight: '800' }}>{t('Refunded')}</T>
+              : <T color={brand.success} style={{ fontWeight: '900' }}>{r.discount_amount != null ? `−${egp(r.discount_amount)}` : `+${r.xp_awarded} XP`}</T>}
           </Pressable>
         ))}
       </Card>
