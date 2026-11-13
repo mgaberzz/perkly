@@ -6,7 +6,7 @@ import { SentryTest } from "@/components/sentry-test";
 import { getT } from "@/lib/i18n/server";
 import { MultiSelect } from "@/components/multi-select";
 import { APP_FEATURES, type FeatureCfg } from "@/lib/features";
-import { saveAppFeatures, setPaymentsMode, setRedemptionRules, setVatRate, setVerificationRules } from "../actions";
+import { saveAppFeatures, setRefundWindow, setPaymentsMode, setRedemptionRules, setVatRate, setVerificationRules } from "../actions";
 
 export const metadata = { title: "Settings" };
 
@@ -15,7 +15,7 @@ export default async function SettingsPage() {
   const t = await getT();
   const platform = can("settings");
   const { data: rows } = platform
-    ? await supabase.from("app_settings").select("key, value").in("key", ["tax", "payments", "redemption_rules", "student_verification", "features"])
+    ? await supabase.from("app_settings").select("key, value").in("key", ["tax", "payments", "redemption_rules", "student_verification", "features", "refunds"])
     : { data: [] };
   const get = (k: string) => ((rows ?? []).find((r) => r.key === k)?.value ?? {}) as Record<string, unknown>;
   const vat = Number(get("tax").vat_pct ?? 14);
@@ -24,6 +24,7 @@ export default async function SettingsPage() {
   const verifyRequired = get("student_verification").required === true;
   const freeRedemptions = Number(get("student_verification").free_redemptions ?? 0);
   const features = get("features") as FeatureCfg;
+  const refundDays = Number(get("refunds").window_days ?? 7);
   const { data: campuses } = platform ? await supabase.from("campuses").select("id, name").order("name") : { data: [] };
   const campusOptions = (campuses ?? []).map((c) => ({ value: c.id, label: c.name }));
 
@@ -60,6 +61,14 @@ export default async function SettingsPage() {
             <Card title={t("Error reporting (Sentry)")}>
               <p className="mb-3 text-xs text-zinc-500">{t("Crashes and errors from the portals and the student app are reported to Sentry automatically, without names or contact details.")}</p>
               <SentryTest />
+            </Card>
+            <Card title={t("Refunds")}>
+              <p className="mb-3 text-xs text-zinc-500">{t("How long after a purchase a student can ask for a refund. The merchant decides; Admin and Operations can step in.")}</p>
+              <ActionForm action={setRefundWindow} className="flex flex-wrap items-center gap-2">
+                <Input name="window_days" type="number" min="1" max="60" defaultValue={refundDays} className="w-28" />
+                <span className="text-sm text-zinc-500">{t("days after the purchase")}</span>
+                <SubmitButton variant="secondary">{t("Save")}</SubmitButton>
+              </ActionForm>
             </Card>
             <Card title={t("Student verification")}>
               <p className="mb-3 text-xs text-zinc-500">{t("When required, students must have their student ID approved before they can redeem. Turn it on when you launch; keep it off while testing.")}</p>

@@ -1005,3 +1005,44 @@ reset role;
 do $$ begin
   assert (select payment_status from redemptions where id = current_setting('test.rf_rx2')::uuid) = 'refunded', 'payment marked refunded';
 end $$;
+
+
+-- ── Refund on an already-settled transaction → adjustment → included in the next settlement ──
+insert into redemptions (user_id, perk_id, merchant_id, branch_id, original_amount, discount_amount, final_amount, xp_awarded, verification_code, payment_method, payment_status, commission_amount)
+  select user_id, perk_id, merchant_id, branch_id, 1000, 100, 900, 0, 'RF0002', 'in_app', 'paid', 45 from redemptions where id = current_setting('test.rf_rx')::uuid;
+select set_config('test.rf_rx3', (select id::text from redemptions where verification_code = 'RF0002'), false);
+select set_config('test.rf_m', (select merchant_id::text from redemptions where verification_code = 'RF0002'), false);
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e3', false);
+do $$ begin assert (create_settlements(null, current_setting('test.rf_m')::uuid)->>'ok')::boolean, 'settle the merchant'; end $$;
+reset role;
+select set_config('test.rf_settle', (select settle_amount::text from redemptions where id = current_setting('test.rf_rx3')::uuid), false);
+do $$ begin assert (select settlement_id is not null from redemptions where id = current_setting('test.rf_rx3')::uuid), 'transaction is settled'; end $$;
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000b9', false);
+do $$ declare r jsonb; begin
+  r := request_refund(current_setting('test.rf_rx3')::uuid, 'returned');
+  assert (r->>'ok')::boolean, r::text; perform set_config('test.rf_id3', r->>'id', false);
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c5', false);
+do $$ begin assert (decide_refund(current_setting('test.rf_id3')::uuid, true)->>'ok')::boolean, 'merchant approves'; end $$;
+reset role;
+do $$ begin
+  assert (select amount from settlement_adjustments where redemption_id = current_setting('test.rf_rx3')::uuid) = -current_setting('test.rf_settle')::numeric,
+    'the merchant returns what it was paid for that transaction';
+  assert (select was_settled from refund_requests where id = current_setting('test.rf_id3')::uuid), 'flagged as settled';
+end $$;
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e3', false);
+do $$ declare b numeric; begin
+  select net_to_settle into b from merchant_balances(current_setting('test.rf_m')::uuid);
+  assert b = -current_setting('test.rf_settle')::numeric, 'balance shows the adjustment: ' || b;
+  assert (create_settlements(null, current_setting('test.rf_m')::uuid)->>'settlements')::int = 1, 'a settlement is made for the adjustment alone';
+  assert (create_settlements(null, current_setting('test.rf_m')::uuid)->>'settlements')::int = 0, 'and only once';
+  assert set_refund_window(10)->>'error' = 'not_allowed', 'only admins change the refund window';
+end $$;
+reset role;
+do $$ begin
+  assert (select adjustments = -current_setting('test.rf_settle')::numeric and amount = adjustments and lines = 0
+            from settlements where merchant_id = current_setting('test.rf_m')::uuid order by created_at desc limit 1), 'settlement carries the adjustment';
+end $$;

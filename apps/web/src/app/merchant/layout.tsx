@@ -5,6 +5,7 @@ import { Shell, type NavItem } from "@/components/shell";
 import { Badge } from "@/components/ui";
 import { getT } from "@/lib/i18n/server";
 import { MEMBER_ROLE_LABEL } from "@/lib/labels";
+import Link from "next/link";
 import { switchMerchant } from "./actions";
 
 export default async function MerchantLayout({ children }: LayoutProps<"/merchant">) {
@@ -14,6 +15,9 @@ export default async function MerchantLayout({ children }: LayoutProps<"/merchan
   // Refund requests waiting for this merchant (RLS limits branch managers to their branch)
   const { count: refunds } = merchantCan(memberRole, "refunds")
     ? await supabase.from("refund_requests").select("*", { count: "exact", head: true }).eq("merchant_id", merchant.id).eq("status", "pending")
+    : { count: 0 };
+  const { count: refundsLate } = refunds
+    ? await supabase.from("refund_requests").select("*", { count: "exact", head: true }).eq("merchant_id", merchant.id).eq("status", "pending").lt("created_at", daysAgo(3))
     : { count: 0 };
   const items: (NavItem & { area: MerchantArea })[] = [
     { area: "dashboard", href: "/merchant", label: branchScope ? t("My branch dashboard") : t("Dashboard"), icon: "home", group: 0, exact: true },
@@ -56,7 +60,21 @@ export default async function MerchantLayout({ children }: LayoutProps<"/merchan
             : t("Your business is {status}. Students can't see or redeem your perks right now.", { status: t(merchant.status) })}
         </div>
       )}
+      {!!refunds && (
+        <Link href="/merchant/refunds" className={`mb-6 flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm font-medium ${refundsLate ? "bg-red-50 text-red-800" : "bg-perk-purple/10 text-perk-purple"}`}>
+          <span>
+            {refundsLate
+              ? t("Refund requests waiting more than 3 days: {n}. Students are waiting for your answer; the Perkly team may decide for you.", { n: refundsLate })
+              : t("Refund requests waiting for your answer: {n}.", { n: refunds })}
+          </span>
+          <span className="shrink-0 font-bold">{t("Review")} →</span>
+        </Link>
+      )}
       {children}
     </Shell>
   );
+}
+
+function daysAgo(days: number) {
+  return new Date(Date.now() - days * 86400_000).toISOString();
 }

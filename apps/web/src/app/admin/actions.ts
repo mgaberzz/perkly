@@ -537,6 +537,16 @@ export async function rejectApplication(_: ActionState, fd: FormData): Promise<A
 }
 
 // ───────── Refunds ─────────
+export async function setRefundWindow(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireStaff("settings");
+  const days = Math.floor(Number(str(fd, "window_days")));
+  if (!(days >= 1 && days <= 60)) return { error: "Enter a number of days between 1 and 60." };
+  const { data, error } = await supabase.rpc("set_refund_window", { p_days: days });
+  if (error || !(data as { ok: boolean } | null)?.ok) return { error: "Could not save." };
+  revalidatePath("/admin/settings");
+  return { ok: "Saved." };
+}
+
 export async function adminDecideRefund(_: ActionState, fd: FormData): Promise<ActionState> {
   const { supabase } = await requireStaff("redemptions_review");
   const approve = str(fd, "decision") === "approve";

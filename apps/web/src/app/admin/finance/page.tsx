@@ -198,7 +198,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/admin/fi
               <div className="text-sm"><div className="text-xs text-zinc-500">{t("Paid")}</div>{egp(x.paid_amount)}</div>
               <div className={`text-xs font-semibold ${x.status === "paid" ? "text-emerald-700" : x.status === "partially_paid" ? "text-amber-700" : "text-zinc-500"}`}>{t(settlementLabel(x.status))}{x.reference && <div className="font-mono font-normal text-zinc-500">{x.reference}</div>}</div>
             </>}>
-              <p className="mb-2 px-1 text-xs text-zinc-500">{t("{n} transactions", { n: x.lines })} · {t("commission {c} + VAT {v}", { c: egp(x.commission), v: egp(x.vat) })} · {t("{amount} remaining", { amount: egp(Math.abs(x.amount) - Number(x.paid_amount)) })} · {t("Created")} {date(x.created_at)}</p>
+              <p className="mb-2 px-1 text-xs text-zinc-500">{t("{n} transactions", { n: x.lines })} · {t("commission {c} + VAT {v}", { c: egp(x.commission), v: egp(x.vat) })}{Number(x.adjustments ?? 0) !== 0 && <> · {t("refund adjustments {a}", { a: `${Number(x.adjustments) > 0 ? "+" : "−"}${egp(Math.abs(Number(x.adjustments)))}` })}</>} · {t("{amount} remaining", { amount: egp(Math.abs(x.amount) - Number(x.paid_amount)) })} · {t("Created")} {date(x.created_at)}</p>
               {x.status !== "paid" && (
                 <ActionForm action={markSettlementPaid} className="mb-3 flex flex-wrap gap-2 rounded-xl bg-zinc-50 p-3">
                   <input type="hidden" name="id" value={x.id} />

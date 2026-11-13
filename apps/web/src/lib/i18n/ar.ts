@@ -1,5 +1,14 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "refund adjustments {a}": "تسويات الاسترداد {a}",
+  "Refund adjustments (EGP)": "تسويات الاسترداد (ج.م)",
+  "Already paid out in settlement {code}: the amount is taken off the merchant's next settlement automatically.": "تم صرفها في التسوية {code}: يُخصم المبلغ تلقائيًا من تسوية التاجر القادمة.",
+  "Commission was already charged in settlement {code}: it is credited back in the merchant's next settlement automatically.": "تم احتساب العمولة في التسوية {code}: تُعاد تلقائيًا في تسوية التاجر القادمة.",
+  "Enter a number of days between 1 and 60.": "أدخل عدد أيام بين 1 و60.",
+  "How long after a purchase a student can ask for a refund. The merchant decides; Admin and Operations can step in.": "المدة التي يمكن للطالب خلالها طلب الاسترداد بعد الشراء. التاجر يقرر، ويمكن للإدارة والعمليات التدخل.",
+  "days after the purchase": "أيام بعد الشراء",
+  "Refund requests waiting more than 3 days: {n}. Students are waiting for your answer; the Perkly team may decide for you.": "طلبات استرداد تنتظر منذ أكثر من 3 أيام: {n}. الطلاب بانتظار ردك؛ قد يقرر فريق Perkly بدلًا منك.",
+  "Refund requests waiting for your answer: {n}.": "طلبات استرداد بانتظار ردك: {n}.",
   "Discount %": "نسبة الخصم",
   "Refunds": "الاستردادات",
   "Students ask for a refund in the app. Check the transaction, then approve or reject. Approving cancels the transaction, so you pay no commission on it.": "يطلب الطلاب الاسترداد من التطبيق. راجع المعاملة ثم وافق أو ارفض. الموافقة تلغي المعاملة فلا تُحتسب عليها عمولة.",

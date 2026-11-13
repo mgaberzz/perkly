@@ -43,7 +43,8 @@ export function RefundCard({ r, t, showMerchant, children }: { r: RefundRow; t: 
           )}
           {r.was_settled && r.status === "approved" && (
             <p className="mt-1 text-xs font-medium text-amber-700">
-              {t("This transaction was already in settlement {code}. Finance adjusts it in the next settlement.", { code: tx?.settlement?.settlement_code ?? "" })}
+              {r.paid_in_app ? t("Already paid out in settlement {code}: the amount is taken off the merchant's next settlement automatically.", { code: tx?.settlement?.settlement_code ?? "" })
+                : t("Commission was already charged in settlement {code}: it is credited back in the merchant's next settlement automatically.", { code: tx?.settlement?.settlement_code ?? "" })}
             </p>
           )}
         </div>

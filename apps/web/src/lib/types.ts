@@ -54,7 +54,7 @@ export interface Balance {
   last_paid_at: string | null; bank_name: string | null; iban: string | null;
 }
 export interface Settlement {
-  id: string; settlement_code: string; merchant_id: string; period_start: string | null; period_end: string; gross_amount: number; commission: number;
+  id: string; settlement_code: string; merchant_id: string; period_start: string | null; period_end: string; gross_amount: number; adjustments?: number; commission: number;
   amount: number; lines: number; status: "pending" | "partially_paid" | "paid"; paid_amount: number; vat: number; reference: string | null; created_at: string; paid_at: string | null;
 }
 export interface AdminRequest {

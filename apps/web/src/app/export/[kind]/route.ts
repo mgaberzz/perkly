@@ -152,6 +152,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/export/[kind]">)
       { header: t("In-app sales (EGP)"), value: (r) => r.gross_amount, money: true },
       { header: t("Perkly commission (EGP)"), value: (r) => r.commission, money: true },
       { header: t("VAT on commission (EGP)"), value: (r) => r.vat, money: true },
+      { header: t("Refund adjustments (EGP)"), value: (r) => r.adjustments ?? 0, money: true },
       { header: t("Net amount (EGP)"), value: (r) => r.amount, money: true },
       { header: t("Direction"), value: (r) => (r.amount > 0 ? t("Perkly pays merchant") : r.amount < 0 ? t("Merchant pays Perkly commission") : "—"), width: 26 },
       { header: t("Paid so far (EGP)"), value: (r) => r.paid_amount, money: true },
