@@ -4,6 +4,7 @@ import { requireMerchantArea } from "@/lib/auth";
 import { Badge, Card, Field, Input, PageHeader } from "@/components/ui";
 import { ActionForm, ConfirmButton, SubmitButton } from "@/components/action-form";
 import { QrImage } from "@/components/qr-image";
+import { QrRename } from "@/components/qr-rename";
 import { getT } from "@/lib/i18n/server";
 import type { Branch, QrCode } from "@/lib/types";
 import { createQr, removeBranch, removeQr, renameQr, toggleQr, reopenBranch } from "../../actions";
@@ -40,16 +41,7 @@ export default async function BranchPage({ params }: PageProps<"/merchant/branch
                   <div className="mt-2 font-mono text-xs text-zinc-500">{q.code}</div>
                   {q.status === "pending" && <p className="mt-2 text-xs text-amber-700">{t("Waiting for Perkly approval — it can't be scanned yet.")}</p>}
                   {q.status === "rejected" && <p className="mt-2 text-xs text-red-600">{t("Not approved")}{q.review_note && `: ${q.review_note}`}</p>}
-                  {canQr && (
-                    <details className="mt-2 text-start">
-                      <summary className="cursor-pointer text-center text-sm font-semibold text-perk-purple">{t("Edit cashier name")}</summary>
-                      <ActionForm action={renameQr} className="mt-2 flex items-end gap-2">
-                        <input type="hidden" name="id" value={q.id} /><input type="hidden" name="branch_id" value={id} />
-                        <Input name="cashier_name" defaultValue={q.cashier_name ?? q.label} required maxLength={60} aria-label={t("Cashier name")} />
-                        <SubmitButton variant="secondary">{t("Save")}</SubmitButton>
-                      </ActionForm>
-                    </details>
-                  )}
+                  {canQr && <QrRename action={renameQr} id={q.id} branchId={id} name={q.cashier_name ?? q.label} />}
                   <div className="mt-3 flex justify-center gap-3 text-sm font-semibold">
                     {usable && <Link href={`/merchant/branches/${id}/qr/${q.id}`} className="text-perk-purple hover:underline">{t("Print poster")}</Link>}
                     {canQr && q.status === "approved" && (
