@@ -6,7 +6,7 @@ import { SentryTest } from "@/components/sentry-test";
 import { getT } from "@/lib/i18n/server";
 import { MultiSelect } from "@/components/multi-select";
 import { APP_FEATURES, type FeatureCfg } from "@/lib/features";
-import { saveAppFeatures, setRefundWindow, setPaymentsMode, setRedemptionRules, setVatRate, setVerificationRules } from "../actions";
+import { saveAppFeatures, setReceiptVat, setRefundWindow, setPaymentsMode, setRedemptionRules, setVatRate, setVerificationRules } from "../actions";
 
 export const metadata = { title: "Settings" };
 
@@ -15,7 +15,7 @@ export default async function SettingsPage() {
   const t = await getT();
   const platform = can("settings");
   const { data: rows } = platform
-    ? await supabase.from("app_settings").select("key, value").in("key", ["tax", "payments", "redemption_rules", "student_verification", "features", "refunds"])
+    ? await supabase.from("app_settings").select("key, value").in("key", ["tax", "payments", "redemption_rules", "student_verification", "features", "refunds", "receipt"])
     : { data: [] };
   const get = (k: string) => ((rows ?? []).find((r) => r.key === k)?.value ?? {}) as Record<string, unknown>;
   const vat = Number(get("tax").vat_pct ?? 14);
@@ -24,6 +24,7 @@ export default async function SettingsPage() {
   const verifyRequired = get("student_verification").required === true;
   const freeRedemptions = Number(get("student_verification").free_redemptions ?? 0);
   const features = get("features") as FeatureCfg;
+  const receiptVat = Number(get("receipt").vat_pct ?? 14), receiptVatShown = get("receipt").show_vat !== false;
   const refundDays = Number(get("refunds").window_days ?? 7);
   const { data: campuses } = platform ? await supabase.from("campuses").select("id, name").order("name") : { data: [] };
   const campusOptions = (campuses ?? []).map((c) => ({ value: c.id, label: c.name }));
@@ -39,6 +40,14 @@ export default async function SettingsPage() {
               <p className="mb-3 text-xs text-zinc-500">{t("Applied to Perkly's commission. 0% turns VAT off for everyone; single merchants can be exempted on their merchant page.")}</p>
               <ActionForm action={setVatRate} className="flex items-center gap-2">
                 <Input name="vat_pct" type="number" step="0.01" min="0" max="100" defaultValue={vat} className="w-28" /><span className="text-sm text-zinc-500">%</span>
+                <SubmitButton variant="secondary">{t("Save")}</SubmitButton>
+              </ActionForm>
+            </Card>
+            <Card title={t("VAT line on receipts")}>
+              <p className="mb-3 text-xs text-zinc-500">{t("Students see “Incl. VAT” on every receipt in the app, for every merchant. It is information only: it doesn't change what the student pays or your commission.")}</p>
+              <ActionForm action={setReceiptVat} className="flex flex-wrap items-center gap-3">
+                <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" name="show_vat" defaultChecked={receiptVatShown} className="h-4 w-4 accent-perk-purple" /> {t("Show on receipts")}</label>
+                <Input name="vat_pct" type="number" step="0.01" min="0" max="100" defaultValue={receiptVat} className="w-28" /><span className="text-sm text-zinc-500">%</span>
                 <SubmitButton variant="secondary">{t("Save")}</SubmitButton>
               </ActionForm>
             </Card>

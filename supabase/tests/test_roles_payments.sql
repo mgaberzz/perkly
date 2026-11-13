@@ -1075,3 +1075,53 @@ reset role;
 do $$ begin
   assert (select rating_avg = 4 and rating_count = 1 from merchants where id = current_setting('test.rf_m')::uuid), 'average kept by the database; the owner cannot change it';
 end $$;
+
+-- ── Merchant portal controls: perks, branches and bank details are decided by Perkly ──
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c5', false);
+do $$
+declare v_m uuid := current_setting('test.rf_m')::uuid; v_perk uuid; v_branch uuid; v_name text;
+begin
+  select perk_id, branch_id into v_perk, v_branch from redemptions where id = current_setting('test.rt_rx')::uuid;
+  update perks set status = 'paused' where id = v_perk;
+  assert (select status from perks where id = v_perk) = 'active', 'owner cannot pause a perk';
+  select name into v_name from merchant_branches where id = v_branch;
+  update merchant_branches set name = 'Hacked', lat = 1, is_active = false where id = v_branch;
+  assert (select name = v_name and lat is distinct from 1 and not is_active from merchant_branches where id = v_branch), 'owner can close a branch but not edit it';
+  update merchant_branches set is_active = true where id = v_branch;
+  insert into merchant_bank_accounts (merchant_id, bank_name, account_name, iban, payout_schedule, status)
+  values (v_m, 'CIB', 'Owner', 'EG380019000500000000263180002', 'monthly', 'approved');
+  assert (select status = 'pending' and payout_schedule = 'weekly' from merchant_bank_accounts where merchant_id = v_m), 'bank details wait for approval; cycle is Perkly''s';
+  begin
+    update merchant_bank_accounts set iban = 'EG000000000000000000000000000' where merchant_id = v_m;
+    raise exception 'should fail';
+  exception when check_violation then null; end;
+  assert (merchant_stats(v_m, 30, null, null, current_date - 1, current_date)->>'redemptions')::int >= 1, 'stats for a date range';
+  assert (merchant_stats(v_m, 30, null, null, current_date - 30, current_date - 20)->>'redemptions')::int = 0, 'empty range';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e3', false);
+do $$ begin
+  assert not exists (select 1 from admin_requests where kind = 'bank_account'), 'finance does not see bank approvals';
+  begin
+    update merchant_bank_accounts set status = 'approved' where merchant_id = current_setting('test.rf_m')::uuid;
+    raise exception 'should fail';
+  exception when insufficient_privilege then null; end;
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ declare v_m uuid := current_setting('test.rf_m')::uuid; begin
+  assert (resolve_request((select id from admin_requests where kind = 'bank_account' and status = 'pending' and merchant_id = v_m), false, 'Wrong IBAN')->>'ok')::boolean, 'ops rejects';
+  assert (select status = 'rejected' and review_note = 'Wrong IBAN' from merchant_bank_accounts where merchant_id = v_m), 'rejected with a note';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c5', false);
+update merchant_bank_accounts set iban = 'EG380019000500000000263180003' where merchant_id = current_setting('test.rf_m')::uuid;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ declare v_m uuid := current_setting('test.rf_m')::uuid; begin
+  assert (select status from merchant_bank_accounts where merchant_id = v_m) = 'pending', 'owner can send again after a rejection';
+  update merchant_bank_accounts set status = 'approved', payout_schedule = 'monthly' where merchant_id = v_m;
+  assert (select status = 'approved' and payout_schedule = 'monthly' and reviewed_by is not null from merchant_bank_accounts where merchant_id = v_m), 'ops approves and sets the cycle';
+  assert not exists (select 1 from admin_requests where kind = 'bank_account' and status = 'pending' and merchant_id = v_m), 'request closed';
+  update perks set status = 'paused' where merchant_id = v_m;
+  assert exists (select 1 from perks where merchant_id = v_m and status = 'paused'), 'ops pauses perks';
+  update perks set status = 'active' where merchant_id = v_m;
+end $$;
+reset role;

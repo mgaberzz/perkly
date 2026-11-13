@@ -3,11 +3,10 @@ import { notFound, redirect } from "next/navigation";
 import { requireMerchantArea } from "@/lib/auth";
 import { Badge, Card, Field, Input, PageHeader } from "@/components/ui";
 import { ActionForm, ConfirmButton, SubmitButton } from "@/components/action-form";
-import { BranchForm } from "@/components/branch-form";
 import { QrImage } from "@/components/qr-image";
 import { getT } from "@/lib/i18n/server";
 import type { Branch, QrCode } from "@/lib/types";
-import { createQr, removeBranch, removeQr, toggleQr, updateBranch, reopenBranch } from "../../actions";
+import { createQr, removeBranch, removeQr, renameQr, toggleQr, reopenBranch } from "../../actions";
 
 export const metadata = { title: "Branch" };
 
@@ -18,9 +17,9 @@ export default async function BranchPage({ params }: PageProps<"/merchant/branch
   const t = await getT();
   const { data: branch } = await supabase.from("merchant_branches").select("*").eq("id", id).eq("merchant_id", merchant.id).maybeSingle<Branch>();
   if (!branch) notFound();
-  const [{ data: qrs }, { data: campuses }] = await Promise.all([
+  const [{ data: qrs }, { data: campus }] = await Promise.all([
     supabase.from("branch_qr_codes").select("*").eq("branch_id", id).order("created_at").returns<QrCode[]>(),
-    supabase.from("campuses").select("id,name").order("name"),
+    branch.campus_id ? supabase.from("campuses").select("name").eq("id", branch.campus_id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   const canQr = canManage || branchScope?.id === id;
   return (
@@ -41,6 +40,16 @@ export default async function BranchPage({ params }: PageProps<"/merchant/branch
                   <div className="mt-2 font-mono text-xs text-zinc-500">{q.code}</div>
                   {q.status === "pending" && <p className="mt-2 text-xs text-amber-700">{t("Waiting for Perkly approval — it can't be scanned yet.")}</p>}
                   {q.status === "rejected" && <p className="mt-2 text-xs text-red-600">{t("Not approved")}{q.review_note && `: ${q.review_note}`}</p>}
+                  {canQr && (
+                    <details className="mt-2 text-start">
+                      <summary className="cursor-pointer text-center text-sm font-semibold text-perk-purple">{t("Edit cashier name")}</summary>
+                      <ActionForm action={renameQr} className="mt-2 flex items-end gap-2">
+                        <input type="hidden" name="id" value={q.id} /><input type="hidden" name="branch_id" value={id} />
+                        <Input name="cashier_name" defaultValue={q.cashier_name ?? q.label} required maxLength={60} aria-label={t("Cashier name")} />
+                        <SubmitButton variant="secondary">{t("Save")}</SubmitButton>
+                      </ActionForm>
+                    </details>
+                  )}
                   <div className="mt-3 flex justify-center gap-3 text-sm font-semibold">
                     {usable && <Link href={`/merchant/branches/${id}/qr/${q.id}`} className="text-perk-purple hover:underline">{t("Print poster")}</Link>}
                     {canQr && q.status === "approved" && (
@@ -74,7 +83,13 @@ export default async function BranchPage({ params }: PageProps<"/merchant/branch
           <p className="mt-4 text-xs text-zinc-500">{t("If a QR photo leaks or gets misused, disable it and request a new one — old copies stop working instantly.")}</p>
         </Card>
         <Card title={t("Branch details")} className="lg:col-span-2">
-          {canManage ? <BranchForm action={updateBranch.bind(null, id)} branch={branch} campuses={campuses ?? []} /> : <p className="text-sm text-zinc-500">{t("Only owners and managers can edit branches.")}</p>}
+          <dl className="space-y-2 text-sm">
+            {([[t("Branch name"), branch.name], [t("Address"), branch.address], [t("City"), branch.city], [t("Nearest campus"), campus?.name],
+              [t("Location"), branch.lat != null ? t("Set") : t("Missing")]] as const).map(([k, v]) => (
+              <div key={k} className="flex justify-between gap-3 border-b border-zinc-100 pb-2"><dt className="text-zinc-500">{k}</dt><dd className="text-end font-semibold">{v || "—"}</dd></div>
+            ))}
+          </dl>
+          <p className="mt-3 text-xs text-zinc-500">{t("To change these details, contact Perkly. The Perkly team updates them for you.")}</p>
           {memberRole === "owner" && (branch.is_active ? (
             <form action={removeBranch} className="mt-6 border-t border-zinc-100 pt-4">
               <input type="hidden" name="id" value={id} />

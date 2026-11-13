@@ -5,7 +5,6 @@ import { requireMerchantArea } from "@/lib/auth";
 import { Badge, PageHeader, Table, Td } from "@/components/ui";
 import { date, discountLabel, tierFor } from "@/lib/format";
 import type { Perk } from "@/lib/types";
-import { setPerkStatus } from "../actions";
 import { getT } from "@/lib/i18n/server";
 
 export const metadata = { title: "Perks" };
@@ -18,9 +17,9 @@ export default async function PerksPage() {
     .returns<(Perk & { branch: { name: string } | null })[]>();
   return (
     <>
-      <PageHeader title={t("Perks")} subtitle={t("What students get when they scan your QR.")} />
+      <PageHeader title={t("Perks")} subtitle={t("What students get when they scan your QR. To pause or reactivate a perk, contact Perkly.")} />
       {canManage && <PageTabs tabs={[{ href: "/merchant/perks", label: t("All perks") }, { href: "/merchant/perks/new", label: t("New perk") }]} />}
-      <Table head={[t("Perk"), t("Discount"), t("Tier"), t("Branch"), t("Ends"), t("Status"), ""]} empty={t("No perks yet — create your first one.")}>
+      <Table head={[t("Perk"), t("Discount"), t("Tier"), t("Branch"), t("Ends"), t("Status")]} empty={t("No perks yet — create your first one.")}>
         {(perks ?? []).map((p) => {
           const tier = tierFor(p);
           return (
@@ -31,15 +30,6 @@ export default async function PerksPage() {
               <Td>{p.branch?.name ?? t("All branches")}</Td>
               <Td>{date(p.end_at)}</Td>
               <Td phone="sum"><Badge tone={p.status}>{t(p.status)}</Badge>{p.status === "rejected" && p.review_note && <div className="mt-1 text-xs text-red-600">{p.review_note}</div>}</Td>
-              <Td className="text-end">
-                {canManage && (p.status === "active" || p.status === "paused") && (
-                  <form action={setPerkStatus}>
-                    <input type="hidden" name="id" value={p.id} />
-                    <input type="hidden" name="status" value={p.status === "active" ? "paused" : "active"} />
-                    <button className="text-sm font-semibold text-perk-purple hover:underline">{p.status === "active" ? t("Pause") : t("Activate")}</button>
-                  </form>
-                )}
-              </Td>
             </tr>
           );
         })}

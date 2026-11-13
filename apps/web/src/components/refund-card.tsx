@@ -21,7 +21,7 @@ export function RefundCard({ r, t, showMerchant, children }: { r: RefundRow; t: 
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-lg font-bold">{egp(r.amount)}</span>
             <Badge>{t(REFUND_REASON_LABEL[r.reason] ?? r.reason)}</Badge>
-            <Badge tone={r.status}>{t(r.status === "pending" ? "Waiting" : r.status === "approved" ? "Approved" : "Rejected")}</Badge>
+            <Badge tone={r.status}>{t(r.status === "pending" ? "Pending" : r.status === "approved" ? "Approved" : "Rejected")}</Badge>
             {r.payout_status === "due" && <Badge tone="pending">{t("Refund due")}</Badge>}
             {r.payout_status === "paid" && <Badge tone="paid">{t("Refund paid")}</Badge>}
           </div>

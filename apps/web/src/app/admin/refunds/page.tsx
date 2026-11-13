@@ -39,7 +39,7 @@ export default async function AdminRefundsPage({ searchParams }: PageProps<"/adm
         <Stat label={t("Approved (all time)")} value={rows.filter((r) => r.status === "approved").length} href={href("approved")} />
       </div>
       <FilterBar path="/admin/refunds" search={{ name: "q", value: search, placeholder: t("Search Refund ID") }} fields={[
-        { name: "view", label: t("Show"), type: "select", value: view === "pending" ? undefined : view, all: t("Waiting"),
+        { name: "view", label: t("Show"), type: "select", value: view === "pending" ? undefined : view, all: t("Pending"),
           options: [{ value: "due", label: t("Refund due") }, { value: "approved", label: t("Approved") }, { value: "rejected", label: t("Rejected") }, { value: "all", label: t("All statuses") }] },
       ]} />
       {!data?.length && <div className="rounded-2xl border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500">{t("Nothing here.")}</div>}

@@ -86,10 +86,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   // Feature switches: saved copy first, then the latest from the server (also before login, for the language switch)
   const refreshFeatures = useCallback(async () => {
-    const { data, error } = await supabase.from('app_settings').select('key, value').in('key', ['features', 'tax']);
+    const { data, error } = await supabase.from('app_settings').select('key, value').in('key', ['features', 'receipt']);
     if (error || !data) return;
     const f = (data.find((r) => r.key === 'features')?.value ?? {}) as FeatureCfg;
-    const vat = Number((data.find((r) => r.key === 'tax')?.value as { vat_pct?: number } | undefined)?.vat_pct ?? 14);
+    // "Incl. VAT" line on receipts: the Perkly team shows / hides it and sets the rate in the portal (0 hides the line)
+    const receipt = (data.find((r) => r.key === 'receipt')?.value ?? {}) as { show_vat?: boolean; vat_pct?: number };
+    const vat = receipt.show_vat === false ? 0 : Number(receipt.vat_pct ?? 14);
     setFeatureCfg(f);
     setVatPct(Number.isFinite(vat) ? vat : 14);
     AsyncStorage.setItem(FEATURES_CACHE, JSON.stringify(f)).catch(() => {});

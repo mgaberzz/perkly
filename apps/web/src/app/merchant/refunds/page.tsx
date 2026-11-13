@@ -22,12 +22,12 @@ export default async function MerchantRefundsPage({ searchParams }: PageProps<"/
     <>
       <PageHeader title={t("Refunds")} subtitle={t("Students ask for a refund in the app. Check the transaction, then approve or reject. Approving cancels the transaction, so you pay no commission on it.")} />
       <FilterBar path="/merchant/refunds" fields={[
-        { name: "status", label: t("Status"), type: "select", value: status === "pending" ? undefined : status, all: t("Waiting"),
+        { name: "status", label: t("Status"), type: "select", value: status === "pending" ? undefined : status, all: t("Pending"),
           options: [{ value: "approved", label: t("Approved") }, { value: "rejected", label: t("Rejected") }, { value: "all", label: t("All statuses") }] },
       ]} />
       {!data?.length && (
         <div className="rounded-2xl border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500">
-          {status === "pending" ? t("No refund requests waiting.") : t("Nothing matches these filters.")}
+          {status === "pending" ? t("No pending refund requests.") : t("Nothing matches these filters.")}
         </div>
       )}
       <ul className="space-y-3">

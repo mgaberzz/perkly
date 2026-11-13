@@ -5,7 +5,7 @@ import { change, summarize, type WeekRow } from "@/lib/weekly";
 
 type Review = { stars: number; created_at: string };
 
-/** "Your week with Perkly": last Monday–Sunday against the week before. Shown at the top of the merchant dashboard. */
+/** "Your week with Perkly": last week (from Sunday) against the week before. Shown at the top of the merchant dashboard. */
 export function WeeklySummary({ t, rows, reviews, range }: {
   t: TFn; rows: WeekRow[]; reviews: Review[]; range: { from: string; lastDay: string; fromISO: string; toISO: string };
 }) {

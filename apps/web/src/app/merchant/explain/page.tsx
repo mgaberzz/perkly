@@ -69,7 +69,7 @@ export default async function MerchantExplainPage({ searchParams }: PageProps<"/
     return (
       <Explained title={t("Transactions") + (what ? ` · ${what}` : "")}
         value={<>{rows.length.toLocaleString()}</>}
-        subtitle={g("to") && g("from") === g("to") ? t("On {date}", { date: g("from") }) : t("Last {days} days", { days })}
+        subtitle={g("to") && g("from") === g("to") ? t("On {date}", { date: g("from") }) : g("from") && g("to") ? `${g("from")} → ${g("to")}` : t("Last {days} days", { days })}
         formula={<>
           <Line count label={t("Transactions")} value={rows.length} href={qs({ customer: undefined })} />
           <Line count sign="↳" label={t("New customers")} value={newOnes} href={qs({ customer: "new" })} />

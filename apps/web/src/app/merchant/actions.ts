@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { addMember } from "@/lib/members";
 import { parsePerkForm } from "@/lib/perk-form";
 import { REFUND_ERRORS } from "@/lib/refunds";
+import { BANKS } from "@/lib/banks";
 import type { ActionState, MemberRole } from "@/lib/types";
 
 async function manager() {
@@ -53,14 +54,6 @@ export async function updatePerk(id: string, _: ActionState, fd: FormData): Prom
   return { ok: data.status === "pending" ? "Saved — waiting for Perkly approval." : "Saved." };
 }
 
-export async function setPerkStatus(fd: FormData) {
-  const { supabase, merchant } = await manager();
-  const status = str(fd, "status");
-  if (!["active", "paused"].includes(status)) return;
-  await supabase.from("perks").update({ status }).eq("id", str(fd, "id")).eq("merchant_id", merchant.id);
-  revalidatePath("/merchant/perks", "layout");
-}
-
 // ───────── Branches & QR ─────────
 function branchRow(fd: FormData) {
   return {
@@ -86,16 +79,6 @@ export async function createBranch(_: ActionState, fd: FormData): Promise<Action
   redirect(`/merchant/branches/${data.id}`);
 }
 
-export async function updateBranch(id: string, _: ActionState, fd: FormData): Promise<ActionState> {
-  const { supabase, merchant } = await manager();
-  const row = branchRow(fd);
-  if (!row.name) return { error: "Branch name is required." };
-  const { error } = await supabase.from("merchant_branches").update(row).eq("id", id).eq("merchant_id", merchant.id);
-  if (error) return { error: error.message };
-  revalidatePath("/merchant/branches", "layout");
-  return { ok: "Branch saved." };
-}
-
 /** Owners/managers: any branch. Branch managers: only their own branch. */
 async function branchEditor(branchId: string) {
   const ctx = await requireMerchant();
@@ -116,6 +99,19 @@ export async function createQr(_: ActionState, fd: FormData): Promise<ActionStat
   revalidatePath(`/merchant/branches/${branchId}`);
   revalidatePath("/merchant/branches");
   return { ok: "QR requested — it works as soon as Perkly approves it." };
+}
+
+/** Rename the cashier on a QR code (the code itself and its history stay the same). */
+export async function renameQr(_: ActionState, fd: FormData): Promise<ActionState> {
+  const branchId = str(fd, "branch_id");
+  const { supabase } = await branchEditor(branchId);
+  const cashier = str(fd, "cashier_name");
+  if (!cashier) return { error: "Enter the cashier's name (or till number)." };
+  if (cashier.length > 60) return { error: "That name is too long." };
+  const { error } = await supabase.from("branch_qr_codes").update({ cashier_name: cashier, label: cashier }).eq("id", str(fd, "id")).eq("branch_id", branchId);
+  if (error) return { error: error.message };
+  revalidatePath("/merchant", "layout");
+  return { ok: "Cashier name saved." };
 }
 
 export async function toggleQr(fd: FormData) {
@@ -157,18 +153,19 @@ export async function reopenBranch(fd: FormData) {
 }
 
 // ───────── Payouts ─────────
+/** The owner adds bank details once; Perkly Operations approves them. Later changes go through Perkly. */
 export async function saveBankAccount(_: ActionState, fd: FormData): Promise<ActionState> {
   const { supabase, merchant, memberRole } = await requireMerchant();
-  if (memberRole !== "owner") return { error: "Only the owner can change bank details." };
+  if (memberRole !== "owner") return { error: "Only the owner can add bank details." };
+  const bank = str(fd, "bank_name"), holder = str(fd, "account_name");
   const iban = str(fd, "iban").replace(/\s+/g, "").toUpperCase();
-  if (iban && !/^EG\d{27}$/.test(iban)) return { error: "Egyptian IBANs start with EG followed by 27 digits." };
-  const { error } = await supabase.from("merchant_bank_accounts").upsert({
-    merchant_id: merchant.id, bank_name: str(fd, "bank_name") || null, account_name: str(fd, "account_name") || null,
-    iban: iban || null, payout_schedule: str(fd, "payout_schedule") || "weekly", updated_at: new Date().toISOString(),
-  });
-  if (error) return { error: error.message };
+  if (!BANKS.includes(bank)) return { error: "Pick your bank from the list." };
+  if (!holder) return { error: "Enter the account holder's name." };
+  if (!/^EG\d{27}$/.test(iban)) return { error: "Egyptian IBANs start with EG followed by 27 digits." };
+  const { error } = await supabase.from("merchant_bank_accounts").upsert({ merchant_id: merchant.id, bank_name: bank, account_name: holder, iban });
+  if (error) return { error: error.message.includes("bank_locked") ? "Your bank details were already sent. Contact Perkly to change them." : error.message };
   revalidatePath("/merchant/payouts");
-  return { ok: "Bank details saved." };
+  return { ok: "Bank details sent. Perkly will review them." };
 }
 
 // ───────── Online ─────────
@@ -254,4 +251,38 @@ export async function decideRefund(_: ActionState, fd: FormData): Promise<Action
   revalidatePath("/merchant", "layout");
   return { ok: !approve ? "Refund rejected. The student was told why."
     : res.payout_status === "by_merchant" ? "Approved. Give the student the money back at the cashier." : "Approved. Perkly returns the money to the student." };
+}
+
+// ───────── Settings: mobile number, confirmed by an SMS code ─────────
+function egyptPhone(input: string) {
+  let d = input.replace(/\D/g, "");
+  if (d.startsWith("0020")) d = d.slice(4); else if (d.startsWith("20")) d = d.slice(2); else if (d.startsWith("0")) d = d.slice(1);
+  return /^1[0125]\d{8}$/.test(d) ? `+20${d}` : null;
+}
+const smsError = (m: string) =>
+  /provider|not enabled|disabled|unsupported/i.test(m) ? "SMS codes aren't switched on yet. Perkly is setting this up; please try again later."
+  : /already|registered|exists/i.test(m) ? "That number is already used by another Perkly account."
+  : /rate|seconds|too many/i.test(m) ? "Too many tries. Wait a minute and try again."
+  : /expired|invalid|token/i.test(m) ? "That code is wrong or has expired. Check it or send a new one."
+  : m;
+
+export async function sendPhoneCode(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireMerchant();
+  const phone = egyptPhone(str(fd, "phone"));
+  if (!phone) return { error: "That doesn't look like an Egyptian mobile number. Try 01x xxxx xxxx." };
+  const { error } = await supabase.auth.updateUser({ phone });
+  if (error) return { error: smsError(error.message) };
+  return { ok: "Code sent by SMS. Enter it below." };
+}
+
+export async function verifyPhoneCode(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase, user } = await requireMerchant();
+  const phone = egyptPhone(str(fd, "phone"));
+  const code = str(fd, "code");
+  if (!phone || !/^\d{6}$/.test(code)) return { error: "Enter the 6-digit code from the SMS." };
+  const { error } = await supabase.auth.verifyOtp({ phone, token: code, type: "phone_change" });
+  if (error) return { error: smsError(error.message) };
+  await supabase.from("profiles").update({ phone }).eq("id", user.id);
+  revalidatePath("/merchant/settings");
+  return { ok: "Mobile number verified." };
 }
