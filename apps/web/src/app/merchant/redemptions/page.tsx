@@ -2,7 +2,8 @@ import { requireMerchantArea } from "@/lib/auth";
 import { PageHeader } from "@/components/ui";
 import { FilterBar } from "@/components/filter-bar";
 import { ExportButtons } from "@/components/export-buttons";
-import { LiveRedemptions, FEED_SELECT, type FeedRow } from "@/components/live-redemptions";
+import { LiveRedemptions } from "@/components/live-redemptions";
+import { FEED_SELECT, type FeedRow } from "@/lib/feed";
 import { getT } from "@/lib/i18n/server";
 
 export const metadata = { title: "Transactions" };

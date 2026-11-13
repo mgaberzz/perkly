@@ -44,7 +44,7 @@ Ask Claude: **"launch checklist"** to walk through it.
 - [ ] Remove test & demo data with `supabase/scripts/launch_cleanup.sql` (dry run first; ready, not run):
   - 89 demo merchants and their perks/branches
   - "ZZ Test Partner (delete me)" (400001) and the test café link
-  - Demo logins: ops / finance / am / partner `.demo@perkly.app`
+  - Demo logins: ops / finance / am / partner / merchant `.demo@perkly.app` (merchant.demo is an owner of the Test Café)
   - Anonymised test accounts 10000006 and 10000007
   - "Perkly Test Café" (no location check — must not stay live)
 

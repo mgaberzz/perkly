@@ -3,13 +3,13 @@
 -- What counts as demo/test (frozen 2026-11-09, before any real merchant existed):
 --   • merchants 300001–300090 (89 demo merchants + "Perkly Test Café" 300090) and everything under them
 --   • partner 400001 "ZZ Test Partner (delete me)"
---   • logins ops / finance / am / partner .demo@perkly.app
+--   • logins ops / finance / am / partner / merchant .demo@perkly.app
 --   • anonymised test accounts 10000006 and 10000007
 -- Before running: re-check foreign keys (new tables may have appeared) and take a backup.
 
 -- ───────── PART 1: dry run (read-only) ─────────
 with m as (select id from merchants where merchant_code between '300001' and '300090'),
-     u as (select id from profiles where email in ('ops.demo@perkly.app','finance.demo@perkly.app','am.demo@perkly.app','partner.demo@perkly.app')
+     u as (select id from profiles where email in ('ops.demo@perkly.app','finance.demo@perkly.app','am.demo@perkly.app','partner.demo@perkly.app','merchant.demo@perkly.app')
            or user_code in ('10000006','10000007'))
 select
   (select count(*) from m)                                                   as merchants,
