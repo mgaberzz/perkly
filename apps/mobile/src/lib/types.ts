@@ -8,6 +8,7 @@ export interface Perk {
 }
 export interface Branch { id: string; name: string; address?: string | null; lat: number | null; lng: number | null; campus_id: string | null; }
 export interface Merchant {
+  rating_avg?: number | null; rating_count?: number | null;
   id: string; name: string; category: string; subcategory: string | null; description: string | null;
   logo_url: string | null; cover_url: string | null; perks: Perk[]; branches: Branch[];
   channel: 'in_store' | 'online' | 'both'; website_url: string | null; affiliate_url: string | null;

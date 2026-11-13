@@ -14,7 +14,7 @@ import { BRAND_TYPES, CATEGORIES, type Balance, type Merchant } from "@/lib/type
 export const metadata = { title: "Merchants" };
 
 const STATUSES = ["live", "pending", "paused", "churned"] as const;
-const SORTS = { name: "Name (A–Z)", newest: "Newest first", active: "Most transactions (30 days)", gmv: "Highest GMV (30 days)", dues: "Highest dues" } as const;
+const SORTS = { name: "Name (A–Z)", newest: "Newest first", active: "Most transactions (30 days)", gmv: "Highest GMV (30 days)", dues: "Highest dues", rating: "Lowest rating" } as const;
 const PAGE = 48;
 type Row = Merchant & { partner_id?: string | null; created_at: string; branches: { count: number }[]; perks: { count: number }[] };
 type Act = { key: string; transactions: number; gmv: number };
@@ -60,6 +60,7 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
     sort === "newest" ? b.created_at.localeCompare(a.created_at)
       : sort === "active" ? tx(b.id) - tx(a.id) || a.name.localeCompare(b.name)
       : sort === "gmv" ? gmv(b.id) - gmv(a.id) || a.name.localeCompare(b.name)
+      : sort === "rating" ? (a.rating_count ? Number(a.rating_avg) : 9) - (b.rating_count ? Number(b.rating_avg) : 9) || a.name.localeCompare(b.name)
       : sort === "dues" ? (owedTo(b.id) + owedBy(b.id)) - (owedTo(a.id) + owedBy(a.id)) || a.name.localeCompare(b.name)
       : a.name.localeCompare(b.name));
   const pages = Math.max(1, Math.ceil(rows.length / PAGE));
@@ -104,7 +105,7 @@ export default async function MerchantsPage({ searchParams }: PageProps<"/admin/
                     <Avatar name={m.name} src={m.logo_url} />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2"><span className="truncate font-bold">{m.name}</span><Badge tone={m.status} className="shrink-0 !px-2 !text-[10px]">{t(m.status)}</Badge></div>
-                      <div className="truncate text-xs text-zinc-500">{t(m.category)} · <span className="font-mono">{m.merchant_code}</span></div>
+                      <div className="truncate text-xs text-zinc-500">{t(m.category)} · <span className="font-mono">{m.merchant_code}</span>{!!m.rating_count && <span className={`ms-1 font-semibold ${Number(m.rating_avg) < 3.5 ? "text-red-600" : "text-amber-600"}`}> · ★ {Number(m.rating_avg).toFixed(1)} ({m.rating_count})</span>}</div>
                       {pName && <div className="truncate text-xs text-zinc-500"><Icon name="handshake" size={12} className="me-1 inline-block align-[-2px]" />{pName}</div>}
                     </div>
                   </div>

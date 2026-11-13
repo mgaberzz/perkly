@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/components/text';
 import { Button, Card, DiscountBadge, Empty, MerchantLogo, T } from '@/components/ui';
+import { ratingText } from '@/components/rate-visit';
 import { bestPerk, distanceLabel, distanceM, egp, timeLeft } from '@/lib/format';
 import { OnlineActions } from '@/components/online-actions';
 import { t } from '@/lib/i18n';
@@ -17,7 +18,7 @@ export default function MerchantScreen() {
   const { c } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { merchants, origin: coords, favorites, toggleFavorite, campus } = useSession();
+  const { merchants, origin: coords, favorites, toggleFavorite, campus, feature } = useSession();
   const m = merchants.find((x) => x.id === id);
   const [weekCount, setWeekCount] = useState<number | null>(null);
 
@@ -57,6 +58,7 @@ export default function MerchantScreen() {
             {best && <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><T v="h3">{t('Save Up To')}</T><DiscountBadge perk={best} size="lg" /></View>}
             {m.description ? <T v="muted">{m.description}</T> : null}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {feature('ratings') && ratingText(m) ? <Tag text={ratingText(m)} /> : null}
               {weekCount != null && weekCount > 0 && <Tag text={`🔥 ${t('{n} Students Redeemed This Week', { n: weekCount })}`} />}
               {m.channel !== 'in_store' && <Tag text={`🌐 ${m.channel === 'online' ? t('Online Only') : t('In-Store + Online')}`} />}
               {onCampus && <Tag text={`🎓 ${t('Near {place}', { place: campus?.short_name ?? t('your campus') })}`} />}

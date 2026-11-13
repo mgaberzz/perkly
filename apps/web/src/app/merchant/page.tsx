@@ -6,6 +6,8 @@ import { ExportButtons } from "@/components/export-buttons";
 import { egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import type { Balance } from "@/lib/types";
+import { WeeklySummary } from "@/components/weekly-summary";
+import { lastWeek, type WeekRow } from "@/lib/weekly";
 
 export const metadata = { title: "Dashboard" };
 
@@ -29,14 +31,21 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
   // Every number opens /merchant/explain with the same branch / cashier filters
   const filt = `${branch && !branchScope ? `&branch=${branch}` : ""}${qr ? `&qr=${qr}` : ""}`;
 
-  const [{ data, error }, { data: branches }, { data: qrs }, { data: balance }] = await Promise.all([
+  const week = lastWeek();
+  let weekQ = supabase.from("redemptions").select("user_id, original_amount, final_amount, discount_amount, first_time_at_merchant, created_at, perk:perks(title)")
+    .eq("merchant_id", merchant.id).neq("status", "reversed").gte("created_at", week.prevFromISO).lt("created_at", week.toISO).limit(10000);
+  if (branch) weekQ = weekQ.eq("branch_id", branch);
+  const [{ data, error }, { data: branches }, { data: qrs }, { data: balance }, { data: weekRows }, { data: reviews }] = await Promise.all([
     supabase.rpc("merchant_stats", { p_merchant_id: merchant.id, p_days: days, p_branch_id: branch, p_qr_id: qr }),
     supabase.from("merchant_branches").select("id, name").eq("merchant_id", merchant.id).order("name"),
     supabase.from("branch_qr_codes").select("id, label, cashier_name, branch_id, branch:merchant_branches!inner(merchant_id)")
       .eq("branch.merchant_id", merchant.id).eq("status", "approved").order("created_at")
       .returns<{ id: string; label: string; cashier_name: string | null; branch_id: string }[]>(),
     canSeeMoney ? supabase.rpc("merchant_balances", { p_merchant_id: merchant.id }).maybeSingle<Balance>() : Promise.resolve({ data: null }),
+    weekQ.returns<WeekRow[]>(),
+    supabase.rpc("merchant_reviews", { p_merchant_id: merchant.id, p_limit: 500 }),
   ]);
+  const weekReviews = ((reviews ?? []) as { stars: number; created_at: string; branch_id: string | null }[]).filter((r) => !branch || r.branch_id === branch);
   const s = (data ?? {}) as Stats;
 
   const now = new Date().getTime();
@@ -60,6 +69,7 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
         subtitle={branchScope ? t("{branch} · last {days} days", { branch: branchScope.name, days }) : t("Your student traffic for the last {days} days", { days })}
         actions={<>{[7, 30, 90].map((d) => <LinkButton key={d} href={link(d)} variant={d === days ? "primary" : "secondary"}>{d}d</LinkButton>)}</>}
       />
+      {!qr && <WeeklySummary t={t} rows={weekRows ?? []} reviews={weekReviews} range={week} />}
       <form className="mb-6 flex flex-wrap items-center gap-2 rounded-2xl border border-zinc-200 bg-white p-3">
         <input type="hidden" name="days" value={days} />
         {!branchScope && (

@@ -49,7 +49,7 @@ type Ctx = {
 };
 
 export type FeatureKey = 'arcade' | 'quests' | 'leaderboard' | 'badges' | 'streaks' | 'invite' | 'pay_in_app' | 'shop_online'
-  | 'flash_perks' | 'collections' | 'avatar_builder' | 'verification' | 'language' | 'refunds';
+  | 'flash_perks' | 'collections' | 'avatar_builder' | 'verification' | 'language' | 'refunds' | 'ratings';
 type FeatureCfg = Partial<Record<FeatureKey, { on?: boolean; campuses?: string[]; default?: 'en' | 'ar' }>>;
 const FEATURES_CACHE = 'perkly.cache.features';
 
@@ -62,7 +62,7 @@ type UserCache = { profile: Profile | null; stats: Stats | null; campus: Campus 
 const PARKED_KEY = 'perkly.parkedSession';
 
 const MERCHANT_SELECT =
-  'id, name, category, subcategory, description, logo_url, cover_url, channel, website_url, affiliate_url, ' +
+  'id, name, category, subcategory, description, logo_url, cover_url, channel, website_url, affiliate_url, rating_avg, rating_count, ' +
   'perks(id, title, description, terms, discount_type, discount_value, max_discount_amount, min_spend, is_flash, end_at, branch_id, priority_score, valid_days), ' +
   'branches:merchant_branches(id, name, address, lat, lng, campus_id)';
 

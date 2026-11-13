@@ -1,5 +1,13 @@
 // Arabic translations for the student app. Keys are the English text used in the code (see lib/i18n.ts).
 export const AR: Record<string, string> = {
+  "Rate Your Visit": "قيّم زيارتك",
+  "Your Rating": "تقييمك",
+  "{n} Stars": "{n} نجوم",
+  "What went wrong? (optional)": "إيه اللي ماعجبكش؟ (اختياري)",
+  "What did you like? (optional)": "إيه اللي عجبك؟ (اختياري)",
+  "Send": "ابعت",
+  "Thanks! The shop sees this without your name 💜": "شكرًا! المحل بيشوف ده من غير اسمك 💜",
+  "Couldn’t save your rating. Try again.": "ماقدرناش نحفظ تقييمك. جرّب تاني.",
   "Incl. VAT ({n}%)": "شامل ضريبة القيمة المضافة ({n}%)",
   "Refund": "استرجاع",
   "Request a Refund": "اطلب استرجاع",

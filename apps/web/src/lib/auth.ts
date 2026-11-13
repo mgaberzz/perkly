@@ -90,6 +90,7 @@ export const MERCHANT_AREAS = {
   dashboard: ["owner", "manager", "branch_manager"],
   transactions: ["owner", "manager", "branch_manager", "cashier"],
   refunds: ["owner", "manager", "branch_manager"],
+  reviews: ["owner", "manager", "branch_manager"],
   online: ["owner", "manager", "cashier"],
   perks: ["owner", "manager"],
   branches: ["owner", "manager", "branch_manager"],

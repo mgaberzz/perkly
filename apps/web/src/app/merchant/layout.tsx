@@ -23,6 +23,7 @@ export default async function MerchantLayout({ children }: LayoutProps<"/merchan
     { area: "dashboard", href: "/merchant", label: branchScope ? t("My branch dashboard") : t("Dashboard"), icon: "home", group: 0, exact: true },
     { area: "transactions", href: "/merchant/redemptions", label: t("Transactions"), icon: "receipt", group: 0 },
     { area: "refunds", href: "/merchant/refunds", label: t("Refunds"), icon: "undo", group: 0, count: refunds || undefined },
+    { area: "reviews", href: "/merchant/reviews", label: t("Reviews"), icon: "flag", group: 0 },
     ...(online ? [{ area: "online" as const, href: "/merchant/online", label: t("Online orders"), icon: "globe", group: 0 }] : []),
     { area: "perks", href: "/merchant/perks", label: t("Perks"), icon: "gift", group: 1 },
     { area: "branches", href: "/merchant/branches", label: branchScope ? t("My branch & QR") : t("Branches & QR"), icon: "qr", group: 1 },

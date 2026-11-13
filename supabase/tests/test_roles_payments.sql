@@ -1046,3 +1046,32 @@ do $$ begin
   assert (select adjustments = -current_setting('test.rf_settle')::numeric and amount = adjustments and lines = 0
             from settlements where merchant_id = current_setting('test.rf_m')::uuid order by created_at desc limit 1), 'settlement carries the adjustment';
 end $$;
+
+
+-- ── Ratings: one per transaction, merchant sees them without the student's identity ──
+insert into redemptions (user_id, perk_id, merchant_id, branch_id, original_amount, discount_amount, final_amount, xp_awarded, verification_code, payment_method, payment_status, commission_amount)
+  select user_id, perk_id, merchant_id, branch_id, 100, 10, 90, 0, 'RT0001', 'merchant', 'na', 5 from redemptions where id = current_setting('test.rf_rx')::uuid;
+select set_config('test.rt_rx', (select id::text from redemptions where verification_code = 'RT0001'), false);
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000a7', false);
+do $$ begin assert rate_visit(current_setting('test.rt_rx')::uuid, 5)->>'error' = 'not_found', 'only your own visits'; end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000b9', false);
+do $$ begin
+  assert rate_visit(current_setting('test.rt_rx')::uuid, 6)->>'error' = 'bad_stars', '1 to 5 only';
+  assert rate_visit(current_setting('test.rf_rx')::uuid, 5)->>'error' = 'reversed', 'no rating on a refunded visit';
+  assert (rate_visit(current_setting('test.rt_rx')::uuid, 2, 'Slow service')->>'ok')::boolean, 'student rates';
+  assert (rate_visit(current_setting('test.rt_rx')::uuid, 4)->>'ok')::boolean, 'and can change it';
+  assert (select count(*) from ratings) = 1 and (select stars from ratings) = 4 and (select comment from ratings) = 'Slow service', 'one rating, updated';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c5', false);
+do $$ begin
+  assert (select count(*) from ratings) = 0, 'merchants cannot read the ratings table (it has the student id)';
+  assert (select count(*) from merchant_reviews(current_setting('test.rf_m')::uuid)) = 1, 'but see their reviews';
+  update merchants set rating_avg = 5, rating_count = 999 where id = current_setting('test.rf_m')::uuid;
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000a7', false);
+do $$ begin assert (select count(*) from merchant_reviews(current_setting('test.rf_m')::uuid)) = 0, 'students cannot read a shop''s reviews list'; end $$;
+reset role;
+do $$ begin
+  assert (select rating_avg = 4 and rating_count = 1 from merchants where id = current_setting('test.rf_m')::uuid), 'average kept by the database; the owner cannot change it';
+end $$;

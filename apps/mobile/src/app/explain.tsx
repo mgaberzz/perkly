@@ -7,6 +7,7 @@ import { Card, Empty, MerchantLogo, T } from '@/components/ui';
 import { discountPct, egp, levelProgress, shortDate, vatIncluded } from '@/lib/format';
 import { backChevron, fwdChevron, locale, t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
+import { RateVisit } from '@/components/rate-visit';
 import { supabase } from '@/lib/supabase';
 import { brand, gradient, useTheme } from '@/lib/theme';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -197,6 +198,7 @@ export default function Explain() {
             <T v="small">{r.branch_name === 'Online' ? t('Online') : r.branch_name} · {new Date(r.created_at).toLocaleString(locale(), { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</T>
             {r.tx_code ? <T v="small">{t('Transaction ID')}: <Text style={{ fontWeight: '900' }}>{r.tx_code}</Text></T> : null}
             <T v="small">{t('Code')}: <Text style={{ fontWeight: '900', letterSpacing: 2 }}>{r.verification_code}</Text>{r.status === 'reversed' ? ` · ${t('Reversed')}` : ''}</T>
+            {r.status !== 'reversed' && <View style={{ marginTop: 12 }}><RateVisit redemptionId={r.id} /></View>}
             <View style={{ marginTop: 10 }}><ShareReceiptButton data={r} /></View>
             {(feature('refunds') || r.status === 'reversed') && Number(r.final_amount ?? 0) > 0 && (
               <T v="small" color={brand.purple} style={{ fontWeight: '800', marginTop: 10, textAlign: 'center' }}

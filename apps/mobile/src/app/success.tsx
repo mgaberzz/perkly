@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase';
 import { brand } from '@/lib/theme';
 import { locale, t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
+import { RateVisit } from '@/components/rate-visit';
 
 const CONFETTI = ['🎉', '✨', '💜', '🎊', '⭐', '💸'];
 
@@ -158,6 +159,7 @@ export default function Success() {
           </Animated.View>
 
           <View style={{ alignSelf: 'stretch', marginTop: 8, gap: 10 }}>
+            <RateVisit redemptionId={r.redemption_id} onDark />
             <ReceiptRefInput redemptionId={r.redemption_id} />
             <ShareReceiptButton variant="light" data={{ ...r, tx_code: txCode }} />
             <Button variant="white" title={t('Done')} onPress={() => router.replace('/')} />

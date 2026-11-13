@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { ratingText } from './rate-visit';
 import { Pressable, View } from 'react-native';
 import { Card, DiscountBadge, MerchantLogo, T } from './ui';
 import { bestPerk, distanceLabel, timeLeft } from '@/lib/format';
@@ -14,7 +15,7 @@ export function MerchantRow({ m, distance }: { m: Merchant; distance?: number | 
       <MerchantLogo name={m.name} category={m.category} uri={m.logo_url} />
       <View style={{ flex: 1, gap: 2 }}>
         <T v="h3" numberOfLines={1}>{m.name}</T>
-        <T v="small" numberOfLines={1}>{m.subcategory ?? t(m.category)}{m.channel === 'online' ? ` · 🌐 ${t('Online')}` : ''}{distance != null ? ` · ${distanceLabel(distance)}` : ''}</T>
+        <T v="small" numberOfLines={1}>{ratingText(m) ? `${ratingText(m)} · ` : ''}{m.subcategory ?? t(m.category)}{m.channel === 'online' ? ` · 🌐 ${t('Online')}` : ''}{distance != null ? ` · ${distanceLabel(distance)}` : ''}</T>
       </View>
       {perk && <DiscountBadge perk={perk} size="sm" />}
     </Card>

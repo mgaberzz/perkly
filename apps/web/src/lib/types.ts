@@ -10,6 +10,7 @@ export interface Profile {
 }
 export interface Campus { id: string; name: string; short_name: string | null; city: string; type: string; lat: number | null; lng: number | null; is_active: boolean; }
 export interface Merchant {
+  rating_avg?: number | null; rating_count?: number;
   id: string; name: string; category: string; subcategory: string | null; brand_type: string; description: string | null;
   logo_url: string | null; cover_url: string | null; contact_name: string | null; contact_phone: string | null; contact_email: string | null;
   status: "pending" | "live" | "paused" | "churned"; plan: "free" | "pro"; commission_pct: number; created_at: string;
