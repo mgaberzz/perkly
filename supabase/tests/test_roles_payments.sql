@@ -1099,8 +1099,8 @@ begin
     update merchant_bank_accounts set iban = 'EG000000000000000000000000000' where merchant_id = v_m;
     raise exception 'should fail';
   exception when check_violation then null; end;
-  assert (merchant_stats(v_m, 30, null, null, current_date - 1, current_date)->>'redemptions')::int >= 1, 'stats for a date range';
-  assert (merchant_stats(v_m, 30, null, null, current_date - 30, current_date - 20)->>'redemptions')::int = 0, 'empty range';
+  assert (merchant_stats(v_m, 30, null, null, cairo_today() - 1, cairo_today())->>'redemptions')::int >= 1, 'stats for a date range';
+  assert (merchant_stats(v_m, 30, null, null, cairo_today() - 30, cairo_today() - 20)->>'redemptions')::int = 0, 'empty range';
 end $$;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e3', false);
 do $$ begin
@@ -1145,4 +1145,21 @@ end $$;
 -- ── Tickets are remembered on the purchase that earned them ──
 do $$ begin
   assert (select max(tickets_awarded) from redemptions) >= 2, 'first-of-day ticket and quest tickets are both recorded on the redemption';
+end $$;
+
+-- ── Test merchants skip the 15-minute and per-day rules; everyone else keeps them ──
+do $$
+declare v_m uuid := current_setting('test.rf_m')::uuid; v_user uuid := '00000000-0000-0000-0000-0000000000b9'; v_perk uuid; v_branch uuid; r jsonb; i int;
+begin
+  select perk_id, branch_id into v_perk, v_branch from redemptions where id = current_setting('test.rt_rx')::uuid;
+  update perks set max_uses_per_user = null, daily_cap = null, status = 'active' where id = v_perk;
+  r := perform_redemption(v_user, v_perk, v_m, v_branch, null, 50, null, null, 'in_store', 'merchant', null);
+  r := perform_redemption(v_user, v_perk, v_m, v_branch, null, 50, null, null, 'in_store', 'merchant', null);
+  assert r->>'error' = 'too_soon', 'normal merchants keep the 15-minute rule: ' || r::text;
+  update app_settings set value = jsonb_build_object('ids', jsonb_build_array(v_m)) where key = 'test_merchants';
+  for i in 1..6 loop
+    r := perform_redemption(v_user, v_perk, v_m, v_branch, null, 50, null, null, 'in_store', 'merchant', null);
+    assert (r->>'ok')::boolean, 'test merchant: back-to-back redemption ' || i || ' ' || r::text;
+  end loop;
+  update app_settings set value = '{"ids": []}' where key = 'test_merchants';
 end $$;

@@ -29,3 +29,6 @@ select
 --   delete from partners where partner_code = '400001';
 --   delete from auth.users where id in (select id from profiles where email in (...demo logins...) or user_code in ('10000006','10000007'));
 -- commit;
+
+-- Also at launch: no merchant may stay exempt from the redemption rules
+--   update app_settings set value = '{"ids": []}' where key = 'test_merchants';

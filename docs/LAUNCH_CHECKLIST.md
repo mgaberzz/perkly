@@ -55,6 +55,7 @@ Ask Claude: **"launch checklist"** to walk through it.
   - Demo logins: **admin** (full control, delete first) / ops / finance / am / partner / merchant / student `.demo@perkly.app` (merchant.demo is an owner of the Test Café; student.demo is for testing the app)
   - Anonymised test accounts 10000006 and 10000007
   - "Perkly Test Café" (no location check — must not stay live)
+- [ ] Empty the test-merchant list (`app_settings.test_merchants`): Perkly Test Café is exempt from the 15-minute and per-day redemption rules for testing
 
 ## Switches on launch day
 - [ ] Settings → **Require verification to redeem** ON (decide free redemptions before verifying)
