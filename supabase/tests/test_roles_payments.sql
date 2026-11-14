@@ -943,6 +943,7 @@ update app_settings set value = '{"required": false, "free_redemptions": 0}' whe
 -- ── Refunds: student asks → merchant decides → transaction reversed, XP taken back ──
 insert into auth.users (id, email, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000c5', 'refund-owner@perkly.test', '{"full_name":"Omar Owner"}');
 select set_config('test.rf_rx', (select id::text from redemptions where user_id = '00000000-0000-0000-0000-0000000000b9' and status = 'success' limit 1), false);
+select set_config('test.rf_tk', (select spin_tickets::text from user_stats where user_id = '00000000-0000-0000-0000-0000000000b9'), false);
 insert into merchant_members (merchant_id, user_id, member_role)
   select merchant_id, '00000000-0000-0000-0000-0000000000c5', 'owner' from redemptions where id = current_setting('test.rf_rx')::uuid;
 select set_config('test.rf_xp', (select total_xp::text from user_stats where user_id = '00000000-0000-0000-0000-0000000000b9'), false);
@@ -976,6 +977,8 @@ do $$ begin
   assert (select status from redemptions where id = current_setting('test.rf_rx')::uuid) = 'reversed', 'transaction reversed';
   assert (select total_xp from user_stats where user_id = '00000000-0000-0000-0000-0000000000b9')
          = greatest(0, current_setting('test.rf_xp')::int - (select xp_awarded from redemptions where id = current_setting('test.rf_rx')::uuid)), 'XP taken back';
+  assert (select spin_tickets from user_stats where user_id = '00000000-0000-0000-0000-0000000000b9')
+         = greatest(0, current_setting('test.rf_tk')::int - (select tickets_awarded from redemptions where id = current_setting('test.rf_rx')::uuid)), 'unused spin tickets taken back';
   assert (select count(*) from notifications where user_id = '00000000-0000-0000-0000-0000000000b9' and kind = 'refund') = 1, 'student is told';
 end $$;
 -- in-app payment: approved → Perkly owes the money → Finance marks it paid
@@ -1137,4 +1140,9 @@ do $$ begin
   assert num_text(200) = '200' and num_text(569.60) = '569.6' and num_text(1209.65) = '1,209.65' and num_text(0.5) = '0.5', 'amount text';
   assert not exists (select 1 from refund_requests where student_code is null), 'every refund request carries the student ID';
   assert not exists (select 1 from notifications where kind = 'refund' and body like '%EGP 2%'), 'no "EGP 200.00" style';
+end $$;
+
+-- ── Tickets are remembered on the purchase that earned them ──
+do $$ begin
+  assert (select max(tickets_awarded) from redemptions) >= 2, 'first-of-day ticket and quest tickets are both recorded on the redemption';
 end $$;

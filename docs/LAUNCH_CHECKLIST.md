@@ -5,19 +5,24 @@ Ask Claude: **"launch checklist"** to walk through it.
 
 ## Accounts & stores
 - [ ] Apple Developer account → iPhone build on TestFlight → App Store review
+  - Waiting for Apple's reply to the identity check (ID sent)
   - Enrolled as **Individual** (company not registered yet). After registering the company: get a D-U-N-S number, then ask Apple Support to change the membership to **Organization** so the store shows "Perkly" as the seller.
 - [ ] Google Play Console → internal testing → production release
+- [ ] New Android build installed and checked on a real phone: camera scan, Face ID / fingerprint, student ID photo upload, in-app payment (test mode)
 - [ ] Android push notifications tested on a real phone (Settings → "Notifications on this phone" shows **On ✓**)
 
 ## Domain & contact details
+- [ ] Buy the domain, then: verify it in Resend (email), connect it to Vercel (portal)
 - [ ] Own domain (e.g. `perkly.app`) on Vercel — do it **before** the team registers Face ID / passkeys on the portal
 - [ ] Set `EXPO_PUBLIC_WEB_URL` in `apps/mobile/eas.json` to the new domain (legal links in the app)
 - [ ] Real support email + registered company name in `apps/web/src/lib/legal.ts` (replace `support@perkly.app` / "Perkly")
 - [ ] WhatsApp support number for the app's "Support chat" button (`apps/mobile/src/app/settings.tsx`)
+  - Today the button opens an empty WhatsApp link, so it does nothing useful until the number is set
 - [ ] Lawyer in Egypt reviews the Privacy Policy and Terms of Use
 
 ## Providers
 - [ ] SMS provider for students' login codes (Supabase Auth → Phone)
+  - Also needed for the merchant portal's mobile number verification (Settings → Mobile number); until then it shows "SMS codes aren't switched on yet"
 - [ ] Email provider: Resend is connected but in **test mode** (only emails m.gaberz@hotmail.com). Verify the domain at resend.com/domains, then change the sender in Supabase → Auth → SMTP to e.g. `no-reply@<domain>`. Until then students can't get email login codes and portal invites don't arrive. This also enables university-email verification.
   - After email works: email each merchant their weekly summary every Sunday (today it's the "Your week with Perkly" card on their dashboard)
   - After email works: email merchants a refund reminder after 3 days (today they only see a banner in the portal)
