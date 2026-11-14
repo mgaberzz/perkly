@@ -9,7 +9,7 @@ Ask Claude: **"launch checklist"** to walk through it.
   - Enrolled as **Individual** (company not registered yet). After registering the company: get a D-U-N-S number, then ask Apple Support to change the membership to **Organization** so the store shows "Perkly" as the seller.
 - [ ] Google Play Console → internal testing → production release
 - [ ] New Android build installed and checked on a real phone: camera scan, Face ID / fingerprint, student ID photo upload, in-app payment (test mode)
-- [ ] Android push notifications tested on a real phone (Settings → "Notifications on this phone" shows **On ✓**)
+- [x] Android push notifications tested on a real phone (14 Nov 2026: test message arrived on the preview build)
 
 ## Domain & contact details
 - [ ] Buy the domain, then: verify it in Resend (email), connect it to Vercel (portal)
