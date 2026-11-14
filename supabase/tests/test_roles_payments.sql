@@ -1169,3 +1169,19 @@ do $$ begin
   assert position('You paid '' || num_text(new.final_amount) || '' EGP at ' in (select pg_get_functiondef(oid) from pg_proc where proname = 'notify_payment')) > 0,
     'amount like the app: ' || (select substring(pg_get_functiondef(oid) from 'You paid[^\n]*') from pg_proc where proname = 'notify_payment');
 end $$;
+
+-- ── A discount change by the merchant re-opens an approval request ──
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c5', false);
+do $$ declare v_perk uuid; begin
+  select perk_id into v_perk from redemptions where id = current_setting('test.rt_rx')::uuid;
+  update perks set discount_value = discount_value + 1 where id = v_perk;
+  assert (select status from perks where id = v_perk) = 'pending', 'discount change waits for approval';
+  perform set_config('test.dc_perk', v_perk::text, false);
+end $$;
+reset role;
+do $$ begin
+  assert (select count(*) from admin_requests where kind = 'perk' and status = 'pending' and ref_id = current_setting('test.dc_perk')::uuid) = 1, 'and Operations get a request for it';
+  update perks set status = 'active' where id = current_setting('test.dc_perk')::uuid;
+  assert not exists (select 1 from admin_requests where kind = 'perk' and status = 'pending' and ref_id = current_setting('test.dc_perk')::uuid), 'approving closes it';
+end $$;
