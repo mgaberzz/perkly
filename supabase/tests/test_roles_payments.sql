@@ -1125,3 +1125,9 @@ do $$ declare v_m uuid := current_setting('test.rf_m')::uuid; begin
   update perks set status = 'active' where merchant_id = v_m;
 end $$;
 reset role;
+
+-- ── The week starts on Sunday ──
+do $$ begin
+  assert week_start(date '2026-11-14') = date '2026-11-08', 'Saturday belongs to the week that started on Sunday';
+  assert week_start(date '2026-11-15') = date '2026-11-15', 'Sunday starts a new week';
+end $$;

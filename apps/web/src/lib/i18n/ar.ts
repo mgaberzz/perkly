@@ -1,5 +1,8 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Every new perk goes live once the Perkly team approves it.": "كل عرض جديد يُفعَّل بعد موافقة فريق Perkly.",
+  "Created! It goes live once the Perkly team approves it.": "تم الإنشاء! يُفعَّل العرض بعد موافقة فريق Perkly.",
+  "% for percentage, EGP for fixed. Tiers: 10% Bronze · 15–20% Silver · 25–30% Gold · 35–40% Hero. Changing the discount sends the perk back to Perkly for approval.": "% للنسبة، وجنيه للمبلغ الثابت. الفئات: 10% برونزي · 15–20% فضي · 25–30% ذهبي · 35–40% هيرو. تغيير الخصم يعيد العرض لفريق Perkly للموافقة.",
   "Free": "مجاني",
   "Bank account & payout cycle": "الحساب البنكي ودورة الدفع",
   "Bank details sent. Perkly will review them.": "تم إرسال بيانات البنك. سيراجعها فريق Perkly.",

@@ -18,7 +18,7 @@ type Leader = { rank: number; user_id: string; display_name: string; campus_name
 function periodStart(type: Quest['quest_type']) {
   const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Africa/Cairo' }));
   const d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  if (type === 'weekly') d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  if (type === 'weekly') d.setDate(d.getDate() - d.getDay()); // the week starts on Sunday
   if (type === 'monthly') d.setDate(1);
   const p = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
@@ -156,7 +156,7 @@ export default function Rewards() {
           </View>
         ))}
       </Card>
-      <T v="small" style={{ textAlign: 'center' }}>{t('Leaderboards reset every Monday.')}</T>
+      <T v="small" style={{ textAlign: 'center' }}>{t('Leaderboards reset every Sunday.')}</T>
       </>}
     </Screen>
   );

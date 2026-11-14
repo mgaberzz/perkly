@@ -309,7 +309,7 @@ export const AR: Record<string, string> = {
   "It's printed under the QR (starts with PK-).": "مكتوب تحت الكود (بيبدأ بـ PK-).",
   "LEVEL {n}": "المستوى {n}",
   "Language": "اللغة",
-  "Leaderboards reset every Monday.": "لوحة المتصدرين بتتجدد كل اثنين.",
+  "Leaderboards reset every Sunday.": "لوحة المتصدرين بتتجدد كل حد.",
   "Legendary streak. You’re on fire 👑": "سلسلة أسطورية. حافظ عليها 👑",
   "Let’s Play": "يلا نلعب",
   "Level up! You’re {name} now 🚀": "مستوى جديد! {name}",

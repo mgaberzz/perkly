@@ -37,7 +37,7 @@ export async function createPerk(_: ActionState, fd: FormData): Promise<ActionSt
   const parsed = parsePerkForm(fd);
   if ("error" in parsed) return parsed;
   const { data, error } = await supabase.from("perks")
-    .insert({ ...parsed.row, merchant_id: merchant.id, status: "active" }).select("id,status").single();
+    .insert({ ...parsed.row, merchant_id: merchant.id, status: "pending" }).select("id,status").single();
   if (error) return { error: error.message };
   revalidatePath("/merchant/perks");
   redirect(`/merchant/perks/${data.id}?created=${data.status}`);

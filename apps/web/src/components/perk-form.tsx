@@ -28,7 +28,7 @@ export async function PerkForm({
             <option value="bundle">{t("Bundle deal")}</option>
           </Select>
         </Field>
-        <Field label={t("Discount value")} hint={t("% for percentage, EGP for fixed. Tiers: 10% Bronze · 15–20% Silver · 25–30% Gold · 35–40% Hero (needs approval)")}>
+        <Field label={t("Discount value")} hint={t("% for percentage, EGP for fixed. Tiers: 10% Bronze · 15–20% Silver · 25–30% Gold · 35–40% Hero. Changing the discount sends the perk back to Perkly for approval.")}>
           <Input name="discount_value" type="number" step="0.01" min="0" defaultValue={perk?.discount_value ?? 10} />
         </Field>
         <Field label={t("Max discount (EGP)")} hint={t("Optional cap per redemption")}><Input name="max_discount_amount" type="number" step="0.01" min="0" defaultValue={perk?.max_discount_amount ?? ""} /></Field>
