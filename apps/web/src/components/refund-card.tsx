@@ -28,7 +28,7 @@ export function RefundCard({ r, t, showMerchant, children }: { r: RefundRow; t: 
           {r.note && <p className="mt-1 text-sm text-zinc-700">“{r.note}”</p>}
           <dl className="mt-3 grid gap-x-6 gap-y-1 text-xs text-zinc-500 sm:grid-cols-2">
             <div>{t("Refund ID")}: <span className="font-mono text-zinc-700">{r.refund_code}</span> · {dateTime(r.created_at)}</div>
-            <div>{t("Student")}: <span className="text-zinc-700">{r.student?.full_name ?? "—"}{r.student?.student_code ? ` · ${r.student.student_code}` : ""}</span></div>
+            <div>{t("Student")}: <span className="text-zinc-700">{r.student?.full_name ?? (r.student_code ? `${t("Student ID")} ${r.student_code}` : "—")}{r.student?.full_name && (r.student?.student_code ?? r.student_code) ? ` · ${r.student?.student_code ?? r.student_code}` : ""}</span></div>
             {showMerchant && r.merchant && <div>{t("Merchant")}: <span className="text-zinc-700">{r.merchant.name} · {r.merchant.merchant_code}</span></div>}
             {tx && <div>{t("Transaction")}: <span className="font-mono text-zinc-700">{tx.tx_code ?? "—"}</span> · {dateTime(tx.created_at)}</div>}
             {tx && <div>{t("Bill")}: <span className="text-zinc-700">{egp(tx.original_amount)} − {egp(tx.discount_amount)} = {egp(tx.final_amount)}</span></div>}

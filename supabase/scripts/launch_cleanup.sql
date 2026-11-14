@@ -9,7 +9,7 @@
 
 -- ───────── PART 1: dry run (read-only) ─────────
 with m as (select id from merchants where merchant_code between '300001' and '300090'),
-     u as (select id from profiles where email in ('ops.demo@perkly.app','finance.demo@perkly.app','am.demo@perkly.app','partner.demo@perkly.app','merchant.demo@perkly.app','student.demo@perkly.app')
+     u as (select id from profiles where email in ('admin.demo@perkly.app','ops.demo@perkly.app','finance.demo@perkly.app','am.demo@perkly.app','partner.demo@perkly.app','merchant.demo@perkly.app','student.demo@perkly.app')
            or user_code in ('10000006','10000007'))
 select
   (select count(*) from m)                                                   as merchants,

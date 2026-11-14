@@ -1131,3 +1131,10 @@ do $$ begin
   assert week_start(date '2026-11-14') = date '2026-11-08', 'Saturday belongs to the week that started on Sunday';
   assert week_start(date '2026-11-15') = date '2026-11-15', 'Sunday starts a new week';
 end $$;
+
+-- ── Refund card: student ID for the merchant; amounts written like the app ──
+do $$ begin
+  assert num_text(200) = '200' and num_text(569.60) = '569.6' and num_text(1209.65) = '1,209.65' and num_text(0.5) = '0.5', 'amount text';
+  assert not exists (select 1 from refund_requests where student_code is null), 'every refund request carries the student ID';
+  assert not exists (select 1 from notifications where kind = 'refund' and body like '%EGP 2%'), 'no "EGP 200.00" style';
+end $$;
