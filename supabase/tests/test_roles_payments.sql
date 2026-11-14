@@ -725,7 +725,7 @@ do $$ declare p perks; begin
   select * into p from perks where status = 'active' limit 1;
   insert into redemptions (user_id, perk_id, merchant_id, verification_code, status, payment_method, payment_status, final_amount)
   values ('00000000-0000-0000-0000-0000000000d2', p.id, p.merchant_id, 'PAY1', 'success', 'in_app', 'paid', 123.5);
-  assert (select body from notifications where user_id = '00000000-0000-0000-0000-0000000000d2' and kind = 'payment') like 'You paid EGP 123.50 at %', 'payment receipt';
+  assert (select body from notifications where user_id = '00000000-0000-0000-0000-0000000000d2' and kind = 'payment') like 'You paid 123.5 EGP at %', 'payment receipt';
 end $$;
 
 -- ── Insights for any range with filters; broadcasts to several campuses ──
@@ -1162,4 +1162,10 @@ begin
     assert (r->>'ok')::boolean, 'test merchant: back-to-back redemption ' || i || ' ' || r::text;
   end loop;
   update app_settings set value = '{"ids": []}' where key = 'test_merchants';
+end $$;
+
+-- ── Payment notification wording ──
+do $$ begin
+  assert position('You paid '' || num_text(new.final_amount) || '' EGP at ' in (select pg_get_functiondef(oid) from pg_proc where proname = 'notify_payment')) > 0,
+    'amount like the app: ' || (select substring(pg_get_functiondef(oid) from 'You paid[^\n]*') from pg_proc where proname = 'notify_payment');
 end $$;
