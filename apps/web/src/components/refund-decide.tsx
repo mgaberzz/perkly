@@ -21,7 +21,10 @@ export function RefundPay({ id, action, t }: { id: string; action: (prev: Action
   return (
     <ActionForm action={action} className="space-y-2 rounded-xl bg-zinc-50 p-3">
       <input type="hidden" name="id" value={id} />
-      <Input name="reference" required maxLength={80} placeholder={t("Payment reference")} />
+      <label className="block text-xs font-semibold text-zinc-600">{t("Payment reference (required)")}
+        <Input name="reference" required maxLength={80} placeholder={t("e.g. bank transfer or Paymob refund number")} className="mt-1" />
+      </label>
+      <p className="text-xs text-zinc-500">{t("Enter the reference of the transfer you made, then mark it paid. The student is notified.")}</p>
       <SubmitButton className="w-full">{t("Mark refund as paid")}</SubmitButton>
     </ActionForm>
   );
