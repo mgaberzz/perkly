@@ -36,7 +36,7 @@ export function ProfileForm({ submitLabel, onDone, showInvite }: { submitLabel: 
     const e: Record<string, string> = {};
     if (name.trim().split(/\s+/).length < 2) e.name = t('Add your first and last name.');
     const birth = dob ? dobToIso(dob) : null;
-    if (dob && !birth) e.dob = t('Use DD / MM / YYYY (you must be 12+).');
+    if (dob && !birth) e.dob = t('Use DD / MM / YYYY (you must be 16+).');
     if (email && !/^\S+@\S+\.\S+$/.test(email.trim())) e.email = t('That email doesn’t look right.');
     const phoneIntl = phone.trim() ? toIntlPhone(phone) : null;
     if (phone.trim() && !phoneIntl) e.phone = t('That doesn’t look like an Egyptian mobile number. Try 01x xxxx xxxx.');

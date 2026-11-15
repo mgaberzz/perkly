@@ -558,7 +558,7 @@ export const AR: Record<string, string> = {
   "Unlock Perkly": "افتح Perkly",
   "Unlock Perks. Live Smart.": "افتح العروض. عيش بذكاء.",
   "Up to 4 Perkly redemptions per place per day, and one every 15 minutes.": "لحد 4 استخدامات في اليوم لكل مكان، ومرة كل 15 دقيقة.",
-  "Use DD / MM / YYYY (you must be 12+).": "استخدم يوم / شهر / سنة (لازم تكون 12+).",
+  "Use DD / MM / YYYY (you must be 16+).": "استخدم يوم / شهر / سنة (لازم تكون 16+).",
   "Use Face ID, your fingerprint or your phone passcode to continue.": "استخدم Face ID أو بصمتك أو رمز موبايلك للمتابعة.",
   "Use at {place}": "استخدمه في {place}",
   "Use Passcode": "استخدم رمز المرور",
