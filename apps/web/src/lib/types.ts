@@ -59,7 +59,7 @@ export interface Settlement {
   amount: number; lines: number; status: "pending" | "partially_paid" | "paid"; paid_amount: number; vat: number; reference: string | null; created_at: string; paid_at: string | null;
 }
 export interface AdminRequest {
-  id: string; kind: "qr_code" | "perk" | "cashback" | "payout"; merchant_id: string | null; ref_id: string; title: string;
+  id: string; kind: "qr_code" | "perk" | "cashback" | "payout" | "bank_account"; merchant_id: string | null; ref_id: string; title: string;
   details: Record<string, unknown>; status: "pending" | "approved" | "rejected"; created_at: string; resolved_at: string | null; note: string | null;
 }
 export const BRAND_TYPES = ["local", "chain", "mega_account"] as const;

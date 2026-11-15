@@ -1,4 +1,5 @@
 "use server";
+import { BANKS } from "@/lib/banks";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin, requireStaff } from "@/lib/auth";
@@ -107,6 +108,58 @@ export async function adminCreateBranch(merchantId: string, _: ActionState, fd: 
   await supabase.from("branch_qr_codes").insert({ branch_id: data.id, label: "Cashier 1", cashier_name: str(fd, "cashier_name") || null });
   revalidatePath(`/admin/merchants/${merchantId}`);
   return { ok: "Branch added with a cashier QR." };
+}
+
+/** Operations change a branch's details (merchants can only open / close their branches). */
+export async function adminUpdateBranch(merchantId: string, branchId: string, _: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireStaff("merchants_edit");
+  const name = str(fd, "name");
+  if (!name) return { error: "Branch name is required." };
+  const num = (k: string) => (str(fd, k) === "" || Number.isNaN(Number(str(fd, k))) ? null : Number(str(fd, k)));
+  const { error } = await supabase.from("merchant_branches").update({
+    name, address: str(fd, "address") || null, city: str(fd, "city") || null, campus_id: str(fd, "campus_id") || null,
+    lat: num("lat"), lng: num("lng"), is_active: fd.get("is_active") === "on",
+  }).eq("id", branchId).eq("merchant_id", merchantId);
+  if (error) return { error: error.message };
+  revalidatePath(`/admin/merchants/${merchantId}`);
+  return { ok: "Branch saved." };
+}
+
+export async function adminRenameQr(fd: FormData) {
+  const { supabase } = await requireStaff("merchants_edit");
+  const name = str(fd, "cashier_name");
+  if (name) await supabase.from("branch_qr_codes").update({ cashier_name: name, label: name }).eq("id", str(fd, "id"));
+  revalidatePath(`/admin/merchants/${str(fd, "merchant_id")}`);
+}
+
+// ───────── Bank details & payout cycle (Admin / Operations) ─────────
+export async function adminSaveBank(merchantId: string, _: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase, role } = await requireStaff("merchants_view");
+  if (!["admin", "operations"].includes(role)) return { error: "Only Admin or Operations can change bank details." };
+  const bank = str(fd, "bank_name"), holder = str(fd, "account_name"), cycle = str(fd, "payout_schedule");
+  const iban = str(fd, "iban").replace(/\s+/g, "").toUpperCase();
+  if (!BANKS.includes(bank)) return { error: "Pick the bank from the list." };
+  if (!holder) return { error: "Enter the account holder's name." };
+  if (!/^EG\d{27}$/.test(iban)) return { error: "Egyptian IBANs start with EG followed by 27 digits." };
+  if (!["weekly", "biweekly", "monthly"].includes(cycle)) return { error: "Pick a payout cycle." };
+  const decision = str(fd, "decision");
+  const row = { merchant_id: merchantId, bank_name: bank, account_name: holder, iban, payout_schedule: cycle, updated_at: new Date().toISOString(),
+    ...(decision === "approve" ? { status: "approved", review_note: null } : {}) };
+  const { error } = await supabase.from("merchant_bank_accounts").upsert(row);
+  if (error) return { error: error.message };
+  revalidatePath("/admin", "layout");
+  return { ok: decision === "approve" ? "Bank details approved." : "Bank details saved." };
+}
+
+export async function adminRejectBank(merchantId: string, _: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase, role } = await requireStaff("merchants_view");
+  if (!["admin", "operations"].includes(role)) return { error: "Only Admin or Operations can change bank details." };
+  const note = str(fd, "note");
+  if (!note) return { error: "Tell the merchant what to correct." };
+  const { error } = await supabase.from("merchant_bank_accounts").update({ status: "rejected", review_note: note }).eq("merchant_id", merchantId);
+  if (error) return { error: error.message };
+  revalidatePath("/admin", "layout");
+  return { ok: "Sent back to the merchant." };
 }
 
 export async function adminCreateQr(fd: FormData) {
@@ -223,6 +276,15 @@ export async function reviewPerk(fd: FormData) {
   await supabase.from("perks").update(update).eq("id", str(fd, "id"));
   revalidatePath("/admin/perks", "layout");
   revalidatePath("/admin");
+}
+
+/** Pause / activate a perk (merchants can't do this themselves). */
+export async function adminSetPerkStatus(fd: FormData) {
+  const { supabase } = await requireStaff("perks");
+  const status = str(fd, "status");
+  if (!["active", "paused"].includes(status)) return;
+  await supabase.from("perks").update({ status }).eq("id", str(fd, "id")).in("status", ["active", "paused"]);
+  revalidatePath("/admin", "layout");
 }
 
 export async function adminUpdatePerk(id: string, _: ActionState, fd: FormData): Promise<ActionState> {
@@ -534,6 +596,17 @@ export async function rejectApplication(_: ActionState, fd: FormData): Promise<A
   if (!data?.length) return { error: "This application was already handled." };
   revalidatePath("/admin/merchants", "layout");
   return { ok: "Application rejected." };
+}
+
+/** Admin: the "Incl. VAT" line on students' receipts (shown or hidden, and its rate). */
+export async function setReceiptVat(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { supabase } = await requireStaff("settings");
+  const pct = Number(str(fd, "vat_pct"));
+  if (!(pct >= 0 && pct <= 100)) return { error: "Enter a rate between 0 and 100." };
+  const { error } = await supabase.from("app_settings").upsert({ key: "receipt", value: { show_vat: fd.get("show_vat") === "on", vat_pct: pct }, updated_at: new Date().toISOString() });
+  if (error) return { error: error.message };
+  revalidatePath("/admin/settings");
+  return { ok: "Saved. Students see it the next time they open the app." };
 }
 
 // ───────── Refunds ─────────

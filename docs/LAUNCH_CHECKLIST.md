@@ -5,21 +5,30 @@ Ask Claude: **"launch checklist"** to walk through it.
 
 ## Accounts & stores
 - [ ] Apple Developer account → iPhone build on TestFlight → App Store review
+  - Waiting for Apple's reply to the identity check (ID sent)
   - Enrolled as **Individual** (company not registered yet). After registering the company: get a D-U-N-S number, then ask Apple Support to change the membership to **Organization** so the store shows "Perkly" as the seller.
 - [ ] Google Play Console → internal testing → production release
-- [ ] Android push notifications tested on a real phone (Settings → "Notifications on this phone" shows **On ✓**)
+- [x] New Android build installed and checked on a real phone (14 Nov 2026): camera scan, fingerprint login, student ID photo upload and approval, receipt
+- [ ] In-app payment tried on a real phone (test mode)
+- [x] Android push notifications tested on a real phone (14 Nov 2026: test message arrived on the preview build)
 
 ## Domain & contact details
-- [ ] Own domain (e.g. `perkly.app`) on Vercel — do it **before** the team registers Face ID / passkeys on the portal
-- [ ] Set `EXPO_PUBLIC_WEB_URL` in `apps/mobile/eas.json` to the new domain (legal links in the app)
-- [ ] Real support email + registered company name in `apps/web/src/lib/legal.ts` (replace `support@perkly.app` / "Perkly")
+- [x] Domains bought: `perklyapp.co` and `perklyeg.com` (Namecheap)
+- [ ] Connect `perklyapp.co` (primary) and `perklyeg.com` (redirects to it) in Vercel → Settings → Domains, and add Vercel's DNS records in Namecheap — do it **before** the team registers Face ID / passkeys on the portal
+- [ ] Set `NEXT_PUBLIC_SITE_URL` to `https://perklyapp.co` in Vercel's environment variables and redeploy (invite and password-reset links use it)
+- [ ] Supabase → Auth → URL Configuration: set Site URL to `https://perklyapp.co` and add `https://perklyapp.co/**` to the redirect URLs
+- [x] `EXPO_PUBLIC_WEB_URL` in `apps/mobile/eas.json` set to `https://perklyapp.co` (legal links in the app) — new app builds need the domain live first
+- [ ] Create the `support@perklyapp.co` mailbox (already shown on the legal pages) and put the registered company name in `apps/web/src/lib/legal.ts` (replace "Perkly")
+- [ ] Verify `perklyapp.co` in Resend (email)
 - [ ] WhatsApp support number for the app's "Support chat" button (`apps/mobile/src/app/settings.tsx`)
+  - Today the button opens an empty WhatsApp link, so it does nothing useful until the number is set
 - [ ] Lawyer in Egypt reviews the Privacy Policy and Terms of Use
 
 ## Providers
 - [ ] SMS provider for students' login codes (Supabase Auth → Phone)
+  - Also needed for the merchant portal's mobile number verification (Settings → Mobile number); until then it shows "SMS codes aren't switched on yet"
 - [ ] Email provider: Resend is connected but in **test mode** (only emails m.gaberz@hotmail.com). Verify the domain at resend.com/domains, then change the sender in Supabase → Auth → SMTP to e.g. `no-reply@<domain>`. Until then students can't get email login codes and portal invites don't arrive. This also enables university-email verification.
-  - After email works: email each merchant their weekly summary every Monday (today it's the "Your week with Perkly" card on their dashboard)
+  - After email works: email each merchant their weekly summary every Sunday (today it's the "Your week with Perkly" card on their dashboard)
   - After email works: email merchants a refund reminder after 3 days (today they only see a banner in the portal)
 - [ ] Paymob merchant account → switch in-app payments from **test** to **live** (Settings)
   - After Paymob: make approved in-app refunds go back to the student's card automatically (today Finance returns the money by hand and marks the refund paid)
@@ -46,9 +55,10 @@ Ask Claude: **"launch checklist"** to walk through it.
 - [ ] Remove test & demo data with `supabase/scripts/launch_cleanup.sql` (dry run first; ready, not run):
   - 89 demo merchants and their perks/branches
   - "ZZ Test Partner (delete me)" (400001) and the test café link
-  - Demo logins: ops / finance / am / partner / merchant `.demo@perkly.app` (merchant.demo is an owner of the Test Café)
+  - Demo logins: **admin** (full control, delete first) / ops / finance / am / partner / merchant / student `.demo@perkly.app` (merchant.demo is an owner of the Test Café; student.demo is for testing the app)
   - Anonymised test accounts 10000006 and 10000007
   - "Perkly Test Café" (no location check — must not stay live)
+- [ ] Empty the test-merchant list (`app_settings.test_merchants`): Perkly Test Café is exempt from the 15-minute and per-day redemption rules for testing
 
 ## Switches on launch day
 - [ ] Settings → **Require verification to redeem** ON (decide free redemptions before verifying)

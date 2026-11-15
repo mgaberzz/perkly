@@ -8,6 +8,7 @@ import { ExportButtons } from "@/components/export-buttons";
 import { date, egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { settlementLabel, type Balance, type Settlement } from "@/lib/types";
+import { BANKS } from "@/lib/banks";
 import { saveBankAccount } from "../actions";
 
 export const metadata = { title: "Payouts" };
@@ -19,7 +20,7 @@ export default async function PayoutsPage() {
   const [{ data: b }, { data: settlements }, { data: bank }] = await Promise.all([
     supabase.rpc("merchant_balances", { p_merchant_id: merchant.id }).maybeSingle<Balance>(),
     supabase.from("settlements").select("*").eq("merchant_id", merchant.id).order("created_at", { ascending: false }).limit(50).returns<Settlement[]>(),
-    supabase.from("merchant_bank_accounts").select("*").eq("merchant_id", merchant.id).maybeSingle<{ bank_name: string | null; account_name: string | null; iban: string | null; payout_schedule: string }>(),
+    supabase.from("merchant_bank_accounts").select("*").eq("merchant_id", merchant.id).maybeSingle<{ bank_name: string | null; account_name: string | null; iban: string | null; payout_schedule: string; status: string; review_note: string | null }>(),
   ]);
   const toSettle = Number(b?.net_to_settle ?? 0) + Number(b?.pending_settlements ?? 0);
   return (
@@ -49,23 +50,31 @@ export default async function PayoutsPage() {
           </Table>
         </div>
         <Card title={t("Bank account")}>
-          {memberRole === "owner" ? (
+          {bank && bank.status !== "rejected" ? (
+            <div className="space-y-2 text-sm">
+              <Badge tone={bank.status === "approved" ? "active" : "pending"}>{bank.status === "approved" ? t("Approved") : t("Pending Perkly approval")}</Badge>
+              {([[t("Bank"), bank.bank_name], [t("Account holder"), bank.account_name], ["IBAN", bank.iban ? `${bank.iban.slice(0, 4)} •••• ${bank.iban.slice(-4)}` : null],
+                [t("Payout cycle"), t(bank.payout_schedule)]] as const).map(([k, v]) => (
+                <div key={k} className="flex justify-between gap-3 border-b border-zinc-100 pb-2"><span className="text-zinc-500">{k}</span><span className="text-end font-semibold" dir="auto">{v || "—"}</span></div>
+              ))}
+              <p className="text-xs text-zinc-500">{bank.status === "approved" ? t("To change your bank details or payout cycle, contact Perkly.") : t("Perkly is checking your bank details. Payouts start after approval.")}</p>
+            </div>
+          ) : memberRole === "owner" ? (
             <ActionForm action={saveBankAccount} className="space-y-3">
-              <Field label={t("Bank")}><Input name="bank_name" defaultValue={bank?.bank_name ?? ""} placeholder="CIB, NBE, QNB…" /></Field>
-              <Field label={t("Account holder")}><Input name="account_name" defaultValue={bank?.account_name ?? ""} /></Field>
-              <Field label="IBAN"><Input name="iban" defaultValue={bank?.iban ?? ""} placeholder="EG…" dir="ltr" /></Field>
-              <Field label={t("Payout schedule")}>
-                <Select name="payout_schedule" defaultValue={bank?.payout_schedule ?? "weekly"}>
-                  {["weekly", "biweekly", "monthly"].map((s) => <option key={s} value={s}>{t(s)}</option>)}
+              {bank?.status === "rejected" && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{t("Not approved")}{bank.review_note && `: ${bank.review_note}`}. {t("Correct the details and send them again.")}</p>}
+              <Field label={t("Bank")}>
+                <Select name="bank_name" defaultValue={bank?.bank_name ?? ""} required>
+                  <option value="" disabled>{t("Choose your bank")}</option>
+                  {BANKS.map((b) => <option key={b} value={b}>{b}</option>)}
                 </Select>
               </Field>
-              <SubmitButton className="w-full">{t("Save bank details")}</SubmitButton>
+              <Field label={t("Account holder")}><Input name="account_name" defaultValue={bank?.account_name ?? ""} required /></Field>
+              <Field label="IBAN"><Input name="iban" defaultValue={bank?.iban ?? ""} placeholder="EG…" dir="ltr" required /></Field>
+              <p className="text-xs text-zinc-500">{t("You add these once. Perkly reviews them, and any later change goes through Perkly.")}</p>
+              <SubmitButton className="w-full">{t("Send for approval")}</SubmitButton>
             </ActionForm>
           ) : (
-            <dl className="space-y-2 text-sm">
-              <div>{bank?.bank_name ?? "—"}</div><div className="font-mono text-xs">{bank?.iban ?? t("No bank account yet")}</div>
-              <p className="text-xs text-zinc-500">{t("Only the owner can change bank details.")}</p>
-            </dl>
+            <p className="text-sm text-zinc-500">{t("No bank account yet")}. {t("Only the owner can add bank details.")}</p>
           )}
         </Card>
       </div>

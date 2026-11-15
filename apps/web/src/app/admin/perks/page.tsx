@@ -5,7 +5,7 @@ import { getT } from "@/lib/i18n/server";
 import { Badge, LinkButton, PageHeader, Table, Td } from "@/components/ui";
 import { date, discountLabel, tierFor } from "@/lib/format";
 import type { Perk } from "@/lib/types";
-import { reviewPerk } from "../actions";
+import { adminSetPerkStatus, reviewPerk } from "../actions";
 
 export const metadata = { title: "Perks" };
 const STATUSES = ["pending", "active", "paused", "rejected", "expired"];
@@ -40,6 +40,12 @@ export default async function AdminPerksPage({ searchParams }: PageProps<"/admin
                       <button className="rounded-lg bg-emerald-600 px-3 py-1 text-xs font-semibold text-white">{t("Approve")}</button></form>
                     <Link href={`/admin/perks/${p.id}#review`} className="rounded-lg border border-zinc-300 px-3 py-1 text-xs font-semibold">{t("Review")}</Link>
                   </div>
+                )}
+                {(p.status === "active" || p.status === "paused") && (
+                  <form action={adminSetPerkStatus}>
+                    <input type="hidden" name="id" value={p.id} /><input type="hidden" name="status" value={p.status === "active" ? "paused" : "active"} />
+                    <button className="rounded-lg border border-zinc-300 px-3 py-1 text-xs font-semibold">{p.status === "active" ? t("Pause") : t("Activate")}</button>
+                  </form>
                 )}
               </Td>
             </tr>

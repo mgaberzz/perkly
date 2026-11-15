@@ -725,7 +725,7 @@ do $$ declare p perks; begin
   select * into p from perks where status = 'active' limit 1;
   insert into redemptions (user_id, perk_id, merchant_id, verification_code, status, payment_method, payment_status, final_amount)
   values ('00000000-0000-0000-0000-0000000000d2', p.id, p.merchant_id, 'PAY1', 'success', 'in_app', 'paid', 123.5);
-  assert (select body from notifications where user_id = '00000000-0000-0000-0000-0000000000d2' and kind = 'payment') like 'You paid EGP 123.50 at %', 'payment receipt';
+  assert (select body from notifications where user_id = '00000000-0000-0000-0000-0000000000d2' and kind = 'payment') like 'You paid 123.5 EGP at %', 'payment receipt';
 end $$;
 
 -- ── Insights for any range with filters; broadcasts to several campuses ──
@@ -943,6 +943,7 @@ update app_settings set value = '{"required": false, "free_redemptions": 0}' whe
 -- ── Refunds: student asks → merchant decides → transaction reversed, XP taken back ──
 insert into auth.users (id, email, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000c5', 'refund-owner@perkly.test', '{"full_name":"Omar Owner"}');
 select set_config('test.rf_rx', (select id::text from redemptions where user_id = '00000000-0000-0000-0000-0000000000b9' and status = 'success' limit 1), false);
+select set_config('test.rf_tk', (select spin_tickets::text from user_stats where user_id = '00000000-0000-0000-0000-0000000000b9'), false);
 insert into merchant_members (merchant_id, user_id, member_role)
   select merchant_id, '00000000-0000-0000-0000-0000000000c5', 'owner' from redemptions where id = current_setting('test.rf_rx')::uuid;
 select set_config('test.rf_xp', (select total_xp::text from user_stats where user_id = '00000000-0000-0000-0000-0000000000b9'), false);
@@ -976,6 +977,8 @@ do $$ begin
   assert (select status from redemptions where id = current_setting('test.rf_rx')::uuid) = 'reversed', 'transaction reversed';
   assert (select total_xp from user_stats where user_id = '00000000-0000-0000-0000-0000000000b9')
          = greatest(0, current_setting('test.rf_xp')::int - (select xp_awarded from redemptions where id = current_setting('test.rf_rx')::uuid)), 'XP taken back';
+  assert (select spin_tickets from user_stats where user_id = '00000000-0000-0000-0000-0000000000b9')
+         = greatest(0, current_setting('test.rf_tk')::int - (select tickets_awarded from redemptions where id = current_setting('test.rf_rx')::uuid)), 'unused spin tickets taken back';
   assert (select count(*) from notifications where user_id = '00000000-0000-0000-0000-0000000000b9' and kind = 'refund') = 1, 'student is told';
 end $$;
 -- in-app payment: approved → Perkly owes the money → Finance marks it paid
@@ -1074,4 +1077,111 @@ do $$ begin assert (select count(*) from merchant_reviews(current_setting('test.
 reset role;
 do $$ begin
   assert (select rating_avg = 4 and rating_count = 1 from merchants where id = current_setting('test.rf_m')::uuid), 'average kept by the database; the owner cannot change it';
+end $$;
+
+-- ── Merchant portal controls: perks, branches and bank details are decided by Perkly ──
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c5', false);
+do $$
+declare v_m uuid := current_setting('test.rf_m')::uuid; v_perk uuid; v_branch uuid; v_name text;
+begin
+  select perk_id, branch_id into v_perk, v_branch from redemptions where id = current_setting('test.rt_rx')::uuid;
+  update perks set status = 'paused' where id = v_perk;
+  assert (select status from perks where id = v_perk) = 'active', 'owner cannot pause a perk';
+  select name into v_name from merchant_branches where id = v_branch;
+  update merchant_branches set name = 'Hacked', lat = 1, is_active = false where id = v_branch;
+  assert (select name = v_name and lat is distinct from 1 and not is_active from merchant_branches where id = v_branch), 'owner can close a branch but not edit it';
+  update merchant_branches set is_active = true where id = v_branch;
+  insert into merchant_bank_accounts (merchant_id, bank_name, account_name, iban, payout_schedule, status)
+  values (v_m, 'CIB', 'Owner', 'EG380019000500000000263180002', 'monthly', 'approved');
+  assert (select status = 'pending' and payout_schedule = 'weekly' from merchant_bank_accounts where merchant_id = v_m), 'bank details wait for approval; cycle is Perkly''s';
+  begin
+    update merchant_bank_accounts set iban = 'EG000000000000000000000000000' where merchant_id = v_m;
+    raise exception 'should fail';
+  exception when check_violation then null; end;
+  assert (merchant_stats(v_m, 30, null, null, cairo_today() - 1, cairo_today())->>'redemptions')::int >= 1, 'stats for a date range';
+  assert (merchant_stats(v_m, 30, null, null, cairo_today() - 30, cairo_today() - 20)->>'redemptions')::int = 0, 'empty range';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e3', false);
+do $$ begin
+  assert not exists (select 1 from admin_requests where kind = 'bank_account'), 'finance does not see bank approvals';
+  begin
+    update merchant_bank_accounts set status = 'approved' where merchant_id = current_setting('test.rf_m')::uuid;
+    raise exception 'should fail';
+  exception when insufficient_privilege then null; end;
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ declare v_m uuid := current_setting('test.rf_m')::uuid; begin
+  assert (resolve_request((select id from admin_requests where kind = 'bank_account' and status = 'pending' and merchant_id = v_m), false, 'Wrong IBAN')->>'ok')::boolean, 'ops rejects';
+  assert (select status = 'rejected' and review_note = 'Wrong IBAN' from merchant_bank_accounts where merchant_id = v_m), 'rejected with a note';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c5', false);
+update merchant_bank_accounts set iban = 'EG380019000500000000263180003' where merchant_id = current_setting('test.rf_m')::uuid;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+do $$ declare v_m uuid := current_setting('test.rf_m')::uuid; begin
+  assert (select status from merchant_bank_accounts where merchant_id = v_m) = 'pending', 'owner can send again after a rejection';
+  update merchant_bank_accounts set status = 'approved', payout_schedule = 'monthly' where merchant_id = v_m;
+  assert (select status = 'approved' and payout_schedule = 'monthly' and reviewed_by is not null from merchant_bank_accounts where merchant_id = v_m), 'ops approves and sets the cycle';
+  assert not exists (select 1 from admin_requests where kind = 'bank_account' and status = 'pending' and merchant_id = v_m), 'request closed';
+  update perks set status = 'paused' where merchant_id = v_m;
+  assert exists (select 1 from perks where merchant_id = v_m and status = 'paused'), 'ops pauses perks';
+  update perks set status = 'active' where merchant_id = v_m;
+end $$;
+reset role;
+
+-- ── The week starts on Sunday ──
+do $$ begin
+  assert week_start(date '2026-11-14') = date '2026-11-08', 'Saturday belongs to the week that started on Sunday';
+  assert week_start(date '2026-11-15') = date '2026-11-15', 'Sunday starts a new week';
+end $$;
+
+-- ── Refund card: student ID for the merchant; amounts written like the app ──
+do $$ begin
+  assert num_text(200) = '200' and num_text(569.60) = '569.6' and num_text(1209.65) = '1,209.65' and num_text(0.5) = '0.5', 'amount text';
+  assert not exists (select 1 from refund_requests where student_code is null), 'every refund request carries the student ID';
+  assert not exists (select 1 from notifications where kind = 'refund' and body like '%EGP 2%'), 'no "EGP 200.00" style';
+end $$;
+
+-- ── Tickets are remembered on the purchase that earned them ──
+do $$ begin
+  assert (select max(tickets_awarded) from redemptions) >= 2, 'first-of-day ticket and quest tickets are both recorded on the redemption';
+end $$;
+
+-- ── Test merchants skip the 15-minute and per-day rules; everyone else keeps them ──
+do $$
+declare v_m uuid := current_setting('test.rf_m')::uuid; v_user uuid := '00000000-0000-0000-0000-0000000000b9'; v_perk uuid; v_branch uuid; r jsonb; i int;
+begin
+  select perk_id, branch_id into v_perk, v_branch from redemptions where id = current_setting('test.rt_rx')::uuid;
+  update perks set max_uses_per_user = null, daily_cap = null, status = 'active' where id = v_perk;
+  r := perform_redemption(v_user, v_perk, v_m, v_branch, null, 50, null, null, 'in_store', 'merchant', null);
+  r := perform_redemption(v_user, v_perk, v_m, v_branch, null, 50, null, null, 'in_store', 'merchant', null);
+  assert r->>'error' = 'too_soon', 'normal merchants keep the 15-minute rule: ' || r::text;
+  update app_settings set value = jsonb_build_object('ids', jsonb_build_array(v_m)) where key = 'test_merchants';
+  for i in 1..6 loop
+    r := perform_redemption(v_user, v_perk, v_m, v_branch, null, 50, null, null, 'in_store', 'merchant', null);
+    assert (r->>'ok')::boolean, 'test merchant: back-to-back redemption ' || i || ' ' || r::text;
+  end loop;
+  update app_settings set value = '{"ids": []}' where key = 'test_merchants';
+end $$;
+
+-- ── Payment notification wording ──
+do $$ begin
+  assert position('You paid '' || num_text(new.final_amount) || '' EGP at ' in (select pg_get_functiondef(oid) from pg_proc where proname = 'notify_payment')) > 0,
+    'amount like the app: ' || (select substring(pg_get_functiondef(oid) from 'You paid[^\n]*') from pg_proc where proname = 'notify_payment');
+end $$;
+
+-- ── A discount change by the merchant re-opens an approval request ──
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c5', false);
+do $$ declare v_perk uuid; begin
+  select perk_id into v_perk from redemptions where id = current_setting('test.rt_rx')::uuid;
+  update perks set discount_value = discount_value + 1 where id = v_perk;
+  assert (select status from perks where id = v_perk) = 'pending', 'discount change waits for approval';
+  perform set_config('test.dc_perk', v_perk::text, false);
+end $$;
+reset role;
+do $$ begin
+  assert (select count(*) from admin_requests where kind = 'perk' and status = 'pending' and ref_id = current_setting('test.dc_perk')::uuid) = 1, 'and Operations get a request for it';
+  update perks set status = 'active' where id = current_setting('test.dc_perk')::uuid;
+  assert not exists (select 1 from admin_requests where kind = 'perk' and status = 'pending' and ref_id = current_setting('test.dc_perk')::uuid), 'approving closes it';
 end $$;

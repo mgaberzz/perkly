@@ -3,11 +3,11 @@ import { cairoLocalToISO } from "./cairo-time";
 const day = (d: Date) => d.toISOString().slice(0, 10);
 const addDays = (dateStr: string, n: number) => day(new Date(new Date(`${dateStr}T12:00:00Z`).getTime() + n * 86400_000));
 
-/** Last full week (Monday–Sunday, Cairo time) and the week before it. */
+/** Last full week (it starts on Sunday, Cairo time) and the week before it. */
 export function lastWeek(now: Date = new Date()) {
   const today = now.toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
   const dow = new Date(`${today}T12:00:00Z`).getUTCDay(); // 0 = Sunday
-  const thisMonday = addDays(today, -((dow + 6) % 7));
+  const thisMonday = addDays(today, -dow); // the Sunday that starts the current week
   const from = addDays(thisMonday, -7), prevFrom = addDays(thisMonday, -14), lastDay = addDays(thisMonday, -1);
   return {
     from, lastDay, prevFrom,

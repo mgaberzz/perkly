@@ -1,7 +1,9 @@
 import { CardGrid } from "@/components/card-grid";
 import Link from "next/link";
 import { requireMerchantArea } from "@/lib/auth";
-import { Amount, BarChart, Button, Card, HBarList, LinkButton, PageHeader, Select, Stat } from "@/components/ui";
+import { Amount, BarChart, Card, HBarList, PageHeader, Stat } from "@/components/ui";
+import { FilterBar } from "@/components/filter-bar";
+import { daysBetween, PERIOD_LABEL, PERIODS, resolvePeriod } from "@/lib/periods";
 import { ExportButtons } from "@/components/export-buttons";
 import { egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
@@ -25,18 +27,20 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
   const { supabase, merchant, branchScope, canSeeMoney } = await requireMerchantArea("dashboard");
   const t = await getT();
   const sp = await searchParams;
-  const days = Number(sp.days) || 30;
+  const g = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : "");
+  // Month to date by default, same periods as the Perkly team portal
+  const { period, from, to } = resolvePeriod(g("period") || (g("from") ? "custom" : ""), g("from"), g("to"));
   const branch = branchScope?.id ?? (typeof sp.branch === "string" && sp.branch ? sp.branch : null);
   const qr = typeof sp.qr === "string" && sp.qr ? sp.qr : null;
   // Every number opens /merchant/explain with the same branch / cashier filters
-  const filt = `${branch && !branchScope ? `&branch=${branch}` : ""}${qr ? `&qr=${qr}` : ""}`;
+  const filt = `&from=${from}&to=${to}${branch && !branchScope ? `&branch=${branch}` : ""}${qr ? `&qr=${qr}` : ""}`;
 
   const week = lastWeek();
   let weekQ = supabase.from("redemptions").select("user_id, original_amount, final_amount, discount_amount, first_time_at_merchant, created_at, perk:perks(title)")
     .eq("merchant_id", merchant.id).neq("status", "reversed").gte("created_at", week.prevFromISO).lt("created_at", week.toISO).limit(10000);
   if (branch) weekQ = weekQ.eq("branch_id", branch);
   const [{ data, error }, { data: branches }, { data: qrs }, { data: balance }, { data: weekRows }, { data: reviews }] = await Promise.all([
-    supabase.rpc("merchant_stats", { p_merchant_id: merchant.id, p_days: days, p_branch_id: branch, p_qr_id: qr }),
+    supabase.rpc("merchant_stats", { p_merchant_id: merchant.id, p_branch_id: branch, p_qr_id: qr, p_from: from, p_to: to }),
     supabase.from("merchant_branches").select("id, name").eq("merchant_id", merchant.id).order("name"),
     supabase.from("branch_qr_codes").select("id, label, cashier_name, branch_id, branch:merchant_branches!inner(merchant_id)")
       .eq("branch.merchant_id", merchant.id).eq("status", "approved").order("created_at")
@@ -48,43 +52,41 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
   const weekReviews = ((reviews ?? []) as { stars: number; created_at: string; branch_id: string | null }[]).filter((r) => !branch || r.branch_id === branch);
   const s = (data ?? {}) as Stats;
 
-  const now = new Date().getTime();
-  const dayMap = new Map((s.by_day ?? []).map((d) => [d.day, d.count]));
-  const n = Math.min(days, 30);
-  const series = Array.from({ length: n }, (_, i) => {
-    const d = new Date(now - (n - 1 - i) * 86400000).toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
-    return { label: d.slice(8), value: dayMap.get(d) ?? 0, href: `/merchant/explain?metric=transactions&from=${d}&to=${d}${filt}` };
+  const dayMap = new Map((s.by_day ?? []).map((d) => [String(d.day).slice(0, 10), Number(d.count)]));
+  const days = daysBetween(from, to);
+  const monthly = days.length > 92;
+  const bucket = (d: string) => (monthly ? d.slice(0, 7) : d);
+  const counts = new Map<string, number>();
+  for (const [d, c] of dayMap) counts.set(bucket(d), (counts.get(bucket(d)) ?? 0) + c);
+  const series = [...new Set(days.map(bucket))].map((k) => {
+    const f = monthly ? `${k}-01` : k, l = monthly ? days.filter((d) => d.startsWith(k)).at(-1)! : k;
+    return { label: monthly ? k.slice(5) : k.slice(8), value: counts.get(k) ?? 0,
+      href: `/merchant/explain?metric=transactions&from=${f}&to=${l}${branch && !branchScope ? `&branch=${branch}` : ""}${qr ? `&qr=${qr}` : ""}` };
   });
   const hours = Array.from({ length: 24 }, (_, h) => ({ label: String(h), value: s.by_hour?.find((x) => x.hour === h)?.count ?? 0 }));
   const peak = hours.reduce((a, b) => (b.value > a.value ? b : a), hours[0]);
-  const mtx = { scope: "merchant", from: new Date(now - (days - 1) * 86400000).toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" }), branch: branch ?? undefined, qr: qr ?? undefined };
-  const tx = (extra = "") => `/merchant/explain?metric=transactions&days=${days}${filt}${extra}`;
-  const link = (d: number) => `/merchant?days=${d}${branch && !branchScope ? `&branch=${branch}` : ""}${qr ? `&qr=${qr}` : ""}`;
+  const mtx = { scope: "merchant", from, to, branch: branch ?? undefined, qr: qr ?? undefined };
+  const tx = (extra = "") => `/merchant/explain?metric=transactions${filt}${extra}`;
   const visibleQrs = (qrs ?? []).filter((q) => !branch || q.branch_id === branch);
+  const fmt = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: from.slice(0, 4) === to.slice(0, 4) && d === from ? undefined : "numeric" });
+  const range = `${t(PERIOD_LABEL[period])}: ${from === to ? fmt(to) : `${fmt(from)} – ${fmt(to)}`}`;
 
   return (
     <>
       <PageHeader
         title={t("Hey {name}", { name: merchant.name })}
-        subtitle={branchScope ? t("{branch} · last {days} days", { branch: branchScope.name, days }) : t("Your student traffic for the last {days} days", { days })}
-        actions={<>{[7, 30, 90].map((d) => <LinkButton key={d} href={link(d)} variant={d === days ? "primary" : "secondary"}>{d}d</LinkButton>)}</>}
+        subtitle={branchScope ? `${branchScope.name} · ${range}` : range}
+        actions={<ExportButtons kind="transactions" params={{ scope: "merchant", from, to, branch: branch ?? undefined, qr: qr ?? undefined }} />}
       />
       {!qr && <WeeklySummary t={t} rows={weekRows ?? []} reviews={weekReviews} range={week} />}
-      <form className="mb-6 flex flex-wrap items-center gap-2 rounded-2xl border border-zinc-200 bg-white p-3">
-        <input type="hidden" name="days" value={days} />
-        {!branchScope && (
-          <Select name="branch" defaultValue={branch ?? ""} className="w-48">
-            <option value="">{t("All branches")}</option>
-            {(branches ?? []).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </Select>
-        )}
-        <Select name="qr" defaultValue={qr ?? ""} className="w-48">
-          <option value="">{t("All cashiers")}</option>
-          {visibleQrs.map((q) => <option key={q.id} value={q.id}>{q.cashier_name ?? q.label}</option>)}
-        </Select>
-        <Button variant="secondary">{t("Apply")}</Button>
-        <div className="ms-auto"><ExportButtons kind="transactions" params={{ scope: "merchant", branch: branch ?? undefined, qr: qr ?? undefined }} /></div>
-      </form>
+      <FilterBar path="/merchant" fields={[
+        { name: "period", label: t("Period"), type: "select", value: period === "mtd" ? "" : period, all: t("This month (MTD)"),
+          options: PERIODS.filter((p) => p !== "mtd").map((p) => ({ value: p, label: t(PERIOD_LABEL[p]) })) },
+        { name: "from", label: t("From (custom)"), type: "date", value: period === "custom" ? from : undefined },
+        { name: "to", label: t("To (custom)"), type: "date", value: period === "custom" ? to : undefined },
+        ...(branchScope ? [] : [{ name: "branch", label: t("Branch"), type: "select" as const, value: branch ?? undefined, all: t("All branches"), options: (branches ?? []).map((b) => ({ value: b.id, label: b.name })) }]),
+        { name: "qr", label: t("Cashier"), type: "select", value: qr ?? undefined, all: t("All cashiers"), options: visibleQrs.map((q) => ({ value: q.id, label: q.cashier_name ?? q.label })) },
+      ]} />
       {error && <p className="mb-4 text-sm text-red-600">{error.message}</p>}
 
       <CardGrid txPage="/merchant/redemptions" merchantColumn={false} className="grid grid-cols-2 gap-4 lg:grid-cols-4" items={[
@@ -112,11 +114,11 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
           <BarChart data={hours} empty={t("No data yet")} />
         </Card>
         <Card title={t("By cashier")}>
-          <HBarList data={(s.by_cashier ?? []).map((c) => ({ label: branch ? c.cashier : `${c.cashier} · ${c.branch}`, value: c.count, href: `/merchant/explain?metric=transactions&days=${days}&qr=${c.qr_id}` }))} empty={t("No data yet")} />
+          <HBarList data={(s.by_cashier ?? []).map((c) => ({ label: branch ? c.cashier : `${c.cashier} · ${c.branch}`, value: c.count, href: `/merchant/explain?metric=transactions&from=${from}&to=${to}&qr=${c.qr_id}` }))} empty={t("No data yet")} />
         </Card>
         {!branchScope && (
           <Card title={t("By branch")} className="lg:col-span-3">
-            <HBarList data={(s.by_branch ?? []).map((b) => ({ label: `${b.branch} · ${egp(b.revenue)}`, value: b.count, href: `/merchant/explain?metric=transactions&days=${days}&branch=${b.branch_id}` }))} empty={t("No data yet")} />
+            <HBarList data={(s.by_branch ?? []).map((b) => ({ label: `${b.branch} · ${egp(b.revenue)}`, value: b.count, href: `/merchant/explain?metric=transactions&from=${from}&to=${to}&branch=${b.branch_id}` }))} empty={t("No data yet")} />
           </Card>
         )}
       </div>

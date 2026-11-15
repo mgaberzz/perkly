@@ -10,10 +10,10 @@ import type { AdminRequest } from "@/lib/types";
 import { resolveRequest } from "../actions";
 
 export const metadata = { title: "Notifications" };
-const ICON: Record<string, string> = { qr_code: "qr", perk: "gift", cashback: "cash", payout: "building" };
+const ICON: Record<string, string> = { qr_code: "qr", perk: "gift", cashback: "cash", payout: "building", bank_account: "building" };
 
 export default async function NotificationsPage({ searchParams }: PageProps<"/admin/notifications">) {
-  const { supabase, can } = await requireStaff("notifications");
+  const { supabase, can, role } = await requireStaff("notifications");
   const t = await getT();
   const sp = await searchParams;
   const status = typeof sp.status === "string" ? sp.status : "pending";
@@ -23,7 +23,7 @@ export default async function NotificationsPage({ searchParams }: PageProps<"/ad
   if (status !== "all") q = q.eq("status", status);
   if (kind) q = q.eq("kind", kind);
   const { data } = await q.returns<(AdminRequest & { merchant: { id: string; name: string; merchant_code: string } | null })[]>();
-  const decides = (k: string) => (k === "cashback" || k === "payout" ? can("finance") : can("merchants_edit"));
+  const decides = (k: string) => (k === "bank_account" ? ["admin", "operations"].includes(role) : k === "cashback" || k === "payout" ? can("finance") : can("merchants_edit"));
 
   return (
     <>
@@ -32,7 +32,7 @@ export default async function NotificationsPage({ searchParams }: PageProps<"/ad
         { name: "status", label: t("Status"), type: "select", value: status === "pending" ? undefined : status, all: t("Pending"),
           options: [{ value: "approved", label: t("Approved") }, { value: "rejected", label: t("Rejected") }, { value: "all", label: t("All statuses") }] },
         { name: "kind", label: t("Type"), type: "select", value: kind || undefined, all: t("All types"),
-          options: ["qr_code", "perk", "cashback", "payout"].map((k) => ({ value: k, label: t(REQUEST_KIND_LABEL[k]) })) },
+          options: ["qr_code", "perk", "bank_account", "cashback", "payout"].map((k) => ({ value: k, label: t(REQUEST_KIND_LABEL[k]) })) },
       ]} />
       <ul className="space-y-3">
         {(data ?? []).map((r) => (
@@ -49,6 +49,7 @@ export default async function NotificationsPage({ searchParams }: PageProps<"/ad
                 {" · "}{dateTime(r.created_at)}
                 {r.note && <> · “{r.note}”</>}
               </div>
+              {r.kind === "bank_account" && <div className="text-xs text-zinc-600">{String(r.details?.bank ?? "")} · {String(r.details?.account_name ?? "")} · IBAN •••• {String(r.details?.iban_last4 ?? "")} · <Link href={`/admin/merchants/${r.ref_id}#bank`} className="font-semibold text-perk-purple hover:underline">{t("Open bank details")}</Link></div>}
               {r.kind === "perk" && <Link href={`/admin/perks/${r.ref_id}`} className="text-xs font-semibold text-perk-purple hover:underline">{t("Open perk")}</Link>}
             </div>
             {r.status === "pending" && decides(r.kind) && (

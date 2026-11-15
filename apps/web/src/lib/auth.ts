@@ -7,7 +7,7 @@ import { STAFF_ROLES, type MemberRole, type Merchant, type Profile, type StaffRo
 
 export const MERCHANT_COOKIE = "perkly_merchant";
 
-export type SessionUser = { id: string; email: string | null };
+export type SessionUser = { id: string; email: string | null; /** number on the login, set only after it was confirmed by SMS */ phone: string | null };
 
 /**
  * The signed-in person. The login token is verified locally (the project signs tokens with an ES256 key),
@@ -17,7 +17,7 @@ export const getSession = cache(async () => {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const claims = data?.claims;
-  const user: SessionUser | null = claims?.sub ? { id: claims.sub, email: (claims.email as string | undefined) ?? null } : null;
+  const user: SessionUser | null = claims?.sub ? { id: claims.sub, email: (claims.email as string | undefined) ?? null, phone: (claims.phone as string | undefined) || null } : null;
   if (!user) return { supabase, user: null, profile: null as Profile | null };
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single<Profile>();
   return { supabase, user, profile };
