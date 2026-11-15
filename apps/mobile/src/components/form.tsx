@@ -53,7 +53,7 @@ export function dobToIso(masked: string): string | null {
   const d = new Date(Date.UTC(+yyyy, +mm - 1, +dd));
   if (d.getUTCFullYear() !== +yyyy || d.getUTCMonth() !== +mm - 1 || d.getUTCDate() !== +dd) return null;
   const age = (Date.now() - d.getTime()) / (365.25 * 86400000);
-  return age >= 12 && age <= 80 ? `${yyyy}-${mm}-${dd}` : null;
+  return age >= 16 && age <= 80 ? `${yyyy}-${mm}-${dd}` : null;
 }
 export function isoToDob(iso: string | null | undefined) {
   if (!iso) return '';
