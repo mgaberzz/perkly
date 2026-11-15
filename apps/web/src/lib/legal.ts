@@ -5,7 +5,7 @@
 export const LEGAL = {
   company: "Perkly",
   email: "support@perklyapp.co",
-  updated: "2026-11-08",
+  updated: "2026-11-15",
 };
 
 export type LegalSection = { h: string; p?: string[]; list?: string[] };
@@ -26,6 +26,8 @@ const EN: Docs = {
           "Student ID: a photo of your student ID card and, if you add it, your student number, to confirm you are a student. Only Perkly's operations team can see it.",
           "Profile picture: a photo you upload, or the cartoon avatar you build. Both are optional and you can remove them at any time.",
           "Redemptions: each discount you use, the merchant and branch, the bill amount, the discount, the time, the transaction ID and how you paid.",
+          "Ratings: the stars and the optional comment you leave after a visit. Merchants see them without your name.",
+          "Refund requests: the reason and the note you give when you ask for a refund.",
           "Location: when you allow it, your phone's location is used to show nearby perks, and at the moment you redeem to confirm you are at the shop. We store the redemption's distance check, not a history of where you go.",
           "Payments: when you pay in the app, the payment provider handles your card details. We receive only the result (paid or failed), the amount and a reference. We never see or store your full card number.",
           "Device and usage: app version, device type, language, a notification token if you allow notifications, crash reports and basic usage, to keep the service working and secure.",
@@ -54,7 +56,7 @@ const EN: Docs = {
         h: "4. Who we share it with",
         p: ["We never sell your personal data. We share only what is needed:"],
         list: [
-          "Merchants see the redemption at their shop: the transaction ID, the time, the amounts and the verification code. They do not see your phone number, email or birth date.",
+          "Merchants see the redemption at their shop: the transaction ID, the time, the amounts and the verification code. They do not see your phone number, email or birth date. They also see the ratings and refund requests for their shop; ratings are shown without your name.",
           "Partners who onboarded a merchant see totals and transaction IDs for that merchant, with no student details.",
           "Service providers that run Perkly for us under contract: hosting and database (Supabase), the web host (Vercel), SMS and email delivery, the payment provider and crash reporting (Sentry). Some of them store data outside Egypt; we use providers that protect it to a standard comparable to Egyptian law.",
           "Authorities, when the law requires it, or to protect users, merchants or Perkly from fraud.",
@@ -64,7 +66,7 @@ const EN: Docs = {
         h: "5. How long we keep it",
         list: [
           "Your account data is kept while your account is open.",
-          "Redemption and payment records are kept for as long as tax and accounting law requires (usually up to 5 years), even after you close your account, but they are no longer linked to your profile in the app.",
+          "Redemption and payment records are kept for as long as tax and accounting law requires (usually up to 5 years), even after you close your account. After you delete your account, they are kept without your name or contact details.",
           "Photos and avatars are deleted as soon as you remove them or close your account.",
           "Student ID photos are kept while your account is open, so we can show that your verification was checked, and are deleted when you delete your account.",
         ],
@@ -82,7 +84,7 @@ const EN: Docs = {
       },
       {
         h: "8. Children",
-        p: ["Perkly is for university students. You must be at least 16 to use it; if you are under 18, you confirm a parent or guardian agrees."],
+        p: ["Perkly is for university students. You must be at least 16 to use it. If you are under 18, please make sure a parent or guardian knows about and agrees to your use of Perkly."],
       },
       {
         h: "9. Changes",
@@ -127,7 +129,7 @@ const EN: Docs = {
         h: "4. Payments in the app",
         list: [
           "When you pay in the app, the payment is processed by our payment provider and the amount shown on the confirmation is what you pay.",
-          "Refunds follow the merchant's refund policy and are returned to the original payment method.",
+          "You can ask for a refund within the refund window shown in the app. The merchant or Perkly decides the request, and an approved refund is returned at the merchant's cashier or by Perkly, as the app shows.",
         ],
       },
       {
@@ -185,6 +187,8 @@ const AR: Docs = {
           "كارنيه الطالب: صورة كارنيه الطالب، والرقم الجامعي إذا أضفته، للتأكد من أنك طالب. لا يراها إلا فريق العمليات في Perkly.",
           "صورة الملف الشخصي: صورة ترفعها أو الأفاتار الكرتوني الذي تصممه. كلاهما اختياري ويمكنك حذفه في أي وقت.",
           "عمليات الاستخدام: كل خصم تستخدمه، والتاجر والفرع، ومبلغ الفاتورة، والخصم، والوقت، ورقم المعاملة، وطريقة الدفع.",
+          "التقييمات: النجوم والتعليق الاختياري الذي تتركه بعد الزيارة. يراها التجار دون ذكر اسمك.",
+          "طلبات الاسترداد: السبب والملاحظة اللذان تذكرهما عند طلب استرداد المبلغ.",
           "الموقع: عند سماحك بذلك، نستخدم موقع هاتفك لعرض العروض القريبة، ولحظة استخدام الخصم للتأكد من وجودك في المتجر. نحتفظ بنتيجة التحقق من المسافة فقط، وليس بسجل لأماكن تنقلك.",
           "المدفوعات: عند الدفع داخل التطبيق، يتولى مزود خدمة الدفع بيانات بطاقتك. نستلم فقط النتيجة (تم الدفع أو فشل) والمبلغ ومرجع العملية، ولا نرى رقم بطاقتك الكامل ولا نخزنه.",
           "الجهاز والاستخدام: إصدار التطبيق، ونوع الجهاز، واللغة، ورمز الإشعارات إذا سمحت بها، وتقارير الأعطال، وبيانات استخدام أساسية، للحفاظ على عمل الخدمة وأمانها.",
@@ -213,7 +217,7 @@ const AR: Docs = {
         h: "٤. مع من نشاركها",
         p: ["لا نبيع بياناتك الشخصية أبدًا. نشارك فقط ما هو ضروري:"],
         list: [
-          "يرى التاجر عملية الاستخدام في متجره: رقم المعاملة، والوقت، والمبالغ، ورمز التحقق. لا يرى رقم هاتفك أو بريدك الإلكتروني أو تاريخ ميلادك.",
+          "يرى التاجر عملية الاستخدام في متجره: رقم المعاملة، والوقت، والمبالغ، ورمز التحقق. لا يرى رقم هاتفك أو بريدك الإلكتروني أو تاريخ ميلادك. ويرى أيضًا التقييمات وطلبات الاسترداد الخاصة بمتجره، وتُعرض التقييمات دون اسمك.",
           "يرى الشريك الذي ضم تاجرًا إجماليات وأرقام معاملات هذا التاجر، دون أي بيانات عن الطلاب.",
           "مزودو الخدمات الذين يشغّلون Perkly لصالحنا بموجب عقود: الاستضافة وقاعدة البيانات (Supabase)، واستضافة الموقع (Vercel)، وإرسال الرسائل النصية والبريد، ومزود الدفع، وتقارير الأعطال (Sentry). يخزن بعضهم البيانات خارج مصر، ونختار مزودين يحمونها بمستوى مماثل لما يتطلبه القانون المصري.",
           "الجهات الرسمية عندما يتطلب القانون ذلك، أو لحماية المستخدمين أو التجار أو Perkly من الاحتيال.",
@@ -223,7 +227,7 @@ const AR: Docs = {
         h: "٥. مدة الاحتفاظ",
         list: [
           "نحتفظ ببيانات حسابك طالما حسابك مفتوح.",
-          "نحتفظ بسجلات الاستخدام والمدفوعات للمدة التي تتطلبها قوانين الضرائب والمحاسبة (عادةً حتى 5 سنوات)، حتى بعد إغلاق حسابك، لكنها لا تعود مرتبطة بملفك في التطبيق.",
+          "نحتفظ بسجلات الاستخدام والمدفوعات للمدة التي تتطلبها قوانين الضرائب والمحاسبة (عادةً حتى 5 سنوات)، حتى بعد إغلاق حسابك. وبعد حذف حسابك تُحفظ دون اسمك أو بيانات التواصل معك.",
           "تُحذف الصور والأفاتار فور إزالتها أو إغلاق حسابك.",
           "نحتفظ بصورة كارنيه الطالب طالما حسابك مفتوح لإثبات أنه تمت مراجعة التوثيق، وتُحذف عند حذف حسابك.",
         ],
@@ -241,7 +245,7 @@ const AR: Docs = {
       },
       {
         h: "٨. صغار السن",
-        p: ["Perkly مخصص لطلاب الجامعات. يجب ألا يقل عمرك عن 16 عامًا، وإذا كان عمرك أقل من 18 عامًا فأنت تؤكد موافقة ولي أمرك."],
+        p: ["Perkly مخصص لطلاب الجامعات. يجب ألا يقل عمرك عن 16 عامًا. إذا كان عمرك أقل من 18 عامًا، يُرجى التأكد من أن ولي أمرك يعلم باستخدامك Perkly ويوافق عليه."],
       },
       {
         h: "٩. التغييرات",
@@ -286,7 +290,7 @@ const AR: Docs = {
         h: "٤. الدفع داخل التطبيق",
         list: [
           "عند الدفع داخل التطبيق، يعالج مزود الدفع العملية، والمبلغ الظاهر في شاشة التأكيد هو ما تدفعه.",
-          "يخضع الاسترداد لسياسة التاجر، ويُعاد المبلغ إلى وسيلة الدفع الأصلية.",
+          "يمكنك طلب الاسترداد خلال فترة الاسترداد الظاهرة في التطبيق. يبتّ التاجر أو Perkly في الطلب، ويُرد المبلغ المعتمد عند كاشير التاجر أو من خلال Perkly، حسبما يوضح التطبيق.",
         ],
       },
       {
