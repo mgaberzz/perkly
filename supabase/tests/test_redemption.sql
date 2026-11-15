@@ -171,7 +171,7 @@ begin
   assert (select status from perks where id = v_perk) = 'pending', 'high tier perk needs approval';
 
   insert into perks (merchant_id, title, discount_value) values (v_mid, 'Study snack 15%', 15) returning id into v_perk;
-  assert (select status from perks where id = v_perk) = 'active', 'normal perk goes live';
+  assert (select status from perks where id = v_perk) = 'pending', 'every new perk waits for approval';
 
   begin
     insert into perks (merchant_id, title, discount_value) values ((select id from merchants where name = 'KFC'), 'Hack', 50);
@@ -183,7 +183,7 @@ end $$;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
 do $$ begin
   assert (admin_overview()->>'redemptions')::int = 3, 'admin overview';
-  assert (admin_overview()->>'pending_perks')::int = 1, 'pending perks';
+  assert (admin_overview()->>'pending_perks')::int = 2, 'pending perks (every new merchant perk waits)';
   update perks set status = 'active' where status = 'pending';
   assert (select count(*) from perks where status = 'pending') = 0, 'admin approves';
   update redemptions set status = 'flagged', flag_reason = 'manual review' where true;

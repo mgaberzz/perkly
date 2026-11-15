@@ -36,7 +36,7 @@ export function MerchantAdminForm({ action, merchant, withOwner = false, commerc
           </Select>
         </Field>
         <Field label={t("Plan")}>
-          <Select name="plan" defaultValue={merchant?.plan ?? "free"} disabled={!commercial}><option value="free">Free</option><option value="pro">Pro</option></Select>
+          <Select name="plan" defaultValue={merchant?.plan ?? "free"} disabled={!commercial}><option value="free">{t("Free")}</option><option value="pro">Pro</option></Select>
         </Field>
         <Field label={t("Commission %")} hint={commercial ? t("Perkly's cut per redemption (3–7% typical)") : t("Set by Operations / Admin")}>
           <Input name="commission_pct" type="number" step="0.1" min="0" max="100" defaultValue={merchant?.commission_pct ?? 5} disabled={!commercial} />
