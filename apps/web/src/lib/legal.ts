@@ -4,7 +4,7 @@
 
 export const LEGAL = {
   company: "Perkly",
-  email: "support@perkly.app",
+  email: "support@perklyeg.com",
   updated: "2026-11-08",
 };
 
