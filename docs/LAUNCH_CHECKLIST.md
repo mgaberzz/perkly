@@ -10,11 +10,11 @@ Ask Claude: **"launch checklist"** to walk through it.
 - [ ] Android push notifications tested on a real phone (Settings → "Notifications on this phone" shows **On ✓**)
 
 ## Domain & contact details
-- [ ] Connect `perklyeg.com` (primary) and `perklyapp.co` (redirects to it) in Vercel → Settings → Domains, and add Vercel's DNS records in Namecheap — do it **before** the team registers Face ID / passkeys on the portal
-- [ ] Set `NEXT_PUBLIC_SITE_URL` to `https://perklyeg.com` in Vercel's environment variables and redeploy (invite and password-reset links use it)
-- [ ] Supabase → Auth → URL Configuration: set Site URL to `https://perklyeg.com` and add `https://perklyeg.com/**` to the redirect URLs
-- [x] `EXPO_PUBLIC_WEB_URL` in `apps/mobile/eas.json` set to `https://perklyeg.com` (legal links in the app) — new app builds need the domain live first
-- [ ] Create the `support@perklyeg.com` mailbox (already shown on the legal pages) and put the registered company name in `apps/web/src/lib/legal.ts` (replace "Perkly")
+- [ ] Connect `perklyapp.co` (primary) and `perklyeg.com` (redirects to it) in Vercel → Settings → Domains, and add Vercel's DNS records in Namecheap — do it **before** the team registers Face ID / passkeys on the portal
+- [ ] Set `NEXT_PUBLIC_SITE_URL` to `https://perklyapp.co` in Vercel's environment variables and redeploy (invite and password-reset links use it)
+- [ ] Supabase → Auth → URL Configuration: set Site URL to `https://perklyapp.co` and add `https://perklyapp.co/**` to the redirect URLs
+- [x] `EXPO_PUBLIC_WEB_URL` in `apps/mobile/eas.json` set to `https://perklyapp.co` (legal links in the app) — new app builds need the domain live first
+- [ ] Create the `support@perklyapp.co` mailbox (already shown on the legal pages) and put the registered company name in `apps/web/src/lib/legal.ts` (replace "Perkly")
 - [ ] WhatsApp support number for the app's "Support chat" button (`apps/mobile/src/app/settings.tsx`)
 - [ ] Lawyer in Egypt reviews the Privacy Policy and Terms of Use
 
