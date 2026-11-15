@@ -13,10 +13,13 @@ Ask Claude: **"launch checklist"** to walk through it.
 - [x] Android push notifications tested on a real phone (14 Nov 2026: test message arrived on the preview build)
 
 ## Domain & contact details
-- [ ] Buy the domain, then: verify it in Resend (email), connect it to Vercel (portal)
-- [ ] Own domain (e.g. `perkly.app`) on Vercel — do it **before** the team registers Face ID / passkeys on the portal
-- [ ] Set `EXPO_PUBLIC_WEB_URL` in `apps/mobile/eas.json` to the new domain (legal links in the app)
-- [ ] Real support email + registered company name in `apps/web/src/lib/legal.ts` (replace `support@perkly.app` / "Perkly")
+- [x] Domains bought: `perklyapp.co` and `perklyeg.com` (Namecheap)
+- [ ] Connect `perklyapp.co` (primary) and `perklyeg.com` (redirects to it) in Vercel → Settings → Domains, and add Vercel's DNS records in Namecheap — do it **before** the team registers Face ID / passkeys on the portal
+- [ ] Set `NEXT_PUBLIC_SITE_URL` to `https://perklyapp.co` in Vercel's environment variables and redeploy (invite and password-reset links use it)
+- [ ] Supabase → Auth → URL Configuration: set Site URL to `https://perklyapp.co` and add `https://perklyapp.co/**` to the redirect URLs
+- [x] `EXPO_PUBLIC_WEB_URL` in `apps/mobile/eas.json` set to `https://perklyapp.co` (legal links in the app) — new app builds need the domain live first
+- [ ] Create the `support@perklyapp.co` mailbox (already shown on the legal pages) and put the registered company name in `apps/web/src/lib/legal.ts` (replace "Perkly")
+- [ ] Verify `perklyapp.co` in Resend (email)
 - [ ] WhatsApp support number for the app's "Support chat" button (`apps/mobile/src/app/settings.tsx`)
   - Today the button opens an empty WhatsApp link, so it does nothing useful until the number is set
 - [ ] Lawyer in Egypt reviews the Privacy Policy and Terms of Use
