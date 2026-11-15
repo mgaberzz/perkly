@@ -49,8 +49,9 @@ export function dobToIso(masked: string): string | null {
   const m = masked.replace(/\s/g, '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   if (!m) return null;
   const [, dd, mm, yyyy] = m;
-  const d = new Date(`${yyyy}-${mm}-${dd}T00:00:00Z`);
-  if (Number.isNaN(d.getTime()) || d.getUTCDate() !== +dd) return null;
+  // Built from numbers and checked part by part: the phone's JavaScript engine accepts month 18 in a date string and rolls it into the next year
+  const d = new Date(Date.UTC(+yyyy, +mm - 1, +dd));
+  if (d.getUTCFullYear() !== +yyyy || d.getUTCMonth() !== +mm - 1 || d.getUTCDate() !== +dd) return null;
   const age = (Date.now() - d.getTime()) / (365.25 * 86400000);
   return age >= 12 && age <= 80 ? `${yyyy}-${mm}-${dd}` : null;
 }
