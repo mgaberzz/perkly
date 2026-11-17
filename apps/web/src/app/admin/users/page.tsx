@@ -9,7 +9,8 @@ import { cartoonSvg } from "@/lib/cartoon";
 import { date, egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { ROLE_LABEL } from "@/lib/labels";
-import { setUserRole, setUserStatus } from "../actions";
+import { adminResendAccess, setUserRole, setUserStatus } from "../actions";
+import { ResendAccess } from "@/components/resend-access";
 
 export const metadata = { title: "Users" };
 const ROLES = ["student", "merchant", "admin", "operations", "account_manager", "finance"];
@@ -65,6 +66,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
             </Td>
             <Td phone="sum">{u.deleted_at ? <Badge>{t("Deleted")}</Badge> : <Badge tone={u.status}>{t(u.status)}</Badge>}</Td>
             <Td>
+              {u.id !== user.id && !u.deleted_at && u.email && <div className="mb-1"><ResendAccess action={adminResendAccess} email={u.email} t={t} /></div>}
               {u.id !== user.id && !u.deleted_at && (
                 <form action={setUserStatus}>
                   <input type="hidden" name="id" value={u.id} /><input type="hidden" name="status" value={u.status === "active" ? "banned" : "active"} />

@@ -9,7 +9,8 @@ import { PageTabs } from "@/components/page-tabs";
 import { merchantTabs } from "@/lib/merchant-tabs";
 import { getT } from "@/lib/i18n/server";
 import { MEMBER_ROLE_LABEL } from "@/lib/labels";
-import { adminAddMember, adminRemoveMember } from "../../../actions";
+import { adminAddMember, adminRemoveMember, adminResendAccess } from "../../../actions";
+import { ResendAccess } from "@/components/resend-access";
 
 export const metadata = { title: "Portal access" };
 
@@ -46,6 +47,7 @@ export default async function MerchantAccessPage({ params }: PageProps<"/admin/m
                     <div className="truncate font-semibold">{p?.full_name ?? p?.email ?? t("Invited")}</div>
                     <div className="truncate text-xs text-zinc-500">{p?.email} {p?.user_code && `· ${p.user_code}`}</div>
                     {m.branch_id && <div className="text-xs text-zinc-500"><Icon name="pin" size={12} className="me-1 inline-block align-[-2px]" />{branchName.get(m.branch_id)}</div>}
+                    {editable && p?.email && <div className="mt-1"><ResendAccess action={adminResendAccess} email={p.email} t={t} /></div>}
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge tone={m.member_role}>{t(MEMBER_ROLE_LABEL[m.member_role])}</Badge>
