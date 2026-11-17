@@ -1185,3 +1185,9 @@ do $$ begin
   update perks set status = 'active' where id = current_setting('test.dc_perk')::uuid;
   assert not exists (select 1 from admin_requests where kind = 'perk' and status = 'pending' and ref_id = current_setting('test.dc_perk')::uuid), 'approving closes it';
 end $$;
+
+-- ── The weekly count is not open to signed-out visitors ──
+do $$ begin
+  assert not has_function_privilege('anon', 'merchant_week_redemptions(uuid)', 'EXECUTE'), 'anon cannot call merchant_week_redemptions';
+  assert has_function_privilege('authenticated', 'merchant_week_redemptions(uuid)', 'EXECUTE'), 'signed-in users still can';
+end $$;
