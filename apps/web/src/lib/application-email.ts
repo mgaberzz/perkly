@@ -2,7 +2,7 @@ import "server-only";
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-/** Confirmation sent when a merchant application is received. Arabic first when the site is in Arabic. */
+/** Confirmation sent when a merchant application is received, in the language the applicant used. */
 export function applicationReceivedEmail(businessName: string, lang: "en" | "ar") {
   const name = esc(businessName);
   const en = `<h1 style="font-size:22px;margin:0 0 12px;">We received your application</h1>
@@ -13,10 +13,11 @@ export function applicationReceivedEmail(businessName: string, lang: "en" | "ar"
     <p style="font-size:15px;line-height:1.8;margin:0 0 12px;">شكرًا إنك قدّمت تنضم لـ Perkly بـ <b>${name}</b>.</p>
     <p style="font-size:15px;line-height:1.8;margin:0 0 12px;">فريقنا هيراجع الطلب ويتصل بيك خلال يومين عمل. مش محتاج تعمل حاجة دلوقتي. أول ما الطلب يتوافق عليه، هيوصلك إيميل تفتح فيه بوابة التاجر بتاعتك.</p>
     <p style="font-size:13px;line-height:1.8;color:#4b4560;margin:0;">لو ماقدمتش الطلب ده، تقدر تتجاهل الإيميل، أو ردّ علينا وقولنا.</p>`;
-  const block = (inner: string, rtl: boolean) => `<div ${rtl ? 'dir="rtl" lang="ar" style="text-align:right;font-family:Tahoma,Arial,sans-serif;"' : ''}>${inner}</div>`;
-  const body = lang === "ar" ? block(ar, true) + '<hr style="border:none;border-top:1px solid #ece8f3;margin:24px 0;">' + block(en, false)
-    : block(en, false) + '<hr style="border:none;border-top:1px solid #ece8f3;margin:24px 0;">' + block(ar, true);
-  const html = `<!doctype html><html><body style="margin:0;padding:0;background:#f5f3fa;font-family:Arial,Helvetica,sans-serif;color:#1d1830;">
+  // One language only: the language the applicant used on the form
+  const body = lang === "ar"
+    ? `<div dir="rtl" lang="ar" style="text-align:right;font-family:Tahoma,Arial,sans-serif;">${ar}</div>`
+    : `<div>${en}</div>`;
+  const html = `<!doctype html><html lang="${lang}"><body style="margin:0;padding:0;background:#f5f3fa;font-family:Arial,Helvetica,sans-serif;color:#1d1830;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3fa;padding:24px 12px;"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;">
 <tr><td style="background:linear-gradient(135deg,#7B2FF7,#FF3EA5);padding:24px 28px;color:#ffffff;">
@@ -24,6 +25,6 @@ export function applicationReceivedEmail(businessName: string, lang: "en" | "ar"
 <tr><td style="padding:28px;">${body}</td></tr>
 <tr><td style="background:#faf9fd;padding:16px 28px;font-size:12px;color:#6b6680;text-align:center;">Perkly · support@perklyapp.co</td></tr>
 </table></td></tr></table></body></html>`;
-  const subject = lang === "ar" ? "وصلنا طلب Perkly · We received your application" : "We received your Perkly application · وصلنا طلبك";
+  const subject = lang === "ar" ? "وصلنا طلبك للانضمام لـ Perkly" : "We received your Perkly application";
   return { subject, html };
 }

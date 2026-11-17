@@ -1191,3 +1191,20 @@ do $$ begin
   assert not has_function_privilege('anon', 'merchant_week_redemptions(uuid)', 'EXECUTE'), 'anon cannot call merchant_week_redemptions';
   assert has_function_privilege('authenticated', 'merchant_week_redemptions(uuid)', 'EXECUTE'), 'signed-in users still can';
 end $$;
+
+-- ── Email language follows the app language ──
+do $$
+declare v uuid := gen_random_uuid();
+begin
+  -- an invite in Arabic makes the new profile Arabic
+  insert into auth.users (id, email, raw_user_meta_data) values (v, 'lang-test@example.invalid', '{"lang":"ar"}');
+  assert (select lang from profiles where id = v) = 'ar', 'invite language becomes the profile language';
+  -- switching the app to English updates what the email templates read
+  update profiles set lang = 'en' where id = v;
+  assert (select raw_user_meta_data->>'lang' from auth.users where id = v) = 'en', 'profile language copied to the sign-in record';
+  delete from auth.users where id = v;
+  -- applications remember the form language
+  assert (submit_merchant_application('{"business_name":"Lang Test","category":"Food","contact_name":"Te St","contact_phone":"01000000000","contact_email":"lang-app@example.invalid","lang":"ar"}')->>'ok')::boolean, 'application saved';
+  assert (select lang from merchant_applications where contact_email = 'lang-app@example.invalid') = 'ar', 'application language stored';
+  delete from merchant_applications where contact_email = 'lang-app@example.invalid';
+end $$;

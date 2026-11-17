@@ -31,6 +31,7 @@ export async function submitApplication(_: ActionState, fd: FormData): Promise<A
     contact_email: str(fd, "contact_email", 200).toLowerCase(),
     student_offer: str(fd, "student_offer", 500) || null,
     message: str(fd, "message", 1000) || null,
+    lang: (await getLang()) === "ar" ? "ar" : "en",
   };
   if (row.business_name.length < 2) return { error: "Enter your business name." };
   if (!(CATEGORIES as readonly string[]).includes(row.category)) return { error: "Pick a category." };
@@ -55,7 +56,7 @@ export async function submitApplication(_: ActionState, fd: FormData): Promise<A
     return { error: "Couldn't send your application. Please try again." };
   }
   // Confirmation email to the applicant (no account or password needed). A mail problem doesn't undo the application.
-  const { subject, html } = applicationReceivedEmail(row.business_name, (await getLang()) === "ar" ? "ar" : "en");
+  const { subject, html } = applicationReceivedEmail(row.business_name, row.lang === "ar" ? "ar" : "en");
   await sendEmail(row.contact_email, subject, html);
   redirect("/apply?sent=1");
 }

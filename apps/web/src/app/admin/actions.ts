@@ -576,10 +576,10 @@ export async function inviteTeamMember(_: ActionState, fd: FormData): Promise<Ac
 /** Sends the applicant's confirmation email again (for applications still waiting for review). */
 export async function resendApplicationEmail(_: ActionState, fd: FormData): Promise<ActionState> {
   const { supabase } = await requireStaff("merchants_create");
-  const { data: app } = await supabase.from("merchant_applications").select("business_name, contact_email, status").eq("id", str(fd, "id")).maybeSingle();
+  const { data: app } = await supabase.from("merchant_applications").select("business_name, contact_email, status, lang").eq("id", str(fd, "id")).maybeSingle();
   if (!app) return { error: "Application not found." };
   if (app.status !== "pending") return { error: "This application was already handled." };
-  const { subject, html } = applicationReceivedEmail(app.business_name, "en");
+  const { subject, html } = applicationReceivedEmail(app.business_name, app.lang === "ar" ? "ar" : "en");
   const sent = await sendEmail(app.contact_email, subject, html);
   return sent ? { ok: `Confirmation sent to ${app.contact_email}.` } : { error: "Couldn't send. Check RESEND_API_KEY on Vercel." };
 }
