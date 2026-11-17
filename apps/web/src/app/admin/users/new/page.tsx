@@ -19,7 +19,7 @@ export default async function NewUserPage() {
       <Card className="max-w-xl">
         <ActionForm action={inviteTeamMember} className="space-y-4" resetOnSuccess>
           <Field label={t("Full name")}><Input name="full_name" required /></Field>
-          <Field label={t("Email")}><Input name="email" type="email" required /></Field>
+          <Field label={t("Email")} hint={t("Must be a Perkly mailbox, for example name@perklyapp.co")}><Input name="email" type="email" required placeholder="name@perklyapp.co" /></Field>
           <Field label={t("Role")}>
             <Select name="role" defaultValue="operations">
               {["operations", "account_manager", "finance", "admin"].map((r) => <option key={r} value={r}>{t(ROLE_LABEL[r])}</option>)}

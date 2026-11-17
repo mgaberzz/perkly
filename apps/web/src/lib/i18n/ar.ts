@@ -1,5 +1,7 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Must be a Perkly mailbox, for example name@perklyapp.co": "لازم يكون إيميل Perkly، مثلا name@perklyapp.co",
+  "Perkly staff need a @perklyapp.co address.": "موظفين Perkly لازم يكون عندهم إيميل @perklyapp.co.",
   "Users": "المستخدمون",
   "Registered users": "المستخدمون المسجّلون",
   "Invite staff": "دعوة موظف",

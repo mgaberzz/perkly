@@ -11,6 +11,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { SITE_URL } from "@/lib/env";
 import { BRAND_TYPES, STAFF_ROLES, type ActionState, type MemberRole } from "@/lib/types";
 
+/** The company domain Perkly staff accounts must use. */
+const STAFF_EMAIL_DOMAIN = "perklyapp.co";
+
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const SMALL_WORDS = new Set(["a", "an", "the", "and", "or", "of", "to", "in", "on", "at", "for", "with", "by", "per"]);
 /** "weekly grind" → "Weekly Grind" (the app shows names in Title Case) */
@@ -547,6 +550,8 @@ export async function inviteTeamMember(_: ActionState, fd: FormData): Promise<Ac
   const email = str(fd, "email").toLowerCase(), full_name = str(fd, "full_name"), role = str(fd, "role");
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Enter a valid email." };
   if (!(STAFF_ROLES as readonly string[]).includes(role)) return { error: "Pick a role." };
+  // Perkly staff use a company mailbox, so access can be removed in one place when someone leaves
+  if (!email.endsWith(`@${STAFF_EMAIL_DOMAIN}`)) return { error: `Perkly staff need a @${STAFF_EMAIL_DOMAIN} address.` };
   const admin = createAdminClient();
   const { data: existing } = await admin.from("profiles").select("id, role").ilike("email", email).maybeSingle();
   if (existing) {
