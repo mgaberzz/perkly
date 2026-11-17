@@ -65,10 +65,10 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
               )}
             </Td>
             <Td phone="sum">{u.deleted_at ? <Badge>{t("Deleted")}</Badge> : <Badge tone={u.status}>{t(u.status)}</Badge>}</Td>
-            <Td>
-              {u.id !== user.id && !u.deleted_at && u.email && <div className="mb-1"><ResendAccess action={adminResendAccess} email={u.email} t={t} /></div>}
+            <Td className="text-end">
+              {u.id !== user.id && !u.deleted_at && u.email && <div className="mb-2"><ResendAccess action={adminResendAccess} email={u.email} t={t} /></div>}
               {u.id !== user.id && !u.deleted_at && (
-                <form action={setUserStatus}>
+                <form action={setUserStatus} className="inline-block">
                   <input type="hidden" name="id" value={u.id} /><input type="hidden" name="status" value={u.status === "active" ? "banned" : "active"} />
                   <button className={`text-xs font-semibold hover:underline ${u.status === "active" ? "text-red-600" : "text-emerald-700"}`}>{u.status === "active" ? t("Ban") : t("Unban")}</button>
                 </form>
