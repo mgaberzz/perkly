@@ -28,7 +28,7 @@ export default async function TeamPage() {
   ]);
   return (
     <>
-      <PageHeader title={t("Team & assignments")} subtitle={t("Give someone a team role in Users & roles. Account managers only see the merchants and campuses assigned to them.")} />
+      <PageHeader title={t("Team & assignments")} subtitle={t("Invite new staff from Users → Invite staff. Account managers only see the merchants and campuses assigned to them.")} />
       <PageTabs tabs={[{ href: "/admin/team", label: t("Team") }, { href: "/admin/team/assign", label: t("Assign") }]} />
       <details className="mb-6 rounded-2xl border border-zinc-200 bg-white p-4 text-sm">
         <summary className="cursor-pointer font-semibold text-zinc-700">{t("What can each role do?")}</summary>

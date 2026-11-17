@@ -16,7 +16,7 @@ const NAV: (NavItem & { perm: Perm })[] = [
   { href: "/admin/finance", label: "Finance", icon: "wallet", group: 2, perm: "finance" },
   { href: "/admin/refunds", label: "Refunds", icon: "undo", group: 2, perm: "refunds" },
   { href: "/admin/verifications", label: "Student verification", icon: "shield", group: 3, perm: "verifications" },
-  { href: "/admin/users", label: "Users & roles", icon: "users", group: 3, perm: "users" },
+  { href: "/admin/users", label: "Users", icon: "users", group: 3, perm: "users" },
   { href: "/admin/team", label: "Team & assignments", icon: "team", group: 3, perm: "users" },
   { href: "/admin/campuses", label: "Campuses", icon: "school", group: 3, perm: "campuses_view" },
   { href: "/admin/quests", label: "Quests", icon: "target", group: 3, perm: "quests" },

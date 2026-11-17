@@ -9,11 +9,11 @@ import { cartoonSvg } from "@/lib/cartoon";
 import { date, egp } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { ROLE_LABEL } from "@/lib/labels";
-import { adminResendAccess, setUserRole, setUserStatus } from "../actions";
-import { ResendAccess } from "@/components/resend-access";
+import { setUserRole, setUserStatus } from "../actions";
 
 export const metadata = { title: "Users" };
 const ROLES = ["student", "merchant", "admin", "operations", "account_manager", "finance"];
+// This page is for people who registered in the Perkly app. Merchants are on Merchants; staff on Team & assignments.
 
 type Row = {
   id: string; full_name: string | null; email: string | null; phone: string | null; role: string; status: string; created_at: string; deleted_at: string | null; verification_status: string;
@@ -25,25 +25,21 @@ type Row = {
 export default async function UsersPage({ searchParams }: PageProps<"/admin/users">) {
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q.trim() : "";
-  const role = typeof sp.role === "string" ? sp.role : "";
   const { supabase, user } = await requireAdmin();
   const t = await getT();
   let query = supabase.from("profiles")
     .select("id, full_name, email, phone, role, status, created_at, deleted_at, verification_status, user_code, student_code, avatar_path, avatar_config, avatar_kind, campus:campuses(short_name, name), stats:user_stats(total_xp, level, current_streak, total_redemptions, total_saved)")
-    .order("created_at", { ascending: false }).limit(200);
+    .eq("role", "student").order("created_at", { ascending: false }).limit(200);
   if (q) {
     const c = q.replace(/[,()%]/g, "");
     query = query.or(`full_name.ilike.%${c}%,email.ilike.%${c}%,phone.ilike.%${c}%,user_code.ilike.%${c}%,student_code.ilike.%${c}%`);
   }
-  if (role) query = query.eq("role", role);
   const { data } = await query.returns<Row[]>();
   return (
     <>
-      <PageHeader title={t("Users & roles")} subtitle={t("IDs are numbers only; the first digit tells you what it is: 1 = User ID (8 digits), 2 = Student ID (8 digits), 3 = Merchant ID (6 digits), 9 = Transaction ID (10 digits).")} />
-      <PageTabs tabs={[{ href: "/admin/users", label: t("All users") }, { href: "/admin/users/new", label: t("New user") }]} />
-      <FilterBar path="/admin/users" search={{ name: "q", value: q, placeholder: t("Name, email, phone, User ID or Student ID") }} fields={[
-        { name: "role", label: t("Role"), type: "select", value: role, all: t("All roles"), options: ROLES.map((r) => ({ value: r, label: t(ROLE_LABEL[r]) })) },
-      ]} />
+      <PageHeader title={t("Registered users")} subtitle={t("Students who signed up in the Perkly app. Merchants are on Merchants; staff are on Team & assignments.")} />
+      <PageTabs tabs={[{ href: "/admin/users", label: t("Registered users") }, { href: "/admin/users/new", label: t("Invite staff") }]} />
+      <FilterBar path="/admin/users" search={{ name: "q", value: q, placeholder: t("Name, email, phone, User ID or Student ID") }} fields={[]} />
       <Table head={[t("User"), t("IDs"), t("Campus"), t("Level / XP"), t("Redemptions"), t("Saved"), t("Joined"), t("Role"), t("Status"), ""]} empty={t("No users.")}>
         {(data ?? []).map((u) => (
           <tr key={u.id}>
@@ -69,7 +65,6 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
             </Td>
             <Td phone="sum">{u.deleted_at ? <Badge>{t("Deleted")}</Badge> : <Badge tone={u.status}>{t(u.status)}</Badge>}</Td>
             <Td>
-              {u.id !== user.id && !u.deleted_at && u.email && <div className="mb-1"><ResendAccess action={adminResendAccess} email={u.email} t={t} /></div>}
               {u.id !== user.id && !u.deleted_at && (
                 <form action={setUserStatus}>
                   <input type="hidden" name="id" value={u.id} /><input type="hidden" name="status" value={u.status === "active" ? "banned" : "active"} />

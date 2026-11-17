@@ -7,15 +7,15 @@ import { getT } from "@/lib/i18n/server";
 import { ROLE_LABEL } from "@/lib/labels";
 import { inviteTeamMember } from "../../actions";
 
-export const metadata = { title: "New user" };
+export const metadata = { title: "Invite staff" };
 
 export default async function NewUserPage() {
   await requireAdmin();
   const t = await getT();
   return (
     <>
-      <PageHeader title={t("Users & roles")} subtitle={t("Invite a Perkly team member. Merchant staff are added on the merchant's page, partners on the partner's page, and students sign up in the app.")} />
-      <PageTabs tabs={[{ href: "/admin/users", label: t("All users") }, { href: "/admin/users/new", label: t("New user") }]} />
+      <PageHeader title={t("Invite staff")} subtitle={t("Invite a Perkly team member. Merchant staff are added on the merchant's page, partners on the partner's page, and students sign up in the app.")} />
+      <PageTabs tabs={[{ href: "/admin/users", label: t("Registered users") }, { href: "/admin/users/new", label: t("Invite staff") }]} />
       <Card className="max-w-xl">
         <ActionForm action={inviteTeamMember} className="space-y-4" resetOnSuccess>
           <Field label={t("Full name")}><Input name="full_name" required /></Field>

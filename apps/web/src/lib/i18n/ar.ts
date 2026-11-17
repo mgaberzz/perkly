@@ -1,5 +1,10 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Users": "المستخدمون",
+  "Registered users": "المستخدمون المسجّلون",
+  "Invite staff": "دعوة موظف",
+  "Students who signed up in the Perkly app. Merchants are on Merchants; staff are on Team & assignments.": "الطلاب اللي سجّلوا في تطبيق Perkly. التجار في صفحة التجار، والموظفين في الفريق والتعيينات.",
+  "Invite new staff from Users → Invite staff.": "ادعُ موظفين جدد من المستخدمين ← دعوة موظف.",
   "Payment reference (required)": "مرجع الدفع (مطلوب)",
   "e.g. bank transfer or Paymob refund number": "مثال: رقم التحويل البنكي أو رقم استرداد Paymob",
   "Enter the reference of the transfer you made, then mark it paid. The student is notified.": "أدخل مرجع التحويل الذي قمت به ثم علّمه كمدفوع. يتم إشعار الطالب.",
