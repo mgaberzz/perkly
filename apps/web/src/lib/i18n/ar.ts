@@ -1,5 +1,13 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Enter how many branches you have.": "اكتب عدد الفروع اللي عندك.",
+  "Enter your main branch address.": "اكتب عنوان الفرع الرئيسي.",
+  "Online shops need a website address.": "المحلات أونلاين لازم يكون لها عنوان موقع.",
+  "Online shops need an Instagram or Facebook link.": "المحلات أونلاين لازم يكون لها لينك إنستجرام أو فيسبوك.",
+  "How many shops or branches students can visit": "عدد المحلات أو الفروع اللي الطلاب يقدروا يزوروها",
+  "Students use this to find you": "الطلاب بيستخدموه يوصلولك",
+  "Required for online shops": "مطلوب للمحلات أونلاين",
+  "optional": "اختياري",
   "Must be a Perkly mailbox, for example name@perklyapp.co": "لازم يكون إيميل Perkly، مثلا name@perklyapp.co",
   "Perkly staff need a @perklyapp.co address.": "موظفين Perkly لازم يكون عندهم إيميل @perklyapp.co.",
   "Users": "المستخدمون",

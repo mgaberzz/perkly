@@ -34,6 +34,13 @@ export async function submitApplication(_: ActionState, fd: FormData): Promise<A
   if (row.contact_name.length < 2) return { error: "Enter your name." };
   if (row.contact_phone.replace(/\D/g, "").length < 8) return { error: "Enter a valid phone number." };
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(row.contact_email)) return { error: "Enter a valid email." };
+  // In-store needs branches and an address; online needs a website and a social page (both also apply to "in-store + online")
+  const inStore = row.channel !== "online";
+  const online = row.channel !== "in_store";
+  if (inStore && !(Math.round(Number(str(fd, "branches"))) >= 1)) return { error: "Enter how many branches you have." };
+  if (inStore && !row.address) return { error: "Enter your main branch address." };
+  if (online && !row.website_url) return { error: "Online shops need a website address." };
+  if (online && !row.social_url) return { error: "Online shops need an Instagram or Facebook link." };
   if (fd.get("agree") !== "on") return { error: "Please accept the Terms of Use and Privacy Policy." };
 
   const supabase = await createClient();

@@ -6,6 +6,7 @@ import { LangSwitch } from "@/components/lang-switch";
 import { Icon } from "@/components/icons";
 import { getT } from "@/lib/i18n/server";
 import { CHANNEL_LABEL } from "@/lib/labels";
+import { ApplyChannelFields } from "@/components/apply-channel-fields";
 import { CATEGORIES } from "@/lib/types";
 import { submitApplication } from "./actions";
 
@@ -67,14 +68,16 @@ export default async function ApplyPage({ searchParams }: PageProps<"/apply">) {
                   <Field label={t("Category")}>
                     <Select name="category" defaultValue="Food">{CATEGORIES.map((c) => <option key={c} value={c}>{t(c)}</option>)}</Select>
                   </Field>
-                  <Field label={t("Sells")}>
-                    <Select name="channel" defaultValue="in_store">{Object.entries(CHANNEL_LABEL).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}</Select>
-                  </Field>
-                  <Field label={t("Number of branches")}><Input name="branches" type="number" min={1} max={500} defaultValue={1} /></Field>
+                  <ApplyChannelFields
+                    labels={{
+                      sells: t("Sells"), inStore: t("In-store"), online: t("Online"), both: t("In-store + online"),
+                      branches: t("Number of branches"), branchesHint: t("How many shops or branches students can visit"),
+                      address: t("Main branch address"), addressHint: t("Students use this to find you"),
+                      website: t("Website"), social: t("Instagram or Facebook page"), onlineHint: t("Required for online shops"), optional: t("optional"),
+                    }}
+                    options={Object.entries(CHANNEL_LABEL).map(([value, label]) => ({ value, label: t(label) }))}
+                  />
                   <Field label={t("Area / city")}><Input name="area" maxLength={120} placeholder={t("e.g. Dokki, Giza")} /></Field>
-                  <Field label={t("Main branch address")} className="sm:col-span-2"><Input name="address" maxLength={300} /></Field>
-                  <Field label={t("Website")}><Input name="website_url" maxLength={300} placeholder="https://" /></Field>
-                  <Field label={t("Instagram or Facebook page")}><Input name="social_url" maxLength={300} placeholder="instagram.com/…" /></Field>
                 </section>
                 <section className="grid gap-4 sm:grid-cols-2">
                   <h3 className="text-sm font-bold uppercase tracking-wide text-zinc-400 sm:col-span-2">{t("Contact person")}</h3>
