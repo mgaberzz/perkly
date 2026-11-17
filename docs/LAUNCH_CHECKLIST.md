@@ -44,6 +44,7 @@ Ask Claude: **"launch checklist"** to walk through it.
 
 ## Later (after launch)
 - [ ] Apple Watch app (optional): show XP, quests, the spin wheel and the latest receipt. Today the watch only mirrors iPhone notifications. Decide after launch whether it's worth a separate build.
+  - Tested 17 Nov 2026: push notifications show on the watch (mirroring on). Nothing else appears there.
 
 ## Monitoring
 - [ ] **Sentry source maps**: create a Sentry auth token (secret) and add it to
