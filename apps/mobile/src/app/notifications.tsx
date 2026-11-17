@@ -44,7 +44,8 @@ export default function Inbox() {
     );
   }
   return (
-    <Screen edges={[]}>
+    // The list starts below the navigation header on iPhone (it was scrolling under it)
+    <Screen edges={[]} contentInsetAdjustmentBehavior="automatic">
       {items.map((n) => (
         <Pressable key={n.id} disabled={!n.data?.url} onPress={() => n.data?.url?.startsWith('/') && router.push(n.data.url as Href)}>
           <Card style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', borderColor: n.read_at ? c.border : brand.purple }}>
