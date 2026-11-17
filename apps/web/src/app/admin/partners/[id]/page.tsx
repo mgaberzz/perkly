@@ -5,6 +5,7 @@ import { requireStaff } from "@/lib/auth";
 import { Amount, Badge, Card, Field, Input, PageHeader, Select, Stat, Table, Td } from "@/components/ui";
 import { ExportMenu } from "@/components/export-menu";
 import { ActionForm, ConfirmButton, SubmitButton } from "@/components/action-form";
+import { InviteLangField } from "@/components/invite-lang";
 import { PartnerForm, dealLabel } from "@/components/partner-form";
 import { getT } from "@/lib/i18n/server";
 import { date, dateTime, short } from "@/lib/format";
@@ -110,6 +111,7 @@ export default async function PartnerPage({ params }: PageProps<"/admin/partners
             {manage && (
               <ActionForm action={adminAddPartnerUser.bind(null, id)} className="flex gap-2" resetOnSuccess>
                 <Input name="email" type="email" required placeholder="partner@company.com" className="min-w-0 flex-1" />
+                <select name="lang" defaultValue="en" aria-label={t("Invite email language")} className="rounded-xl border border-zinc-300 px-2 text-sm"><option value="en">English</option><option value="ar">العربية</option></select>
                 <SubmitButton variant="secondary">{t("Invite")}</SubmitButton>
               </ActionForm>
             )}

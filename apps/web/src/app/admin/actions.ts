@@ -3,7 +3,7 @@ import { BANKS } from "@/lib/banks";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin, requireStaff } from "@/lib/auth";
-import { addMember, addPartnerMember } from "@/lib/members";
+import { addMember, addPartnerMember, inviteLang } from "@/lib/members";
 import { parsePerkForm } from "@/lib/perk-form";
 import { APP_FEATURES } from "@/lib/features";
 import { REFUND_ERRORS } from "@/lib/refunds";
@@ -85,7 +85,7 @@ export async function adminAddMember(merchantId: string, _: ActionState, fd: For
   if (!email.includes("@")) return { error: "Enter a valid email." };
   if (!["owner", "manager", "branch_manager", "cashier"].includes(role)) return { error: "Pick a role." };
   if (role === "branch_manager" && !branchId) return { error: "Pick the branch this manager runs." };
-  return addMember(merchantId, email, role, role === "branch_manager" ? branchId : null);
+  return addMember(merchantId, email, role, role === "branch_manager" ? branchId : null, inviteLang(str(fd, "lang")));
 }
 
 export async function adminRemoveMember(fd: FormData) {
@@ -530,7 +530,7 @@ export async function adminAddPartnerUser(partnerId: string, _: ActionState, fd:
   await requireStaff("partners_manage");
   const email = str(fd, "email").toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Enter a valid email." };
-  return addPartnerMember(partnerId, email);
+  return addPartnerMember(partnerId, email, inviteLang(str(fd, "lang")));
 }
 
 export async function adminRemovePartnerUser(fd: FormData) {
@@ -543,6 +543,7 @@ export async function adminRemovePartnerUser(fd: FormData) {
 /** Invite a Perkly team member (admin only). */
 export async function inviteTeamMember(_: ActionState, fd: FormData): Promise<ActionState> {
   await requireAdmin();
+  const lang = inviteLang(str(fd, "lang"));
   const email = str(fd, "email").toLowerCase(), full_name = str(fd, "full_name"), role = str(fd, "role");
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Enter a valid email." };
   if (!(STAFF_ROLES as readonly string[]).includes(role)) return { error: "Pick a role." };
@@ -555,7 +556,7 @@ export async function inviteTeamMember(_: ActionState, fd: FormData): Promise<Ac
     return { ok: `${email} is now ${role.replace("_", " ")}.` };
   }
   const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-    data: { full_name }, redirectTo: `${SITE_URL}/auth/callback?next=/account/password`,
+    data: { full_name, lang }, redirectTo: `${SITE_URL}/auth/callback?next=/account/password`,
   });
   if (error || !data.user) return { error: error?.message ?? "Couldn't send invite." };
   await admin.from("profiles").update({ role, full_name: full_name || null }).eq("id", data.user.id);

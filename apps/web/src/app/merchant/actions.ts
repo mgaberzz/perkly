@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { MERCHANT_COOKIE, requireMerchant, requireMerchantArea } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { addMember } from "@/lib/members";
+import { addMember, inviteLang } from "@/lib/members";
 import { parsePerkForm } from "@/lib/perk-form";
 import { REFUND_ERRORS } from "@/lib/refunds";
 import { BANKS } from "@/lib/banks";
@@ -229,7 +229,7 @@ export async function inviteStaff(_: ActionState, fd: FormData): Promise<ActionS
   if (!["manager", "branch_manager", "cashier"].includes(role)) return { error: "Pick a role." };
   const branchId = str(fd, "branch_id") || null;
   if (role === "branch_manager" && !branchId) return { error: "Pick the branch this manager runs." };
-  return addMember(merchant.id, email, role, role === "branch_manager" ? branchId : null);
+  return addMember(merchant.id, email, role, role === "branch_manager" ? branchId : null, inviteLang(str(fd, "lang")));
 }
 
 export async function removeStaff(fd: FormData) {

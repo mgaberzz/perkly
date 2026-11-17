@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { Card, Field, Input, PageHeader, Select } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/action-form";
+import { InviteLangField } from "@/components/invite-lang";
 import { PageTabs } from "@/components/page-tabs";
 import { getT } from "@/lib/i18n/server";
 import { ROLE_LABEL } from "@/lib/labels";
@@ -25,6 +26,7 @@ export default async function NewUserPage() {
             </Select>
           </Field>
           <p className="text-xs text-zinc-500">{t("They get an email to set a password. Account managers then need merchants assigned under Team & assignments.")}</p>
+          <InviteLangField t={t} />
           <SubmitButton className="w-full">{t("Send invite")}</SubmitButton>
         </ActionForm>
       </Card>

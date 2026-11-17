@@ -4,14 +4,19 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { SITE_URL } from "@/lib/env";
 import type { ActionState, MemberRole } from "@/lib/types";
 
+/** Language the invite email is written in (English unless Arabic is chosen). */
+export type InviteLang = "en" | "ar";
+export const inviteLang = (v: string): InviteLang => (v === "ar" ? "ar" : "en");
+
 // NOT a server action: callers must authorize first (merchant owner or admin).
 /** Shared by merchant owners and admins: invite (or link existing) user to a merchant. */
-export async function addMember(merchantId: string, email: string, role: MemberRole, branchId: string | null = null): Promise<ActionState> {
+export async function addMember(merchantId: string, email: string, role: MemberRole, branchId: string | null = null, lang: InviteLang = "en"): Promise<ActionState> {
   const admin = createAdminClient();
   let { data: existing } = await admin.from("profiles").select("id, role").ilike("email", email).maybeSingle();
   let invited = false;
   if (!existing) {
     const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+      data: { lang },
       redirectTo: `${SITE_URL}/auth/callback?next=/account/password`,
     });
     if (error || !data.user) return { error: error?.message ?? "Couldn't send invite." };
@@ -29,12 +34,13 @@ export async function addMember(merchantId: string, email: string, role: MemberR
 
 // NOT a server action: callers must authorize first (admin / operations).
 /** Invite (or link an existing) user to a partner's portal. */
-export async function addPartnerMember(partnerId: string, email: string): Promise<ActionState> {
+export async function addPartnerMember(partnerId: string, email: string, lang: InviteLang = "en"): Promise<ActionState> {
   const admin = createAdminClient();
   let { data: existing } = await admin.from("profiles").select("id, role").ilike("email", email).maybeSingle();
   let invited = false;
   if (!existing) {
     const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+      data: { lang },
       redirectTo: `${SITE_URL}/auth/callback?next=/account/password`,
     });
     if (error || !data.user) return { error: error?.message ?? "Couldn't send invite." };

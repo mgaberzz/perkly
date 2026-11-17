@@ -4,6 +4,7 @@ import { requireStaff } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Badge, Card, Input, PageHeader, Select } from "@/components/ui";
 import { ActionForm, ConfirmButton, SubmitButton } from "@/components/action-form";
+import { InviteLangField } from "@/components/invite-lang";
 import { PageTabs } from "@/components/page-tabs";
 import { merchantTabs } from "@/lib/merchant-tabs";
 import { getT } from "@/lib/i18n/server";
@@ -70,6 +71,7 @@ export default async function MerchantAccessPage({ params }: PageProps<"/admin/m
                 <option value="">{t("Branch (for branch managers)")}</option>
                 {(branches ?? []).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
               </Select>
+              <InviteLangField t={t} />
               <SubmitButton variant="secondary" className="w-full">{t("Invite / add")}</SubmitButton>
             </ActionForm>
           )}

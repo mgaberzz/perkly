@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireMerchantArea } from "@/lib/auth";
 import { Card, Field, Input, PageHeader, Select } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/action-form";
+import { InviteLangField } from "@/components/invite-lang";
 import { PageTabs } from "@/components/page-tabs";
 import { getT } from "@/lib/i18n/server";
 import { MEMBER_ROLE_LABEL } from "@/lib/labels";
@@ -32,6 +33,7 @@ export default async function AddStaffPage() {
                   {(branches ?? []).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                 </Select>
               </Field>
+              <InviteLangField t={t} />
               <SubmitButton className="w-full">{t("Send invite")}</SubmitButton>
             </ActionForm>
           
