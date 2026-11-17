@@ -2,6 +2,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORIES, type ActionState } from "@/lib/types";
+import { sendEmail } from "@/lib/email";
+import { applicationReceivedEmail } from "@/lib/application-email";
+import { getLang } from "@/lib/i18n/server";
 
 const str = (fd: FormData, k: string, max = 300) => String(fd.get(k) ?? "").trim().slice(0, max);
 const url = (s: string) => (!s ? null : /^https?:\/\//i.test(s) ? s : `https://${s}`);
@@ -51,5 +54,8 @@ export async function submitApplication(_: ActionState, fd: FormData): Promise<A
     if (res?.error === "busy") return { error: "We're getting a lot of applications right now. Please try again in an hour." };
     return { error: "Couldn't send your application. Please try again." };
   }
+  // Confirmation email to the applicant (no account or password needed). A mail problem doesn't undo the application.
+  const { subject, html } = applicationReceivedEmail(row.business_name, (await getLang()) === "ar" ? "ar" : "en");
+  await sendEmail(row.contact_email, subject, html);
   redirect("/apply?sent=1");
 }
