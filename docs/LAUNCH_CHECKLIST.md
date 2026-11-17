@@ -44,7 +44,8 @@ Ask Claude: **"launch checklist"** to walk through it.
 
 ## Later (after launch)
 - [ ] Apple Watch app (optional): show XP, quests, the spin wheel and the latest receipt. Today the watch only mirrors iPhone notifications. Decide after launch whether it's worth a separate build.
-  - Test 17 Nov 2026: notifications appeared on the iPhone but not on the Apple Watch. Still to fix (watch mirroring settings).
+  - Passed 17 Nov 2026: with the iPhone locked and Perkly closed, notifications show on the Apple Watch (mirroring on). Nothing else appears there.
+  - Note: with the app open on the phone, the watch doesn't show the notification.
 
 ## Monitoring
 - [ ] **Sentry source maps**: create a Sentry auth token (secret) and add it to
