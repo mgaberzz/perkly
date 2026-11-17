@@ -4,7 +4,8 @@ Everything parked "for launch". Go through it top to bottom before real students
 Ask Claude: **"launch checklist"** to walk through it.
 
 ## Accounts & stores
-- [ ] Apple Developer account → iPhone build on TestFlight → App Store review
+- [x] Apple Developer account → iPhone build on TestFlight (17 Nov 2026: installed on an iPhone, push notifications and in-app payment tested)
+- [ ] App Store review (not started; the listing needs screenshots and a description first)
   - Waiting for Apple's reply to the identity check (ID sent)
   - Enrolled as **Individual** (company not registered yet). After registering the company: get a D-U-N-S number, then ask Apple Support to change the membership to **Organization** so the store shows "Perkly" as the seller.
 - [ ] Google Play Console → internal testing → production release
