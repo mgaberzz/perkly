@@ -11,7 +11,7 @@ import { BRAND_TYPE_LABEL, CHANNEL_LABEL } from "@/lib/labels";
 import { merchantListTabs } from "@/lib/merchant-tabs";
 import { BRAND_TYPES } from "@/lib/types";
 import { SITE_URL } from "@/lib/env";
-import { approveApplication, rejectApplication } from "../../actions";
+import { approveApplication, rejectApplication, resendApplicationEmail } from "../../actions";
 
 export const metadata = { title: "Merchant applications" };
 
@@ -86,6 +86,12 @@ export default async function ApplicationsPage({ searchParams }: PageProps<"/adm
                 </dl>
                 {a.status === "pending" ? (
                   <div className="mt-5 grid gap-4 border-t border-zinc-100 pt-4 lg:grid-cols-2">
+                    <div className="lg:col-span-2">
+                      <ActionForm action={resendApplicationEmail} className="flex flex-wrap items-center gap-3">
+                        <input type="hidden" name="id" value={a.id} />
+                        <button className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-semibold hover:bg-zinc-50">{t("Resend confirmation email")}</button>
+                      </ActionForm>
+                    </div>
                     <ActionForm action={approveApplication} className="space-y-3 rounded-xl bg-zinc-50 p-3">
                       <input type="hidden" name="id" value={a.id} />
                       <div className="grid grid-cols-2 gap-3">
