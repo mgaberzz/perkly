@@ -7,7 +7,8 @@ import { ConfirmButton } from "@/components/action-form";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getT } from "@/lib/i18n/server";
 import { MEMBER_ROLE_LABEL } from "@/lib/labels";
-import { removeStaff } from "../actions";
+import { merchantResendAccess, removeStaff } from "../actions";
+import { ResendAccess } from "@/components/resend-access";
 
 export const metadata = { title: "Team" };
 
@@ -47,6 +48,7 @@ export default async function TeamPage() {
                   <Td>{p?.email}</Td>
                   <Td phone="sum"><Badge tone={m.member_role}>{t(MEMBER_ROLE_LABEL[m.member_role])}</Badge>{m.branch_id && <div className="mt-1 text-xs text-zinc-500"><Icon name="pin" size={12} className="me-1 inline-block align-[-2px]" />{branchName.get(m.branch_id)}</div>}</Td>
                   <Td className="text-end">
+                    {memberRole === "owner" && m.user_id !== user.id && p?.email && <div className="mb-1 flex justify-end"><ResendAccess action={merchantResendAccess} email={p.email} t={t} /></div>}
                     {memberRole === "owner" && m.user_id !== user.id && (
                       <form action={removeStaff}>
                         <input type="hidden" name="user_id" value={m.user_id} />

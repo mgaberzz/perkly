@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { MERCHANT_COOKIE, requireMerchant, requireMerchantArea } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { addMember, inviteLang } from "@/lib/members";
+import { addMember, inviteLang, resendInvite, sendPasswordReset } from "@/lib/members";
 import { parsePerkForm } from "@/lib/perk-form";
 import { REFUND_ERRORS } from "@/lib/refunds";
 import { BANKS } from "@/lib/banks";
@@ -285,4 +285,18 @@ export async function verifyPhoneCode(_: ActionState, fd: FormData): Promise<Act
   await supabase.from("profiles").update({ phone }).eq("id", user.id);
   revalidatePath("/merchant/settings");
   return { ok: "Mobile number verified." };
+}
+
+/** Owners resend an invite or send a password reset to a member of their own team. */
+export async function merchantResendAccess(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { merchant, memberRole } = await requireMerchant();
+  if (memberRole !== "owner") return { error: "Only the owner can resend invites." };
+  const email = str(fd, "email").toLowerCase();
+  const admin = createAdminClient();
+  const { data: prof } = await admin.from("profiles").select("id").ilike("email", email).maybeSingle();
+  const { count } = prof
+    ? await admin.from("merchant_members").select("user_id", { count: "exact", head: true }).eq("merchant_id", merchant.id).eq("user_id", prof.id)
+    : { count: 0 };
+  if (!count) return { error: "That person isn't on your team." };
+  return str(fd, "kind") === "reset" ? sendPasswordReset(email) : resendInvite(email);
 }

@@ -3,7 +3,7 @@ import { BANKS } from "@/lib/banks";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin, requireStaff } from "@/lib/auth";
-import { addMember, addPartnerMember, inviteLang } from "@/lib/members";
+import { addMember, addPartnerMember, inviteLang, resendInvite, sendPasswordReset } from "@/lib/members";
 import { parsePerkForm } from "@/lib/perk-form";
 import { APP_FEATURES } from "@/lib/features";
 import { REFUND_ERRORS } from "@/lib/refunds";
@@ -638,4 +638,12 @@ export async function markRefundPaid(_: ActionState, fd: FormData): Promise<Acti
   if (error || !res?.ok) return { error: REFUND_ERRORS[res?.error ?? ""] ?? "Could not save." };
   revalidatePath("/admin", "layout");
   return { ok: "Marked as paid. The student was notified." };
+}
+
+/** Resend an invite, or send a password reset, to any user (admin only). */
+export async function adminResendAccess(_: ActionState, fd: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const email = str(fd, "email").toLowerCase();
+  if (!email.includes("@")) return { error: "Missing email address." };
+  return str(fd, "kind") === "reset" ? sendPasswordReset(email) : resendInvite(email);
 }

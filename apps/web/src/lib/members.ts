@@ -54,3 +54,29 @@ export async function addPartnerMember(partnerId: string, email: string, lang: I
   revalidatePath(`/admin/partners/${partnerId}`);
   return { ok: invited ? `Invite sent to ${email}.` : `${email} can now open the partner portal.` };
 }
+
+/** Sends the invite again to someone who hasn't signed in yet (old links stop working). */
+export async function resendInvite(email: string): Promise<ActionState> {
+  const admin = createAdminClient();
+  let lang: InviteLang = "en";
+  const { data: prof } = await admin.from("profiles").select("id").ilike("email", email).maybeSingle();
+  if (prof) {
+    const { data } = await admin.auth.admin.getUserById(prof.id);
+    if (data.user?.last_sign_in_at) return { error: "This person has already signed in. Send a password reset instead." };
+    lang = inviteLang(String(data.user?.user_metadata?.lang ?? ""));
+  }
+  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
+    data: { lang }, redirectTo: `${SITE_URL}/auth/callback?next=/account/password`,
+  });
+  if (error) return { error: error.message };
+  return { ok: `New invite sent to ${email}. Any earlier invite link no longer works.` };
+}
+
+/** Emails a link to set a new password (for people who already have an account). */
+export async function sendPasswordReset(email: string): Promise<ActionState> {
+  const { error } = await createAdminClient().auth.resetPasswordForEmail(email, {
+    redirectTo: `${SITE_URL}/auth/callback?next=/account/password`,
+  });
+  if (error) return { error: error.message };
+  return { ok: `Password reset link sent to ${email}.` };
+}

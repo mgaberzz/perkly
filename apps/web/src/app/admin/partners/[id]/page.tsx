@@ -5,7 +5,6 @@ import { requireStaff } from "@/lib/auth";
 import { Amount, Badge, Card, Field, Input, PageHeader, Select, Stat, Table, Td } from "@/components/ui";
 import { ExportMenu } from "@/components/export-menu";
 import { ActionForm, ConfirmButton, SubmitButton } from "@/components/action-form";
-import { InviteLangField } from "@/components/invite-lang";
 import { PartnerForm, dealLabel } from "@/components/partner-form";
 import { getT } from "@/lib/i18n/server";
 import { date, dateTime, short } from "@/lib/format";
