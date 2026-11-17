@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, RefreshControl, View } from 'react-native';
 import { Text } from '@/components/text';
 import { Card, Chip, GradientCard, Screen, SectionHeader, StreakFlame, T, XPBar } from '@/components/ui';
 import { levelProgress } from '@/lib/format';
@@ -54,12 +54,19 @@ export default function Rewards() {
 
   useFocusEffect(useCallback(() => { load(); refreshProfile(); }, [load, refreshProfile]));
 
+  // Pull down on the screen to reload quests, badges and the leaderboard
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try { await Promise.all([load(), refreshProfile()]); } finally { setRefreshing(false); }
+  }, [load, refreshProfile]);
+
   const streak = stats?.current_streak ?? 0;
   const nextMilestone = STREAK_MILESTONES.find((m) => m > streak);
   const { cur } = levelProgress(stats?.total_xp ?? 0);
 
   return (
-    <Screen>
+    <Screen refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7B2FF7" />}>
       <T v="h1">{t('Rewards')} 🏆</T>
 
       <GradientCard style={{ gap: 14 }}>
