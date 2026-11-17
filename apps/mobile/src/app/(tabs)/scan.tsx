@@ -3,7 +3,7 @@ import { useIsFocused } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Animated, KeyboardAvoidingView, Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Text, TextInput } from '@/components/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { HowItWorks, hasSeenHowItWorks } from '@/components/how-it-works';
@@ -47,6 +47,8 @@ export default function Scan() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }} edges={['top']}>
+    {/* Lift the "Type the Code" box above the keyboard */}
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
       {permission?.granted && focused && !showManual ? (
         <CameraView
           style={StyleSheet.absoluteFill}
@@ -91,6 +93,7 @@ export default function Scan() {
         )}
       </View>
       <HowItWorks visible={guide} onClose={() => setGuide(false)} />
+    </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
