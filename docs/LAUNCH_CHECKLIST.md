@@ -42,6 +42,9 @@ Ask Claude: **"launch checklist"** to walk through it.
 - [ ] **HubSpot free** (CRM for the merchant pipeline): create the account, save the private app token in Supabase (not in chat). Claude then sends merchant applications in as leads and keeps status (live, monthly transactions) up to date
 - [ ] Lawyer review covers the analytics consent (Egypt data protection law 151/2020)
 
+## Later (after launch)
+- [ ] Apple Watch app (optional): show XP, quests, the spin wheel and the latest receipt. Today the watch only mirrors iPhone notifications. Decide after launch whether it's worth a separate build.
+
 ## Monitoring
 - [ ] **Sentry source maps**: create a Sentry auth token (secret) and add it to
   - Vercel: `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT=perkly-portal`
