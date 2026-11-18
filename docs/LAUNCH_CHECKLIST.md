@@ -8,7 +8,17 @@ Ask Claude: **"launch checklist"** to walk through it.
 - [ ] App Store review (not started; the listing needs screenshots and a description first)
   - Waiting for Apple's reply to the identity check (ID sent)
   - Enrolled as **Individual** (company not registered yet). After registering the company: get a D-U-N-S number, then ask Apple Support to change the membership to **Organization** so the store shows "Perkly" as the seller.
-- [ ] Google Play Console → internal testing → production release
+- [x] Google Play Console developer account approved (18 Nov 2026)
+- [ ] Google Play store setup (package name `app.perkly.student`):
+  - Category: **Shopping** (tags: coupons, deals, discounts)
+  - Privacy policy: https://perklyapp.co/privacy · Terms: https://perklyapp.co/terms · Account deletion: https://perklyapp.co/delete-account
+  - App access: demo login for reviewers (student.demo@perkly.app)
+  - Data safety, content rating, target audience 16+, financial features (in-app payments)
+  - Advertising ID: **No** (the AD_ID permission is blocked in app.json)
+  - Trader status: Yes. Your developer-account contact details are shown to EU/UK users: switch to business details once the company is registered
+- [ ] First Android release uploaded **by hand** to Closed testing (the `.aab` from the EAS production build)
+- [ ] Closed test: at least 12 testers opted in for 14 days in a row (check the exact rule on the Play Console dashboard), then apply for production access
+- [ ] Automatic Play uploads: create a Google service account with Play access and save its JSON key in Expo (`npx eas-cli credentials`, never in the repo). `eas.json` already uploads to the closed-testing track
 - [x] New Android build installed and checked on a real phone (14 Nov 2026): camera scan, fingerprint login, student ID photo upload and approval, receipt
 - [ ] In-app payment tried on a real phone (test mode)
 - [x] Android push notifications tested on a real phone (14 Nov 2026: test message arrived on the preview build)
