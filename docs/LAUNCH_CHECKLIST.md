@@ -48,6 +48,12 @@ Ask Claude: **"launch checklist"** to walk through it.
   - Passed 17 Nov 2026: with the iPhone locked and Perkly closed, notifications show on the Apple Watch (mirroring on). Nothing else appears there.
   - Note: with the app open on the phone, the watch doesn't show the notification.
 
+## Email deliverability
+- [x] Sending domain perklyapp.co verified in Resend (SPF/DKIM); Supabase sends from no-reply@perklyapp.co
+- [x] DMARC record added (`_dmarc`, `p=none`, 18 Nov 2026). After a few weeks of clean reports, consider `p=quarantine`
+- [x] Emails go out in the person's app language only (invite, password reset, merchant application confirmation)
+- [ ] Hotmail/Outlook hid test emails from the new domain (delivered but not in the inbox): check again after a week of sending
+
 ## Monitoring
 - [ ] **Sentry source maps**: create a Sentry auth token (secret) and add it to
   - Vercel: `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT=perkly-portal`
