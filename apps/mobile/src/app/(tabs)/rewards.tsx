@@ -14,14 +14,21 @@ type UserQuest = { quest_id: string; period_start: string; progress: number; com
 type Badge = { id: string; code: string; name: string; description: string | null; emoji: string };
 type Leader = { rank: number; user_id: string; display_name: string; campus_name: string | null; xp: number; is_me: boolean };
 
-/** Current period start (Cairo) for a quest type, as YYYY-MM-DD. Matches the SQL date_trunc logic. */
+/** Today's date in Cairo as [year, month, day], without parsing a date string (Hermes can't parse "11/18/2026, 2:53 AM"). */
+function cairoToday(): [number, number, number] {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Cairo' }));
+  if (m) return [Number(m[1]), Number(m[2]), Number(m[3])];
+  const d = new Date(Date.now() + 2 * 3600_000); // fallback: Cairo is UTC+2
+  return [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate()];
+}
+
+/** Current period start (Cairo) for a quest type, as YYYY-MM-DD. Matches the SQL logic (weeks start on Sunday). */
 function periodStart(type: Quest['quest_type']) {
-  const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Africa/Cairo' }));
-  const d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  if (type === 'weekly') d.setDate(d.getDate() - d.getDay()); // the week starts on Sunday
-  if (type === 'monthly') d.setDate(1);
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  const [y, mo, da] = cairoToday();
+  const d = new Date(Date.UTC(y, mo - 1, da));
+  if (type === 'weekly') d.setUTCDate(d.getUTCDate() - d.getUTCDay());
+  if (type === 'monthly') d.setUTCDate(1);
+  return d.toISOString().slice(0, 10);
 }
 
 const STREAK_MILESTONES = [3, 5, 7, 14, 30];
