@@ -45,3 +45,7 @@ example
 # Firebase (Android push) — kept as an EAS secret file, never committed
 google-services.json
 *-firebase-adminsdk-*.json
+
+# Google Play upload key (never commit; it lives in EAS credentials)
+play-service-account*.json
+*service-account*.json
