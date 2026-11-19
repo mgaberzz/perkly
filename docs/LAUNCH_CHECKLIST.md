@@ -59,6 +59,8 @@ Ask Claude: **"launch checklist"** to walk through it.
   - Note: with the app open on the phone, the watch doesn't show the notification.
 
 ## Email deliverability
+- [ ] Temporary email forwarding with ImprovMX (support@, dmarc@ → personal inbox) until Google Workspace is ready. Namecheap Mail Settings stays on **Custom MX** (never switch to Namecheap "Email Forwarding": it removes Resend's `send` MX)
+- [ ] When moving to Google Workspace: replace the two ImprovMX MX records on `@` with Google's `smtp.google.com` (priority 1), and in the SPF TXT record on `@` change `include:spf.improvmx.com` to `include:_spf.google.com` (same record, don't add a second). Leave the TXT on host `send` (Resend) untouched
 - [x] Sending domain perklyapp.co verified in Resend (SPF/DKIM); Supabase sends from no-reply@perklyapp.co
 - [x] DMARC record added (`_dmarc`, `p=none`, 18 Nov 2026). After a few weeks of clean reports, consider `p=quarantine`
 - [x] Emails go out in the person's app language only (invite, password reset, merchant application confirmation)
