@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { biometricEnabled, unlock } from './biometric';
 import { supabase } from './supabase';
 import type { Campus, Merchant, Profile, Stats } from './types';
-import { lang, t } from './i18n';
+import { campusName, lang, t } from './i18n';
 import { registerPush, unregisterPush } from './push';
 import { setSentryUser } from './sentry';
 
@@ -268,7 +268,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (coords) return coords;
     return campus?.lat != null && campus?.lng != null ? { lat: campus.lat, lng: campus.lng } : null;
   }, [area, coords, campus]);
-  const areaLabel = area.kind === 'campus' ? area.campus.name : coords ? t('Near You') : campus ? t('Around {place}', { place: campus.short_name ?? campus.name }) : t('Egypt');
+  const areaLabel = area.kind === 'campus' ? campusName(area.campus) : coords ? t('Near You') : campus ? t('Around {place}', { place: campus.short_name ?? campusName(campus) }) : t('Egypt');
 
   const quickLogin = useMemo(() => ({ available: parked && Boolean(authSession), email: authSession?.user.email ?? authSession?.user.phone ?? null }), [parked, authSession]);
 

@@ -6,7 +6,7 @@ import { Button, T } from './ui';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { brand } from '@/lib/theme';
-import { t } from '@/lib/i18n';
+import { campusName, t } from '@/lib/i18n';
 
 /** Shared by onboarding ("Complete your profile") and Edit profile. */
 export function ProfileForm({ submitLabel, onDone, showInvite }: { submitLabel: string; onDone: () => void; showInvite?: boolean }) {
@@ -68,7 +68,7 @@ export function ProfileForm({ submitLabel, onDone, showInvite }: { submitLabel: 
       <TextField label={t('Date of Birth')} value={dob} onChangeText={(v) => setDob(maskDob(v))} placeholder={t('DD / MM / YYYY')} keyboardType="number-pad" maxLength={14}
         hint={t('Optional — unlocks birthday perks 🎂')} error={errors.dob} />
       <View>
-        <PickerField label={t('Campus')} value={campus ? campus.name : null} placeholder={t('Choose Your Campus')} icon="🎓" onPress={() => setPicker(true)} />
+        <PickerField label={t('Campus')} value={campus ? campusName(campus) : null} placeholder={t('Choose Your Campus')} icon="🎓" onPress={() => setPicker(true)} />
         {errors.campus ? <T v="small" color={brand.danger} style={{ marginTop: 6 }}>{errors.campus}</T> : null}
       </View>
       {showInvite && feature('invite') && !profile?.referred_by && (

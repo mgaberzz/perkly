@@ -17,8 +17,12 @@ export default async function NewCampusesPage() {
       <Card className="max-w-xl">
           <ActionForm action={createCampus} className="space-y-3" resetOnSuccess>
             <Field label={t("Name")}><Input name="name" required /></Field>
+            <Field label={t("Name in Arabic")}><Input name="name_ar" dir="rtl" placeholder="جامعة ..." /></Field>
             <Field label={t("Short name")}><Input name="short_name" placeholder="AUC" /></Field>
-            <Field label={t("City")}><Input name="city" required /></Field>
+            <div className="grid grid-cols-2 gap-2">
+              <Field label={t("City")}><Input name="city" required /></Field>
+              <Field label={t("City in Arabic")}><Input name="city_ar" dir="rtl" /></Field>
+            </div>
             <Field label={t("Type")}><Select name="type"><option value="university">{t("university")}</option><option value="school">{t("school")}</option><option value="hub">{t("hub")}</option></Select></Field>
             <div className="grid grid-cols-2 gap-2">
               <Field label={t("Latitude")}><Input name="lat" type="number" step="any" /></Field>

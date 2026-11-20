@@ -68,3 +68,7 @@ export const backChevron = () => (current === 'ar' ? '›' : '‹');
 export const fwdChevron = () => (current === 'ar' ? '‹' : '›');
 /** Locale for dates and numbers */
 export const locale = () => (current === 'ar' ? 'ar-EG' : 'en-GB');
+
+/** A campus's name and city in the app language (Arabic when available). */
+export const campusName = (c: { name: string; name_ar?: string | null }) => (current === 'ar' && c.name_ar) || c.name;
+export const campusCity = (c: { city: string; city_ar?: string | null }) => (current === 'ar' && c.city_ar) || c.city;

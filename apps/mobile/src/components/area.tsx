@@ -4,7 +4,7 @@ import { TextInput } from '@/components/text';
 import { useCampuses } from './campus-picker';
 import { Sheet } from './sheet';
 import { T } from './ui';
-import { t } from '@/lib/i18n';
+import { campusName, t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { brand, useTheme } from '@/lib/theme';
 import type { Campus } from '@/lib/types';
@@ -28,17 +28,19 @@ export function LocationBar() {
 export function AreaSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { c } = useTheme();
   const { setArea, refreshLocation, campus, recentAreas, clearRecentAreas } = useSession();
-  const campuses = useCampuses();
+  // Areas need a location: leave out "Other university or institute"
+  const all = useCampuses();
+  const campuses = useMemo(() => all.filter((x) => x.lat != null && x.lng != null), [all]);
   const [q, setQ] = useState('');
   const results = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return s ? campuses.filter((x) => `${x.name} ${x.short_name ?? ''} ${x.city}`.toLowerCase().includes(s)) : [];
+    return s ? campuses.filter((x) => `${x.name} ${x.name_ar ?? ''} ${x.short_name ?? ''} ${x.city} ${x.city_ar ?? ''}`.toLowerCase().includes(s)) : [];
   }, [q, campuses]);
 
   const pick = (x: Campus) => { setArea({ kind: 'campus', campus: x }); setQ(''); onClose(); };
   const Row = ({ x }: { x: Campus }) => (
     <Pressable onPress={() => pick(x)} style={{ paddingVertical: 14 }}>
-      <T>{x.name}</T>
+      <T>{campusName(x)}</T>
       <T v="small">{x.city}</T>
     </Pressable>
   );

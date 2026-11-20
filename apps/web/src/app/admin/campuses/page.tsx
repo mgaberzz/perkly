@@ -28,7 +28,7 @@ export default async function CampusesPage() {
           <Table head={[t("Campus"), t("City"), t("Type"), t("Location"), t("Status"), ""]}>
             {(data ?? []).map((c) => (
               <tr key={c.id}>
-                <Td className="font-semibold">{c.name} {c.short_name && <span className="text-zinc-500">({c.short_name})</span>}</Td>
+                <Td className="font-semibold">{c.name} {c.short_name && <span className="text-zinc-500">({c.short_name})</span>}{c.name_ar && <div dir="rtl" className="text-start text-xs font-normal text-zinc-500">{c.name_ar}</div>}</Td>
                 <Td phone="sum">{c.city}</Td><Td>{t(c.type)}</Td>
                 <Td className="text-xs text-zinc-500">{c.lat != null ? `${c.lat.toFixed(3)}, ${c.lng?.toFixed(3)}` : "—"}</Td>
                 <Td phone="sum"><Badge tone={c.is_active ? "active" : "paused"}>{c.is_active ? t("active") : t("hidden")}</Badge></Td>

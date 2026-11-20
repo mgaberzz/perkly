@@ -13,7 +13,7 @@ export interface Merchant {
   logo_url: string | null; cover_url: string | null; perks: Perk[]; branches: Branch[];
   channel: 'in_store' | 'online' | 'both'; website_url: string | null; affiliate_url: string | null;
 }
-export interface Campus { id: string; name: string; short_name: string | null; city: string; lat: number | null; lng: number | null; }
+export interface Campus { id: string; name: string; name_ar?: string | null; short_name: string | null; city: string; city_ar?: string | null; lat: number | null; lng: number | null; }
 export interface Profile {
   avatar_path?: string | null;
   avatar_config?: Record<string, unknown> | null;

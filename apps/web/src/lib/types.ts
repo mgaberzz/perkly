@@ -8,7 +8,7 @@ export interface Profile {
   role: Role; status: "active" | "banned"; campus_id: string | null; referral_code: string; created_at: string;
   user_code: string; student_code: string | null;
 }
-export interface Campus { id: string; name: string; short_name: string | null; city: string; type: string; lat: number | null; lng: number | null; is_active: boolean; }
+export interface Campus { id: string; name: string; name_ar?: string | null; short_name: string | null; city: string; city_ar?: string | null; type: string; lat: number | null; lng: number | null; is_active: boolean; }
 export interface Merchant {
   rating_avg?: number | null; rating_count?: number;
   id: string; name: string; category: string; subcategory: string | null; brand_type: string; description: string | null;

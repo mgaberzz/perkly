@@ -6,7 +6,7 @@ import { EditableAvatar } from '@/components/avatar';
 import { MerchantRow } from '@/components/merchant-card';
 import { Card, GradientCard, Screen, SectionHeader, T } from '@/components/ui';
 import { egp, levelProgress, shortDate } from '@/lib/format';
-import { fwdChevron, t } from '@/lib/i18n';
+import { campusName, fwdChevron, t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { brand, useTheme } from '@/lib/theme';
@@ -42,7 +42,7 @@ export default function Me() {
         </Pressable>
         <EditableAvatar size={96} />
         <T v="h2" style={{ textAlign: 'center' }}>{profile?.full_name ?? t('Student')}</T>
-        <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'xp' } })}><T v="muted" style={{ textAlign: 'center' }}>🎓 {campus?.short_name ?? campus?.name ?? t('No Campus')} · {t('Lv {n} · {name}', { n: cur.level, name: cur.name })}</T></Pressable>
+        <Pressable onPress={() => router.push({ pathname: '/explain', params: { metric: 'xp' } })}><T v="muted" style={{ textAlign: 'center' }}>🎓 {(campus ? campus.short_name ?? campusName(campus) : null) ?? t('No Campus')} · {t('Lv {n} · {name}', { n: cur.level, name: cur.name })}</T></Pressable>
       </View>
 
       {/* Student ID card */}

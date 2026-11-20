@@ -6,7 +6,7 @@ import { brand, useTheme } from '@/lib/theme';
 import type { Campus } from '@/lib/types';
 import { Sheet } from './sheet';
 import { T } from './ui';
-import { t } from '@/lib/i18n';
+import { campusCity, campusName, t } from '@/lib/i18n';
 
 let cache: Campus[] | null = null;
 export function useCampuses() {
@@ -14,7 +14,8 @@ export function useCampuses() {
   useEffect(() => {
     if (cache) return;
     supabase.from('campuses').select('*').eq('is_active', true).order('name').returns<Campus[]>()
-      .then(({ data }) => { cache = data ?? []; setCampuses(cache); });
+      // "Other university or institute" (no location) goes last
+      .then(({ data }) => { cache = [...(data ?? [])].sort((a, b) => Number(a.lat == null) - Number(b.lat == null) || campusName(a).localeCompare(campusName(b))); setCampuses(cache); });
   }, []);
   return campuses;
 }
@@ -27,7 +28,7 @@ export function CampusPicker({ visible, onClose, onPick, selectedId }: {
   const [q, setQ] = useState('');
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return s ? campuses.filter((x) => `${x.name} ${x.short_name ?? ''} ${x.city}`.toLowerCase().includes(s)) : campuses;
+    return s ? campuses.filter((x) => `${x.name} ${x.name_ar ?? ''} ${x.short_name ?? ''} ${x.city} ${x.city_ar ?? ''}`.toLowerCase().includes(s)) : campuses;
   }, [campuses, q]);
   return (
     <Sheet visible={visible} onClose={onClose} title={t('Pick Your Campus')}>
@@ -40,8 +41,8 @@ export function CampusPicker({ visible, onClose, onPick, selectedId }: {
               <T v="small" color={x.id === selectedId ? '#fff' : c.text}>{x.short_name ?? x.name.slice(0, 3)}</T>
             </View>
             <View style={{ flex: 1 }}>
-              <T v="h3" numberOfLines={1}>{x.name}</T>
-              <T v="small">{x.city}</T>
+              <T v="h3" numberOfLines={1}>{campusName(x)}</T>
+              <T v="small">{campusCity(x)}</T>
             </View>
             {x.id === selectedId && <T color={brand.purple} style={{ fontWeight: '900' }}>✓</T>}
           </Pressable>

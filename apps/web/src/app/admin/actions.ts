@@ -431,7 +431,7 @@ export async function createCampus(_: ActionState, fd: FormData): Promise<Action
   if (!name || !city) return { error: "Name and city are required." };
   const num = (k: string) => (str(fd, k) === "" ? null : Number(str(fd, k)));
   const { error } = await supabase.from("campuses").insert({
-    name, city, short_name: str(fd, "short_name") || null, type: str(fd, "type") || "university", lat: num("lat"), lng: num("lng"),
+    name, city, name_ar: str(fd, "name_ar") || null, city_ar: str(fd, "city_ar") || null, short_name: str(fd, "short_name") || null, type: str(fd, "type") || "university", lat: num("lat"), lng: num("lng"),
   });
   if (error) return { error: error.message };
   revalidatePath("/admin/campuses");
