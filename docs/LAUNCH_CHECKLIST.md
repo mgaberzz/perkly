@@ -26,6 +26,11 @@ Ask Claude: **"launch checklist"** to walk through it.
 - [x] Production AAB (version code 3, 1.0.0) uploaded to Closed testing (20 Nov 2026)
 - Tester guide, invite message and Test Café QR: docs/testing/ANDROID_CLOSED_TEST.md
 - [x] Closed test release approved by Google (20 Nov 2026)
+- [ ] **On hold until the new logo is ready:** next Android release to Closed testing
+  - The Android build from 20 Nov (hardware warning fix, Arabic university names, version line in Settings, over-the-air updates) is not uploaded; skip it
+  - After the logo is updated: Claude replaces the icons, then make a **new** Android build (`npx eas-cli build --platform android --profile production`), upload it to Closed testing and send for review
+  - Then test over-the-air updates on Android (Settings shows "Built-in" → `npm run update:production -- "OTA test"` → close/open twice → "Update …")
+  - A new logo needs a new iPhone build too (icons can't be changed over the air)
 - [ ] Closed test: at least 12 testers opted in for 14 days in a row (check the exact rule on the Play Console dashboard), then apply for production access
 - [ ] Automatic Play uploads: create a Google service account with Play access and save its JSON key in Expo (`npx eas-cli credentials`, never in the repo). `eas.json` already uploads to the closed-testing track
 - [x] New Android build installed and checked on a real phone (14 Nov 2026): camera scan, fingerprint login, student ID photo upload and approval, receipt
