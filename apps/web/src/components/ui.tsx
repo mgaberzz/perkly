@@ -28,15 +28,23 @@ export function Card({ children, className = "", title, actions }: { children: R
   );
 }
 
-export function Stat({ label, value, hint, accent = false, href }: { label: string; value: ReactNode; hint?: ReactNode; accent?: boolean; href?: string }) {
-  if (href) return <Link href={href} className="block min-w-0 transition hover:-translate-y-0.5"><Stat label={label} value={value} hint={hint} accent={accent} /></Link>;
+export function Stat({ label, value, hint, accent = false, href, delta }: { label: string; value: ReactNode; hint?: ReactNode; accent?: boolean; href?: string; delta?: ReactNode }) {
+  if (href) return <Link href={href} className="block min-w-0 transition hover:-translate-y-0.5"><Stat label={label} value={value} hint={hint} accent={accent} delta={delta} /></Link>;
   return (
     <div className={`min-w-0 rounded-2xl p-4 shadow-sm sm:p-5 ${accent ? "perk-gradient text-white" : "border border-zinc-200 bg-white"}`}>
       <div className={`text-xs font-semibold uppercase tracking-wide ${accent ? "text-white/80" : "text-zinc-500"}`}>{label}</div>
       <div className="mt-2 break-words text-2xl font-extrabold leading-tight sm:text-3xl">{value}</div>
       {hint && <div className={`mt-1 text-xs ${accent ? "text-white/80" : "text-zinc-500"}`}>{hint}</div>}
+      {delta && <div className="mt-2">{delta}</div>}
     </div>
   );
+}
+
+/** "▲ 12% vs previous period" pill (like Paymob's overview). */
+export function Delta({ now, before, label, light = false }: { now: number; before: number; label: string; light?: boolean }) {
+  const pct = before ? Math.round(((now - before) / Math.abs(before)) * 100) : now ? 100 : 0;
+  const tone = light ? "bg-white/20 text-white" : pct > 0 ? "bg-emerald-50 text-emerald-700" : pct < 0 ? "bg-red-50 text-red-700" : "bg-zinc-100 text-zinc-600";
+  return <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${tone}`}>{pct > 0 ? "▲" : pct < 0 ? "▼" : "—"} {Math.abs(pct)}% <span className="font-normal opacity-80">{label}</span></span>;
 }
 
 const STATUS_STYLES: Record<string, string> = {

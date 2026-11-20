@@ -1,7 +1,7 @@
 import { CardGrid } from "@/components/card-grid";
 import Link from "next/link";
 import { requireMerchantArea } from "@/lib/auth";
-import { Amount, BarChart, Card, HBarList, PageHeader, Stat } from "@/components/ui";
+import { Amount, BarChart, Card, Delta, HBarList, PageHeader, Stat } from "@/components/ui";
 import { FilterBar } from "@/components/filter-bar";
 import { daysBetween, PERIOD_LABEL, PERIODS, resolvePeriod } from "@/lib/periods";
 import { ExportButtons } from "@/components/export-buttons";
@@ -35,12 +35,17 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
   // Every number opens /merchant/explain with the same branch / cashier filters
   const filt = `&from=${from}&to=${to}${branch && !branchScope ? `&branch=${branch}` : ""}${qr ? `&qr=${qr}` : ""}`;
 
+  // Same-length period just before, for the "vs previous period" pills
+  const span = daysBetween(from, to).length;
+  const shift = (d: string, n: number) => { const x = new Date(`${d}T12:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+  const prevTo = shift(from, -1), prevFrom = shift(prevTo, -(span - 1));
   const week = lastWeek();
   let weekQ = supabase.from("redemptions").select("user_id, original_amount, final_amount, discount_amount, first_time_at_merchant, created_at, perk:perks(title)")
     .eq("merchant_id", merchant.id).neq("status", "reversed").gte("created_at", week.prevFromISO).lt("created_at", week.toISO).limit(10000);
   if (branch) weekQ = weekQ.eq("branch_id", branch);
-  const [{ data, error }, { data: branches }, { data: qrs }, { data: balance }, { data: weekRows }, { data: reviews }] = await Promise.all([
+  const [{ data, error }, { data: prevData }, { data: branches }, { data: qrs }, { data: balance }, { data: weekRows }, { data: reviews }] = await Promise.all([
     supabase.rpc("merchant_stats", { p_merchant_id: merchant.id, p_branch_id: branch, p_qr_id: qr, p_from: from, p_to: to }),
+    supabase.rpc("merchant_stats", { p_merchant_id: merchant.id, p_branch_id: branch, p_qr_id: qr, p_from: prevFrom, p_to: prevTo }),
     supabase.from("merchant_branches").select("id, name").eq("merchant_id", merchant.id).order("name"),
     supabase.from("branch_qr_codes").select("id, label, cashier_name, branch_id, branch:merchant_branches!inner(merchant_id)")
       .eq("branch.merchant_id", merchant.id).eq("status", "approved").order("created_at")
@@ -51,6 +56,8 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
   ]);
   const weekReviews = ((reviews ?? []) as { stars: number; created_at: string; branch_id: string | null }[]).filter((r) => !branch || r.branch_id === branch);
   const s = (data ?? {}) as Stats;
+  const p = (prevData ?? {}) as Stats;
+  const vs = t("vs previous {n} days", { n: span });
 
   const dayMap = new Map((s.by_day ?? []).map((d) => [String(d.day).slice(0, 10), Number(d.count)]));
   const days = daysBetween(from, to);
@@ -90,10 +97,10 @@ export default async function MerchantDashboard({ searchParams }: PageProps<"/me
       {error && <p className="mb-4 text-sm text-red-600">{error.message}</p>}
 
       <CardGrid txPage="/merchant/redemptions" merchantColumn={false} className="grid grid-cols-2 gap-4 lg:grid-cols-4" items={[
-        { key: "r", title: t("Redemptions"), tx: mtx, card: <Stat accent label={t("Redemptions")} value={s.redemptions ?? 0} hint={t("{n} flagged for review", { n: s.flagged ?? 0 })} /> },
-        { key: "s", title: t("Unique students"), tx: mtx, card: <Stat label={t("Unique students")} value={s.unique_students ?? 0} hint={t("{a} new · {b} recurring", { a: s.new_students ?? 0, b: s.recurring_students ?? 0 })} /> },
+        { key: "r", title: t("Redemptions"), tx: mtx, card: <Stat accent label={t("Redemptions")} value={s.redemptions ?? 0} hint={t("{n} flagged for review", { n: s.flagged ?? 0 })} delta={<Delta light now={s.redemptions ?? 0} before={p.redemptions ?? 0} label={vs} />} /> },
+        { key: "s", title: t("Unique students"), tx: mtx, card: <Stat label={t("Unique students")} value={s.unique_students ?? 0} hint={t("{a} new · {b} recurring", { a: s.new_students ?? 0, b: s.recurring_students ?? 0 })} delta={<Delta now={s.unique_students ?? 0} before={p.unique_students ?? 0} label={vs} />} /> },
         { key: "n", title: t("New customers"), tx: { ...mtx, customer: "new" }, card: <Stat label={t("New vs recurring customers")} value={`${s.new_customer_pct ?? 0}% / ${s.recurring_customer_pct ?? 0}%`} hint={t("Opens new customers")} /> },
-        { key: "v", title: t("Revenue after discount"), tx: mtx, card: <Stat label={t("Revenue after discount")} value={<Amount v={s.revenue_after_discount} />} hint={t("Discount given {amount}", { amount: egp(s.discount_given) })} /> },
+        { key: "v", title: t("Revenue after discount"), tx: mtx, card: <Stat label={t("Revenue after discount")} value={<Amount v={s.revenue_after_discount} />} hint={t("Discount given {amount}", { amount: egp(s.discount_given) })} delta={<Delta now={Number(s.revenue_after_discount ?? 0)} before={Number(p.revenue_after_discount ?? 0)} label={vs} />} /> },
       ]} />
 
       {balance && (

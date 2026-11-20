@@ -3,6 +3,7 @@ export function merchantTabs(id: string, editable: boolean, t: (s: string) => st
   return [
     { href: `/admin/merchants/${id}`, label: t("Overview") },
     { href: `/admin/merchants/${id}/access`, label: t("Portal access") },
+    { href: `/admin/merchants/${id}/statements`, label: t("Statements") },
     ...(editable ? [{ href: `/admin/merchants/${id}/edit`, label: t("Edit") }] : []),
   ];
 }

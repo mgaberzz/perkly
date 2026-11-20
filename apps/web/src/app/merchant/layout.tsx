@@ -7,6 +7,7 @@ import { getT } from "@/lib/i18n/server";
 import { MEMBER_ROLE_LABEL } from "@/lib/labels";
 import Link from "next/link";
 import { switchMerchant } from "./actions";
+import { MerchantTour } from "@/components/merchant-tour";
 
 export default async function MerchantLayout({ children }: LayoutProps<"/merchant">) {
   const { merchant, memberships, profile, user, memberRole, branchScope, supabase } = await requireMerchant();
@@ -30,6 +31,8 @@ export default async function MerchantLayout({ children }: LayoutProps<"/merchan
     { area: "payouts", href: "/merchant/payouts", label: t("Payouts"), icon: "wallet", group: 2 },
     { area: "team", href: "/merchant/team", label: t("Team"), icon: "team", group: 2 },
     { area: "profile", href: "/merchant/profile", label: t("Business profile"), icon: "building", group: 2 },
+    { area: "statements", href: "/merchant/statements", label: t("Reports & statements"), icon: "doc", group: 2 },
+    { area: "developers", href: "/merchant/developers", label: t("API keys"), icon: "key", group: 3 },
   ];
   // Each staff role sees only its own areas
   const nav: NavItem[] = [...items.filter((i) => merchantCan(memberRole, i.area)).map((i) => ({ href: i.href, label: i.label, exact: i.exact, icon: i.icon, group: i.group, count: i.count })),
@@ -54,6 +57,7 @@ export default async function MerchantLayout({ children }: LayoutProps<"/merchan
   return (
     <Shell nav={nav} top={top} user={profile?.full_name ?? user.email ?? ""} badge={t("Merchant")}>
       <SentryUser id={user.id} role={`merchant_${memberRole}`} />
+      {merchantCan(memberRole, "dashboard") && <MerchantTour />}
       {merchant.status !== "live" && (
         <div className="mb-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
           {merchant.status === "pending"

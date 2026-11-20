@@ -97,6 +97,8 @@ export const MERCHANT_AREAS = {
   payouts: ["owner", "manager"],
   team: ["owner", "manager"],
   profile: ["owner", "manager"],
+  statements: ["owner", "manager"],
+  developers: ["owner", "manager"],
 } as const satisfies Record<string, readonly MemberRole[]>;
 export type MerchantArea = keyof typeof MERCHANT_AREAS;
 export const merchantCan = (role: MemberRole, area: MerchantArea) => (MERCHANT_AREAS[area] as readonly MemberRole[]).includes(role);

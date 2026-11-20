@@ -167,6 +167,19 @@ export async function adminRejectBank(merchantId: string, _: ActionState, fd: Fo
   return { ok: "Sent back to the merchant." };
 }
 
+// ───────── Merchant API access (Operations) ─────────
+export async function adminSetApiAccess(merchantId: string, enabled: boolean) {
+  const { supabase } = await requireStaff("merchants_view");
+  await supabase.rpc("set_merchant_api_access", { p_merchant_id: merchantId, p_enabled: enabled });
+  revalidatePath(`/admin/merchants/${merchantId}`);
+}
+
+export async function adminRevokeApiKeys(merchantId: string) {
+  const { supabase } = await requireStaff("merchants_view");
+  await supabase.rpc("revoke_api_credentials", { p_merchant_id: merchantId });
+  revalidatePath(`/admin/merchants/${merchantId}`);
+}
+
 export async function adminCreateQr(fd: FormData) {
   const { supabase } = await requireStaff("merchants_edit");
   await supabase.from("branch_qr_codes").insert({

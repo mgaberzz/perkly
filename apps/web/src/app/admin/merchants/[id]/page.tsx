@@ -9,13 +9,13 @@ import { PageTabs } from "@/components/page-tabs";
 import { merchantTabs } from "@/lib/merchant-tabs";
 import { resolvePeriod } from "@/lib/periods";
 import { QrImage } from "@/components/qr-image";
-import { discountLabel } from "@/lib/format";
+import { dateTime, discountLabel } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { dealLabel } from "@/components/partner-form";
 import { BRAND_TYPE_LABEL, CHANNEL_LABEL } from "@/lib/labels";
 import type { Balance, Merchant, Perk, QrCode } from "@/lib/types";
 import { BANKS } from "@/lib/banks";
-import { adminCreateBranch, adminCreateQr, adminRejectBank, adminRenameQr, adminSaveBank, adminSetPerkStatus, adminToggleQr, adminUpdateBranch, resolveRequest } from "../../actions";
+import { adminRevokeApiKeys, adminSetApiAccess, adminCreateBranch, adminCreateQr, adminRejectBank, adminRenameQr, adminSaveBank, adminSetPerkStatus, adminToggleQr, adminUpdateBranch, resolveRequest } from "../../actions";
 
 export const metadata = { title: "Merchant" };
 
@@ -49,6 +49,12 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
     supabase.rpc("merchant_balances", { p_merchant_id: id }).maybeSingle<Balance>(),
     supabase.from("admin_requests").select("id, ref_id").eq("merchant_id", id).eq("kind", "qr_code").eq("status", "pending"),
   ]);
+  const apiAdmin = role === "admin" || role === "operations";
+  const { data: cred } = apiAdmin || role === "account_manager"
+    ? await supabase.from("merchant_api_credentials").select("public_key, created_at, secret_rotated_at, last_used_at").eq("merchant_id", id)
+        .maybeSingle<{ public_key: string; created_at: string; secret_rotated_at: string; last_used_at: string | null }>()
+    : { data: null };
+  const apiOn = (merchant as Merchant & { api_enabled?: boolean }).api_enabled ?? true;
   const requestFor = new Map((requests ?? []).map((r) => [r.ref_id, r.id]));
   const from30 = resolvePeriod("30d").from;
   const s = (stats ?? {}) as { redemptions?: number; unique_students?: number; new_customer_pct?: number; recurring_customer_pct?: number; revenue_after_discount?: number };
@@ -223,6 +229,37 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
             ) : bank && (
               <p className="text-sm">{bank.bank_name} · {bank.account_name} · <span className="font-mono" dir="ltr">{bank.iban}</span> · {t(bank.payout_schedule)}</p>
             )}
+          </Card>
+        )}
+
+        {(apiAdmin || role === "account_manager") && (
+          <Card title={t("API & integrations")} className="lg:col-span-3"
+            actions={<Link href={`/admin/merchants/${id}/statements`} className="text-sm font-semibold text-perk-purple hover:underline">{t("Monthly statements")} →</Link>}>
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <span className="font-semibold">{t("API access")}:</span>
+              <Badge tone={apiOn ? "active" : "paused"}>{apiOn ? t("On") : t("Off")}</Badge>
+              {apiAdmin && (
+                <form action={adminSetApiAccess.bind(null, id, !apiOn)}>
+                  <button className="rounded-lg border border-zinc-300 px-3 py-1 text-xs font-semibold hover:bg-zinc-50">{apiOn ? t("Turn off") : t("Turn on")}</button>
+                </form>
+              )}
+              <span className="text-xs text-zinc-500">{t("When off, the business can't create keys and its keys stop working.")}</span>
+            </div>
+            <div className="mt-4 border-t border-zinc-100 pt-4 text-sm">
+              {cred ? (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <div><span className="text-zinc-500">{t("Public key")}:</span> <code dir="ltr" className="font-mono text-xs">{cred.public_key}</code></div>
+                    <div className="text-xs text-zinc-500">{t("Secret key created {date}", { date: dateTime(cred.secret_rotated_at) })} · {cred.last_used_at ? t("Last used {date}", { date: dateTime(cred.last_used_at) }) : t("Not used yet")}</div>
+                  </div>
+                  {apiAdmin && (
+                    <form action={adminRevokeApiKeys.bind(null, id)}>
+                      <button className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50">{t("Revoke keys")}</button>
+                    </form>
+                  )}
+                </div>
+              ) : <p className="text-zinc-500">{t("The business hasn't created API keys.")}</p>}
+            </div>
           </Card>
         )}
 
