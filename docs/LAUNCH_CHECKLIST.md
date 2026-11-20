@@ -26,6 +26,10 @@ Ask Claude: **"launch checklist"** to walk through it.
 - [ ] Closed test: at least 12 testers opted in for 14 days in a row (check the exact rule on the Play Console dashboard), then apply for production access
 - [ ] Automatic Play uploads: create a Google service account with Play access and save its JSON key in Expo (`npx eas-cli credentials`, never in the repo). `eas.json` already uploads to the closed-testing track
 - [x] New Android build installed and checked on a real phone (14 Nov 2026): camera scan, fingerprint login, student ID photo upload and approval, receipt
+- [ ] Over-the-air updates (set up 20 Nov 2026, `expo-updates`): make **one new build** for Android and iPhone (production profile) so phones can receive updates; until then installed apps can't get them
+  - Publish an update from `apps/mobile`: `npm run update:production -- "what changed"` (preview builds: `npm run update:preview`)
+  - Phones download it in the background and use it the next time the app is opened after being closed
+  - Only screens, text and images. New Expo packages, permissions, icons or app.json plugins still need a store build (older builds ignore updates they can't run)
 - [ ] In-app payment tried on a real phone (test mode)
 - [x] Android push notifications tested on a real phone (14 Nov 2026: test message arrived on the preview build)
 

@@ -89,6 +89,14 @@
         "projectId": "16463b86-d00a-45d7-80b9-5824d2e14378"
       }
     },
-    "owner": "perklyio"
+    "owner": "perklyio",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/16463b86-d00a-45d7-80b9-5824d2e14378",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    }
   }
 }

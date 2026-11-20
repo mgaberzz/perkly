@@ -17,7 +17,8 @@
         "EXPO_PUBLIC_APP_ENV": "preview",
         "EXPO_PUBLIC_SENTRY_DSN": "https://cb1d448a4e9fab8184e415d15b76f37c@o4512400955146240.ingest.de.sentry.io/4512400968646736"
       },
-      "environment": "preview"
+      "environment": "preview",
+      "channel": "preview"
     },
     "production": {
       "autoIncrement": true,
@@ -29,7 +30,8 @@
         "EXPO_PUBLIC_APP_ENV": "production",
         "EXPO_PUBLIC_SENTRY_DSN": "https://cb1d448a4e9fab8184e415d15b76f37c@o4512400955146240.ingest.de.sentry.io/4512400968646736"
       },
-      "environment": "production"
+      "environment": "production",
+      "channel": "production"
     }
   },
   "submit": {
