@@ -25,6 +25,7 @@ Ask Claude: **"launch checklist"** to walk through it.
 - [x] First Android release uploaded **by hand** to Closed testing (the `.aab` from the EAS production build)
 - [x] Production AAB (version code 3, 1.0.0) uploaded to Closed testing (20 Nov 2026)
 - Tester guide, invite message and Test Café QR: docs/testing/ANDROID_CLOSED_TEST.md
+- [x] Closed test release approved by Google (20 Nov 2026)
 - [ ] Closed test: at least 12 testers opted in for 14 days in a row (check the exact rule on the Play Console dashboard), then apply for production access
 - [ ] Automatic Play uploads: create a Google service account with Play access and save its JSON key in Expo (`npx eas-cli credentials`, never in the repo). `eas.json` already uploads to the closed-testing track
 - [x] New Android build installed and checked on a real phone (14 Nov 2026): camera scan, fingerprint login, student ID photo upload and approval, receipt
