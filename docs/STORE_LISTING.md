@@ -112,3 +112,29 @@ Perkly هو تطبيق خصومات الطلاب لجامعات مصر. لاقي
 
 **كلمات البحث في App Store** (بحد أقصى 100)
 خصم,طلاب,عروض,كوبونات,جامعة,خصومات,توفير,كافيه,مطاعم,مصر
+
+---
+
+## Google Play: Data safety answers (20 Nov 2026)
+
+- Collects data: Yes · Encrypted in transit: Yes · Account creation: username, password and other authentication + OAuth
+- Delete account URL: https://perklyapp.co/delete-account · Delete some data without deleting the account: No · Independent security review: No
+- Every type below: collected Yes, **shared No**, processed ephemerally No
+
+| Data type | Required? | Purposes |
+| --- | --- | --- |
+| Approximate + precise location | Optional | App functionality, fraud prevention |
+| Name | Required | App functionality, account management |
+| Email address | Optional | Account management, app functionality |
+| User IDs | Required | App functionality, account management, fraud prevention |
+| Phone number | Optional | Account management, app functionality |
+| Other info (date of birth, university, student ID number) | Required | App functionality, account management, fraud prevention |
+| Purchase history | Required | App functionality, fraud prevention |
+| Photos (student ID, profile photo) | Optional | App functionality, account management |
+| App interactions | Required | App functionality |
+| Other user-generated content (visit ratings) | Optional | App functionality |
+| Crash logs, diagnostics (Sentry) | Required | Analytics, app functionality |
+| Device or other IDs (push token) | Optional | App functionality |
+
+Not collected: payment info (cards are entered on Paymob's page), contacts, messages, health, files, audio, web browsing.
+Update this form when PostHog analytics is added (add "Analytics" to app interactions) or if card details are ever stored.

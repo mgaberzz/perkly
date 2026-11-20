@@ -17,7 +17,7 @@ Ask Claude: **"launch checklist"** to walk through it.
   - Category: **Shopping** (tags: coupons, deals, discounts)
   - Privacy policy: https://perklyapp.co/privacy · Terms: https://perklyapp.co/terms · Account deletion: https://perklyapp.co/delete-account
   - App access: demo login for reviewers (student.demo@perkly.app)
-  - Data safety, content rating, target audience 16+, financial features (in-app payments)
+  - Data safety, content rating, target audience 16+, financial features (in-app payments): done 20 Nov 2026. Data safety answers are in docs/STORE_LISTING.md
   - Advertising ID: **No** (the AD_ID permission is blocked in app.json)
   - Trader status: Yes. Your developer-account contact details are shown to EU/UK users: switch to business details once the company is registered
 - [x] First Android release uploaded **by hand** to Closed testing (the `.aab` from the EAS production build)
@@ -36,7 +36,8 @@ Ask Claude: **"launch checklist"** to walk through it.
 - [x] Set `NEXT_PUBLIC_SITE_URL` to `https://perklyapp.co` in Vercel's environment variables and redeploy (invite and password-reset links use it)
 - [x] Supabase → Auth → URL Configuration: set Site URL to `https://perklyapp.co` and add `https://perklyapp.co/**` to the redirect URLs
 - [x] `EXPO_PUBLIC_WEB_URL` in `apps/mobile/eas.json` set to `https://perklyapp.co` (legal links in the app) — new app builds need the domain live first
-- [ ] Create the `support@perklyapp.co` mailbox (already shown on the legal pages) and put the registered company name in `apps/web/src/lib/legal.ts` (replace "Perkly")
+- [x] `support@perklyapp.co` receives email (ImprovMX forwarding, tested 20 Nov 2026)
+- [ ] Put the registered company name in `apps/web/src/lib/legal.ts` (replace "Perkly") once the company is registered
 - [x] Verify `perklyapp.co` in Resend (email)
 - [ ] WhatsApp support number for the app's "Support chat" button (`apps/mobile/src/app/settings.tsx`)
   - Today the button opens an empty WhatsApp link, so it does nothing useful until the number is set
@@ -66,7 +67,7 @@ Ask Claude: **"launch checklist"** to walk through it.
   - Note: with the app open on the phone, the watch doesn't show the notification.
 
 ## Email deliverability
-- [ ] Temporary email forwarding with ImprovMX (support@, dmarc@ → personal inbox) until Google Workspace is ready. Namecheap Mail Settings stays on **Custom MX** (never switch to Namecheap "Email Forwarding": it removes Resend's `send` MX)
+- [x] Temporary email forwarding with ImprovMX (support@, dmarc@ → personal inbox) until Google Workspace is ready. Namecheap Mail Settings stays on **Custom MX** (never switch to Namecheap "Email Forwarding": it removes Resend's `send` MX) (working, 20 Nov 2026)
 - [ ] When moving to Google Workspace: replace the two ImprovMX MX records on `@` with Google's `smtp.google.com` (priority 1), and in the SPF TXT record on `@` change `include:spf.improvmx.com` to `include:_spf.google.com` (same record, don't add a second). Leave the TXT on host `send` (Resend) untouched
 - [x] Sending domain perklyapp.co verified in Resend (SPF/DKIM); Supabase sends from no-reply@perklyapp.co
 - [x] DMARC record added (`_dmarc`, `p=none`, 18 Nov 2026). After a few weeks of clean reports, consider `p=quarantine`
