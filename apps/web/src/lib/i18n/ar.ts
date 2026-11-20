@@ -1,5 +1,11 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Search perk or merchant": "دوّر على عرض أو تاجر",
+  "All tiers": "كل المستويات",
+  "Flash perks only": "العروض السريعة بس",
+  "{n} waiting for approval": "{n} مستني الموافقة",
+  "No perks match these filters.": "مفيش عروض بالفلاتر دي.",
+  "Every new perk and every discount change waits here for approval.": "كل عرض جديد وأي تغيير في الخصم بيستنى الموافقة هنا.",
   "Name in Arabic": "الاسم بالعربي",
   "City in Arabic": "المدينة بالعربي",
   "Merchant owes Perkly": "التاجر عليه لـ Perkly",

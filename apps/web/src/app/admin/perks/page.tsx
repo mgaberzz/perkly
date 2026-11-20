@@ -2,28 +2,60 @@ import { Icon } from "@/components/icons";
 import Link from "next/link";
 import { inScope, requireStaff } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
-import { Badge, LinkButton, PageHeader, Table, Td } from "@/components/ui";
+import { Badge, PageHeader, Table, Td } from "@/components/ui";
+import { FilterBar } from "@/components/filter-bar";
 import { date, discountLabel, tierFor } from "@/lib/format";
 import type { Perk } from "@/lib/types";
 import { adminSetPerkStatus, reviewPerk } from "../actions";
 
 export const metadata = { title: "Perks" };
 const STATUSES = ["pending", "active", "paused", "rejected", "expired"];
+// Tier = percentage discount band (same bands as the tier badge)
+const TIERS: Record<string, [number, number]> = { bronze: [0, 15], silver: [15, 25], gold: [25, 30.0001], hero: [30.0001, 101] };
 
 export default async function AdminPerksPage({ searchParams }: PageProps<"/admin/perks">) {
   const sp = await searchParams;
-  const status = typeof sp.status === "string" ? sp.status : "pending";
+  const g = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : "");
+  const status = STATUSES.includes(g("status")) ? g("status") : "";
+  const merchant = g("merchant"), tier = TIERS[g("tier")] ? g("tier") : "", flash = g("flash"), q = g("q").trim();
   const { supabase, merchantScope } = await requireStaff("perks");
   const t = await getT();
   let query = inScope(supabase.from("perks").select("*, merchant:merchants(id, name)").order("created_at", { ascending: false }).limit(300), merchantScope);
-  if (status !== "all") query = query.eq("status", status);
-  const { data } = await query.returns<(Perk & { merchant: { id: string; name: string } })[]>();
+  if (status) query = query.eq("status", status);
+  if (merchant) query = query.eq("merchant_id", merchant);
+  if (flash) query = query.eq("is_flash", true);
+  if (tier) query = query.eq("discount_type", "percentage").gte("discount_value", TIERS[tier][0]).lt("discount_value", TIERS[tier][1]);
+  // Search the perk title or the merchant name
+  let matchIds: string[] = [];
+  if (q) {
+    const like = `%${q.replace(/[%_,()]/g, " ")}%`;
+    const { data: ms } = await inScope(supabase.from("merchants").select("id").ilike("name", like).limit(200), merchantScope, "id");
+    matchIds = (ms ?? []).map((m) => m.id as string);
+    query = query.or(matchIds.length ? `title.ilike.${like},merchant_id.in.(${matchIds.join(",")})` : `title.ilike.${like}`);
+  }
+  type Row = Perk & { merchant: { id: string; name: string } };
+  const merchantsQ = inScope(supabase.from("merchants").select("id, name").order("name").limit(1000), merchantScope, "id");
+  let waitingQ = supabase.from("perks").select("id", { count: "exact", head: true }).eq("status", "pending");
+  if (merchantScope) waitingQ = waitingQ.in("merchant_id", merchantScope.length ? merchantScope : ["00000000-0000-0000-0000-000000000000"]);
+  const { data: rows } = (await query) as unknown as { data: Row[] | null };
+  const { data: merchants } = (await merchantsQ) as unknown as { data: { id: string; name: string }[] | null };
+  const { count: waiting } = (await waitingQ) as unknown as { count: number | null };
+  // Waiting-for-approval perks first, then newest
+  const data = [...(rows ?? [])].sort((a, b) => Number(b.status === "pending") - Number(a.status === "pending"));
   return (
     <>
-      <PageHeader title={t("Campaigns & perks")} subtitle={t("Hero perks (above 30%) wait here for approval.")}
-        actions={[...STATUSES, "all"].map((s) => <LinkButton key={s} href={`/admin/perks?status=${s}`} variant={s === status ? "primary" : "secondary"} >{t(s)}</LinkButton>)} />
-      <Table head={[t("Perk"), t("Merchant"), t("Discount"), t("Limits"), t("Ends"), t("Status"), ""]} empty={status === "pending" ? t("Nothing waiting for approval") : t("No perks.")}>
-        {(data ?? []).map((p) => {
+      <PageHeader title={t("Campaigns & perks")} subtitle={t("Every new perk and every discount change waits here for approval.")}
+        actions={(waiting ?? 0) > 0 && status !== "pending" ? <Link href="/admin/perks?status=pending" className="rounded-full bg-amber-100 px-3 py-1.5 text-sm font-semibold text-amber-800 hover:bg-amber-200">{t("{n} waiting for approval", { n: waiting ?? 0 })}</Link> : undefined} />
+      <FilterBar path="/admin/perks" search={{ name: "q", value: q, placeholder: t("Search perk or merchant") }} fields={[
+        { name: "status", label: t("Status"), type: "select", value: status, all: t("All statuses"), options: STATUSES.map((x) => ({ value: x, label: t(x) })) },
+        { name: "merchant", label: t("Merchant"), type: "select", value: merchant, all: t("All merchants"), options: (merchants ?? []).map((m) => ({ value: m.id, label: m.name })) },
+        { name: "tier", label: t("Tier"), type: "select", value: tier, all: t("All tiers"), options: [
+          { value: "bronze", label: `${t("Bronze")} (<15%)` }, { value: "silver", label: `${t("Silver")} (15–24%)` },
+          { value: "gold", label: `${t("Gold")} (25–30%)` }, { value: "hero", label: `${t("Hero")} (>30%)` }] },
+        { name: "flash", label: t("Flash perks only"), type: "toggle", value: flash },
+      ]} />
+      <Table head={[t("Perk"), t("Merchant"), t("Discount"), t("Limits"), t("Ends"), t("Status"), ""]} empty={status === "pending" ? t("Nothing waiting for approval") : t("No perks match these filters.")}>
+        {data.map((p) => {
           const tier = tierFor(p);
           return (
             <tr key={p.id}>
