@@ -117,19 +117,39 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
           </ExpandItem>
         ))}
       </ExpandList>
-      <Table className="hidden sm:block" head={[t("Time / ID"), t("Student"), t("Merchant"), t("Branch / cashier"), t("Perk"), t("Total GMV"), t("Discount"), t("Payment"), t("To settle"), t("Status"), ""]} empty={t("No transactions.")}>
-        {(data ?? []).map((r) => (
-          <tr key={r.id}>
-            <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-zinc-600">{r.tx_code}</div><div className="font-mono text-xs text-zinc-500">{r.verification_code}</div>{r.receipt_ref && <div className="font-mono text-xs text-zinc-500" title={t("Shop receipt / order no.")}>#{r.receipt_ref}</div>}</Td>
-            <Td>{r.student?.full_name ?? "—"}<div className="font-mono text-xs text-zinc-500">{r.student?.student_code ?? r.student?.user_code}</div></Td>
-            <Td><Link href={`/admin/merchants/${r.merchant.id}`} className="hover:underline">{r.merchant.name}</Link><div className="font-mono text-xs text-zinc-500">{r.merchant.merchant_code}</div></Td>
-            <Td>{r.branch?.name ?? <><Icon name="globe" size={14} className="me-1 inline-block align-[-2px]" />{t("Online")}</>}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>
-            <Td>{r.perk.title}</Td>
-            <Td><Amount v={r.original_amount} /></Td>
-            <Td><Amount v={r.discount_amount} /></Td>
-            <Td><Badge tone={r.payment_method === "in_app" ? "active" : "paused"}>{r.payment_method === "in_app" ? t("In app") : t("Cashier")}</Badge></Td>
-            <Td className="whitespace-nowrap">{r.status === "reversed" ? "—" : <>{egp(r.settle_amount)}<div className="mt-1"><Badge tone={r.settlement?.status === "paid" ? "paid" : r.settlement?.status === "partially_paid" ? "pending" : "paused"}>{t(settlementLabel(r.settlement?.status))}</Badge></div>{r.settlement && <Link href={`/admin/explain?metric=settlement&id=${r.settlement.id}`} className="font-mono text-xs text-zinc-500 hover:underline">{r.settlement.settlement_code}</Link>}</>}</Td>
-            <Td><Badge tone={r.status}>{t(r.status)}</Badge>{r.flag_reason && <div className="mt-1 text-xs text-zinc-500">{r.flag_reason}</div>}</Td>
+      <Table className="hidden sm:block" head={[t("Transaction"), t("Student"), t("Merchant"), t("Perk"), t("Amount"), t("Settlement"), t("Status"), ""]} empty={t("No transactions.")}>
+        {(data ?? []).map((r) => {
+          const owes = r.settle_amount != null && r.settle_amount < 0;
+          return (
+          <tr key={r.id} className={r.status === "reversed" ? "bg-zinc-50/60" : r.status === "flagged" ? "bg-amber-50/50" : ""}>
+            <Td className="whitespace-nowrap">
+              <div className="font-mono text-[13px] font-bold">{r.tx_code}</div>
+              <div className="text-xs text-zinc-500">{shortDateTime(r.created_at)}</div>
+              <div className="font-mono text-[11px] text-zinc-400">{t("Code")} {r.verification_code}{r.receipt_ref && <> · #{r.receipt_ref}</>}</div>
+            </Td>
+            <Td className="min-w-[130px] max-w-[170px]">
+              <div className="truncate font-semibold" title={r.student?.full_name ?? ""}>{r.student?.full_name ?? "—"}</div>
+              <div className="font-mono text-xs text-zinc-500">{r.student?.student_code ?? r.student?.user_code}</div>
+            </Td>
+            <Td className="max-w-[190px]">
+              <Link href={`/admin/merchants/${r.merchant.id}`} className="block truncate font-semibold hover:underline">{r.merchant.name}</Link>
+              <div className="truncate text-xs text-zinc-500" title={[r.branch?.name, r.qr?.cashier_name ?? r.qr?.label].filter(Boolean).join(" · ")}>
+                {r.branch?.name ?? <><Icon name="globe" size={12} className="me-1 inline-block align-[-1px]" />{t("Online")}</>}{(r.qr?.cashier_name ?? r.qr?.label) && <> · {r.qr?.cashier_name ?? r.qr?.label}</>}
+              </div>
+            </Td>
+            <Td className="min-w-[110px] max-w-[150px]"><div className="line-clamp-2 text-[13px] text-zinc-700" title={r.perk.title}>{r.perk.title}</div></Td>
+            <Td className="whitespace-nowrap">
+              <div className={`font-bold ${r.status === "reversed" ? "text-zinc-400 line-through" : ""}`}><Amount v={r.original_amount} /></div>
+              <div className="text-xs text-emerald-600">−<Amount v={r.discount_amount} /> {t("Discount").toLowerCase()}</div>
+              <div className="mt-1"><Badge tone={r.payment_method === "in_app" ? "active" : "paused"} className="!text-[10px]">{r.payment_method === "in_app" ? t("Paid in app") : t("Paid at cashier")}</Badge></div>
+            </Td>
+            <Td className="whitespace-nowrap">{r.status === "reversed" ? <span className="text-zinc-400">—</span> : <>
+              <div className="font-semibold">{egp(Math.abs(r.settle_amount ?? 0))}</div>
+              <div className="text-[11px] text-zinc-500">{owes ? t("Merchant owes Perkly") : t("Perkly pays merchant")}</div>
+              <div className="mt-1"><Badge tone={r.settlement?.status === "paid" ? "paid" : r.settlement?.status === "partially_paid" ? "pending" : "paused"} className="!text-[10px]">{t(settlementLabel(r.settlement?.status))}</Badge>
+                {r.settlement && <Link href={`/admin/explain?metric=settlement&id=${r.settlement.id}`} className="ms-1 font-mono text-[11px] text-zinc-500 hover:underline">{r.settlement.settlement_code}</Link>}</div>
+            </>}</Td>
+            <Td className="whitespace-nowrap"><Badge tone={r.status}>{t(r.status)}</Badge>{r.flag_reason && <div className="mt-1 max-w-[140px] whitespace-normal text-[11px] text-zinc-500">{r.flag_reason}</div>}</Td>
             <Td className="whitespace-nowrap text-end">
               {review && r.status !== "success" && (
                 <form action={setRedemptionStatus} className="inline"><input type="hidden" name="id" value={r.id} /><input type="hidden" name="status" value="success" />
@@ -141,7 +161,8 @@ export default async function AdminRedemptionsPage({ searchParams }: PageProps<"
               )}
             </Td>
           </tr>
-        ))}
+          );
+        })}
       </Table>
     </>
   );

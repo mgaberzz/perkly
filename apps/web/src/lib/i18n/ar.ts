@@ -1,5 +1,6 @@
 // Arabic translations for the portals. Keys are the English text used in the code (see lib/i18n/index.ts).
 export const AR: Record<string, string> = {
+  "Merchant owes Perkly": "التاجر عليه لـ Perkly",
   "Resend confirmation email": "إعادة إرسال إيميل التأكيد",
   "Confirmation sent to": "تم إرسال التأكيد إلى",
   "Couldn't send. Check RESEND_API_KEY on Vercel.": "ماقدرناش نبعت. اتأكد من RESEND_API_KEY في Vercel.",
