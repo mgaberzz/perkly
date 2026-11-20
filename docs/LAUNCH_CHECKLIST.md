@@ -17,7 +17,9 @@ Ask Claude: **"launch checklist"** to walk through it.
   - Category: **Shopping** (tags: coupons, deals, discounts)
   - Privacy policy: https://perklyapp.co/privacy · Terms: https://perklyapp.co/terms · Account deletion: https://perklyapp.co/delete-account
   - App access: demo login for reviewers (student.demo@perkly.app)
-  - Data safety, content rating, target audience 16+, financial features (in-app payments): done 20 Nov 2026. Data safety answers are in docs/STORE_LISTING.md
+  - Data safety, content rating, target audience 16+: done 20 Nov 2026. Data safety answers are in docs/STORE_LISTING.md
+  - **Financial features: "My app doesn't provide any financial features"**. Declaring payments got the app blocked on 20 Nov 2026 (personal accounts can't publish apps with financial features). Paying a shop by card through Paymob is a purchase, not a financial service. Keep cashback as in-app rewards only (no cash-out or transfers), or an organization account is required
+  - [ ] After the company is registered: get a D-U-N-S number and move the Play account to an **organization** account (Apple needs the same)
   - Advertising ID: **No** (the AD_ID permission is blocked in app.json)
   - Trader status: Yes. Your developer-account contact details are shown to EU/UK users: switch to business details once the company is registered
 - [x] First Android release uploaded **by hand** to Closed testing (the `.aab` from the EAS production build)
