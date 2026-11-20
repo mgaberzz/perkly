@@ -77,7 +77,8 @@
           "color": "#7B2FF7"
         }
       ],
-      "@sentry/react-native/expo"
+      "@sentry/react-native/expo",
+      "./plugins/with-optional-hardware"
     ],
     "experiments": {
       "typedRoutes": true,
