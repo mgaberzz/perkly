@@ -32,12 +32,7 @@ Ask Claude: **"launch checklist"** to walk through it.
 ## Domain & contact details
 - [x] Domains bought: `perklyapp.co` and `perklyeg.com` (Namecheap)
 - [x] Connect `perklyapp.co` (primary) and `perklyeg.com` (redirects to it) in Vercel → Settings → Domains, and add Vercel's DNS records in Namecheap — do it **before** the team registers Face ID / passkeys on the portal
-- [ ] `www.perklyapp.co`: added in Vercel (Production) but shows **Invalid Configuration** after the DNS change (20 Nov 2026). Fix in Namecheap → Advanced DNS → Host Records:
-  - Exactly one record for host `www`: **CNAME**, host `www` (not the full domain), value copied exactly from Vercel → View DNS configuration
-  - Delete Namecheap's default `www` records (CNAME to parkingpage.namecheap.com, or a URL Redirect Record)
-  - Don't touch the MX/TXT email records (ImprovMX, Resend, SPF, DMARC)
-  - Wait up to 30 minutes, then Refresh in Vercel. If still red, send Claude screenshots of both screens
-  - Optional: make `www.perklyapp.co` a 308 redirect to `perklyapp.co`. First edit `www.perklyeg.com` to redirect straight to `perklyapp.co`; Vercel won't redirect a domain that others redirect to
+- [x] `www.perklyapp.co` connected in Vercel (Production), CNAME fixed in Namecheap (20 Nov 2026)
 - [x] Set `NEXT_PUBLIC_SITE_URL` to `https://perklyapp.co` in Vercel's environment variables and redeploy (invite and password-reset links use it)
 - [x] Supabase → Auth → URL Configuration: set Site URL to `https://perklyapp.co` and add `https://perklyapp.co/**` to the redirect URLs
 - [x] `EXPO_PUBLIC_WEB_URL` in `apps/mobile/eas.json` set to `https://perklyapp.co` (legal links in the app) — new app builds need the domain live first
