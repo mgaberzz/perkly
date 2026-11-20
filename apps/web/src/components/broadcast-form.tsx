@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState } from "react";
 import { ActionForm } from "./action-form";
 import { useT } from "./i18n";
@@ -53,7 +54,7 @@ export function BroadcastForm({ action, campuses, perks, audience }: {
         <div className="rounded-[28px] bg-zinc-900 p-4 shadow-lg">
           <div className="rounded-2xl bg-white/95 p-3 shadow">
             <div className="flex items-center gap-2 text-[11px] text-zinc-500">
-              <span className="perk-gradient grid h-5 w-5 place-items-center rounded-md text-[10px] font-bold text-white">P</span>
+              <Image src="/perkly-mark.png" alt="" width={20} height={20} className="h-5 w-5 rounded-md" />
               <span className="font-semibold">PERKLY</span><span className="ms-auto">{t("now")}</span>
             </div>
             <div className="mt-1.5 text-sm font-semibold text-zinc-900">{title || t("Title")}</div>
