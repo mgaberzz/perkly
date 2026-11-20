@@ -33,6 +33,8 @@ Ask Claude: **"launch checklist"** to walk through it.
   - A new logo needs a new iPhone build too (icons can't be changed over the air). First fix the build number: `npx eas-cli build:version:set --platform ios` (enter the highest build number shown in TestFlight), then build and `npx eas-cli submit --platform ios --latest`
   - Upload the new Play icon and feature graphics (docs/store-assets) in Play Console → Main store listing
 - [ ] Closed test: at least 12 testers opted in for 14 days in a row (check the exact rule on the Play Console dashboard), then apply for production access
+  - Closed test started 20 Nov 2026 (testers invited). If 12+ stay opted in from today, the earliest day to apply for production is **4 Dec 2026**; count from the day the 12th tester joins
+  - Check opted-in testers on the Play Console dashboard every few days; nudge anyone inactive
 - [ ] Automatic Play uploads: create a Google service account with Play access and save its JSON key in Expo (`npx eas-cli credentials`, never in the repo). `eas.json` already uploads to the closed-testing track
 - [x] New Android build installed and checked on a real phone (14 Nov 2026): camera scan, fingerprint login, student ID photo upload and approval, receipt
 - [ ] Over-the-air updates (set up 20 Nov 2026, `expo-updates`): make **one new build** for Android and iPhone (production profile) so phones can receive updates; until then installed apps can't get them
