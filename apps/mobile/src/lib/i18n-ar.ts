@@ -1,5 +1,8 @@
 // Arabic translations for the student app. Keys are the English text used in the code (see lib/i18n.ts).
 export const AR: Record<string, string> = {
+  "Version": "الإصدار",
+  "Update": "تحديث",
+  "Built-in": "الأصلية",
   "MISSIONS": "المهام",
   "PRIZES": "الجوايز",
   "Rate Your Visit": "قيّم زيارتك",

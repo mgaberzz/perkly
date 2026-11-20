@@ -1,4 +1,6 @@
+import Constants from 'expo-constants';
 import { router } from 'expo-router';
+import * as Updates from 'expo-updates';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Platform, Pressable, Switch, View } from 'react-native';
 import { Card, Screen, T } from '@/components/ui';
@@ -169,7 +171,22 @@ export default function Settings() {
         {deleting ? <ActivityIndicator color={brand.danger} size="small" /> : null}
         <T v="small" color={brand.danger} style={{ textAlign: 'center' }}>{deleting ? t('Deleting…') : t('Delete Account')}</T>
       </Pressable>
-      <View style={{ alignItems: 'center' }}><T v="small">Perkly · {t('Unlock Perks. Live Smart.')}</T></View>
+      <View style={{ alignItems: 'center', gap: 2 }}>
+        <T v="small">Perkly · {t('Unlock Perks. Live Smart.')}</T>
+        <T v="small" style={{ opacity: 0.6, fontSize: 11 }}>{versionLabel()}</T>
+      </View>
     </Screen>
   );
+}
+
+/** "Version 1.0.0 · Update 21 Nov, 14:05" (or "Built-in") — tells support which over-the-air update the phone runs. */
+function versionLabel() {
+  const v = Constants.expoConfig?.version ?? '';
+  let u = t('Built-in');
+  try {
+    if (Updates.isEnabled && !Updates.isEmbeddedLaunch && Updates.createdAt) {
+      u = `${t('Update')} ${Updates.createdAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}, ${Updates.createdAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+  } catch {}
+  return `${t('Version')} ${v} · ${u}`;
 }
