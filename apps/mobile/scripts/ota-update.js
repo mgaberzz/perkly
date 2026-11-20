@@ -27,6 +27,11 @@ if (!message) {
 }
 
 console.log(`Publishing to channel "${build.channel}": ${message}`);
-const res = spawnSync('npx', ['eas-cli', 'update', '--channel', build.channel, '--message', message, '--environment', build.environment ?? profile],
-  { stdio: 'inherit', env, cwd: path.join(__dirname, '..'), shell: process.platform === 'win32' });
+const args = ['eas-cli', 'update', '--channel', build.channel, '--message', message, '--environment', build.environment ?? profile];
+const opts = { stdio: 'inherit', env, cwd: path.join(__dirname, '..') };
+// Windows runs npx through the shell, which splits on spaces: quote every argument there
+const win = process.platform === 'win32';
+const res = win
+  ? spawnSync(['npx', ...args].map((a) => `"${String(a).replace(/"/g, '""')}"`).join(' '), { ...opts, shell: true })
+  : spawnSync('npx', args, opts);
 process.exit(res.status ?? 1);
