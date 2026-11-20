@@ -8,7 +8,7 @@ Ask Claude: **"launch checklist"** to walk through it.
 - [ ] TestFlight external beta (Perkly pilot group): build 1 rejected (no sign-in info). Build 2 waiting for Beta App Review since 18 Nov 2026
   - 20 Nov: Test Information filled in: sign-in required (student.demo@perkly.app), review notes, privacy URL, marketing URL
   - If still waiting after ~5 days in total, contact Apple (App Store Connect → Contact Us)
-  - Switch the Feedback Email to support@perklyapp.co once that mailbox works
+  - [x] Feedback Email switched to support@perklyapp.co (20 Nov 2026)
 - [ ] App Store review (not started; the listing needs screenshots and a description first)
   - Waiting for Apple's reply to the identity check (ID sent)
   - Enrolled as **Individual** (company not registered yet). After registering the company: get a D-U-N-S number, then ask Apple Support to change the membership to **Organization** so the store shows "Perkly" as the seller.
