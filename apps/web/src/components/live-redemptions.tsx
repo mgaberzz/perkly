@@ -70,23 +70,36 @@ export function LiveRedemptions({ merchantId, branchId, initial }: { merchantId:
           </div>
         ))}
       </ExpandList>
-      <Table className="hidden sm:block" head={[t("Code"), t("Time"), t("Perk"), t("Branch / cashier"), t("Bill"), t("Discount"), t("Payment"), t("Customer"), t("Status")]}
+      <Table className="hidden sm:block" head={[t("Code"), t("Transaction"), t("Perk"), t("Branch / cashier"), t("Amount"), t("Customer"), t("Status")]}
         empty={t("No redemptions yet. Put your QR on the cashier table and they'll show up here.")}>
-        {rows.map((r) => (
-          <tr key={r.id} className={r.id === fresh ? "bg-emerald-50 transition-colors" : ""}>
+        {rows.map((r) => {
+          const pct = discountPct(r.discount_amount, r.original_amount);
+          const who = r.qr?.cashier_name ?? r.qr?.label;
+          return (
+          <tr key={r.id} className={r.id === fresh ? "bg-emerald-50 transition-colors" : r.status === "reversed" ? "bg-zinc-50/60" : r.status === "flagged" ? "bg-amber-50/50" : ""}>
             <Td><span className="rounded-lg bg-perk-ink px-2 py-1 font-mono text-base font-bold tracking-widest text-white">{r.verification_code}</span></Td>
-            <Td className="whitespace-nowrap">{dateTime(r.created_at)}<div className="font-mono text-xs font-semibold text-zinc-600">{r.tx_code}</div></Td>
-            <Td>{r.perk?.title}</Td>
-            <Td>{r.branch?.name ?? <><Icon name="globe" size={14} className="me-1 inline-block align-[-2px]" />{t("Online")}</>}<div className="text-xs text-zinc-500">{r.qr?.cashier_name ?? r.qr?.label}</div></Td>
-            <Td>{egp(r.original_amount)}</Td>
-            <Td className="font-semibold text-perk-purple">{egp(r.discount_amount)}{discountPct(r.discount_amount, r.original_amount) && <div className="text-xs font-normal text-zinc-500">{discountPct(r.discount_amount, r.original_amount)}</div>}</Td>
-            <Td>{r.payment_method === "in_app"
-              ? <Badge tone="active">{t("Paid in app")} · {egp(r.final_amount)}</Badge>
-              : <Badge tone="paused">{t("Pay at cashier")}</Badge>}</Td>
-            <Td>{r.first_time_at_merchant ? <Badge tone="live">{t("New customer")}</Badge> : <Badge tone="paused">{t("Recurring customer")}</Badge>}</Td>
-            <Td><Badge tone={r.status}>{t(r.status)}</Badge></Td>
+            <Td className="whitespace-nowrap">
+              <div className="font-mono text-[13px] font-bold">{r.tx_code}</div>
+              <div className="text-xs text-zinc-500">{shortDateTime(r.created_at)}</div>
+              {r.receipt_ref && <div className="font-mono text-[11px] text-zinc-400" title={t("Shop receipt / order no.")}>#{r.receipt_ref}</div>}
+            </Td>
+            <Td className="min-w-[120px] max-w-[200px]"><div className="line-clamp-2 text-[13px] text-zinc-700" title={r.perk?.title}>{r.perk?.title}</div></Td>
+            <Td className="max-w-[200px]">
+              <div className="truncate font-semibold" title={r.branch?.name}>{r.branch?.name ?? <><Icon name="globe" size={12} className="me-1 inline-block align-[-1px]" />{t("Online")}</>}</div>
+              {who && <div className="truncate text-xs text-zinc-500" title={who}>{who}</div>}
+            </Td>
+            <Td className="whitespace-nowrap">
+              <div className={`font-bold ${r.status === "reversed" ? "text-zinc-400 line-through" : ""}`}>{egp(r.original_amount)}</div>
+              <div className="text-xs font-semibold text-perk-purple">−{egp(r.discount_amount)}{pct && <span className="font-normal text-zinc-500"> ({pct})</span>}</div>
+              <div className="mt-1">{r.payment_method === "in_app"
+                ? <Badge tone="active" className="!text-[10px]">{t("Paid in app")} · {egp(r.final_amount)}</Badge>
+                : <Badge tone="paused" className="!text-[10px]">{t("Pay at cashier")}</Badge>}</div>
+            </Td>
+            <Td className="whitespace-nowrap">{r.first_time_at_merchant ? <Badge tone="live">{t("New customer")}</Badge> : <Badge tone="paused">{t("Recurring customer")}</Badge>}</Td>
+            <Td className="whitespace-nowrap"><Badge tone={r.status}>{t(r.status)}</Badge></Td>
           </tr>
-        ))}
+          );
+        })}
       </Table>
     </>
   );
