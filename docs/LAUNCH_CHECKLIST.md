@@ -20,7 +20,7 @@ Ask Claude: **"launch checklist"** to walk through it.
   - Data safety, content rating, target audience 16+, financial features (in-app payments)
   - Advertising ID: **No** (the AD_ID permission is blocked in app.json)
   - Trader status: Yes. Your developer-account contact details are shown to EU/UK users: switch to business details once the company is registered
-- [ ] First Android release uploaded **by hand** to Closed testing (the `.aab` from the EAS production build)
+- [x] First Android release uploaded **by hand** to Closed testing (the `.aab` from the EAS production build)
 - [x] Production AAB (version code 3, 1.0.0) uploaded to Closed testing (20 Nov 2026)
 - Tester guide, invite message and Test Café QR: docs/testing/ANDROID_CLOSED_TEST.md
 - [ ] Closed test: at least 12 testers opted in for 14 days in a row (check the exact rule on the Play Console dashboard), then apply for production access
@@ -31,12 +31,12 @@ Ask Claude: **"launch checklist"** to walk through it.
 
 ## Domain & contact details
 - [x] Domains bought: `perklyapp.co` and `perklyeg.com` (Namecheap)
-- [ ] Connect `perklyapp.co` (primary) and `perklyeg.com` (redirects to it) in Vercel → Settings → Domains, and add Vercel's DNS records in Namecheap — do it **before** the team registers Face ID / passkeys on the portal
+- [x] Connect `perklyapp.co` (primary) and `perklyeg.com` (redirects to it) in Vercel → Settings → Domains, and add Vercel's DNS records in Namecheap — do it **before** the team registers Face ID / passkeys on the portal
 - [ ] Set `NEXT_PUBLIC_SITE_URL` to `https://perklyapp.co` in Vercel's environment variables and redeploy (invite and password-reset links use it)
 - [ ] Supabase → Auth → URL Configuration: set Site URL to `https://perklyapp.co` and add `https://perklyapp.co/**` to the redirect URLs
 - [x] `EXPO_PUBLIC_WEB_URL` in `apps/mobile/eas.json` set to `https://perklyapp.co` (legal links in the app) — new app builds need the domain live first
 - [ ] Create the `support@perklyapp.co` mailbox (already shown on the legal pages) and put the registered company name in `apps/web/src/lib/legal.ts` (replace "Perkly")
-- [ ] Verify `perklyapp.co` in Resend (email)
+- [x] Verify `perklyapp.co` in Resend (email)
 - [ ] WhatsApp support number for the app's "Support chat" button (`apps/mobile/src/app/settings.tsx`)
   - Today the button opens an empty WhatsApp link, so it does nothing useful until the number is set
 - [ ] Lawyer in Egypt reviews the Privacy Policy and Terms of Use
@@ -44,8 +44,8 @@ Ask Claude: **"launch checklist"** to walk through it.
 ## Providers
 - [ ] SMS provider for students' login codes (Supabase Auth → Phone)
   - Also needed for the merchant portal's mobile number verification (Settings → Mobile number); until then it shows "SMS codes aren't switched on yet"
-- [ ] Applicant confirmation email: create a Resend API key (Sending access) and save it in Vercel as `RESEND_API_KEY` (Production), then redeploy. Until then applicants get no confirmation email.
-- [ ] Email provider: Resend is connected but in **test mode** (only emails m.gaberz@hotmail.com). Verify the domain at resend.com/domains, then change the sender in Supabase → Auth → SMTP to e.g. `no-reply@<domain>`. Until then students can't get email login codes and portal invites don't arrive. This also enables university-email verification.
+- [x] Applicant confirmation email: create a Resend API key (Sending access) and save it in Vercel as `RESEND_API_KEY` (Production), then redeploy. Until then applicants get no confirmation email.
+- [x] Email provider: Resend is connected but in **test mode** (only emails m.gaberz@hotmail.com). Verify the domain at resend.com/domains, then change the sender in Supabase → Auth → SMTP to e.g. `no-reply@<domain>`. Until then students can't get email login codes and portal invites don't arrive. This also enables university-email verification.
   - After email works: email each merchant their weekly summary every Sunday (today it's the "Your week with Perkly" card on their dashboard)
   - After email works: email merchants a refund reminder after 3 days (today they only see a banner in the portal)
 - [ ] Paymob merchant account → switch in-app payments from **test** to **live** (Settings)
