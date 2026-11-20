@@ -29,9 +29,10 @@ if (!message) {
 console.log(`Publishing to channel "${build.channel}": ${message}`);
 const args = ['eas-cli', 'update', '--channel', build.channel, '--message', message, '--environment', build.environment ?? profile];
 const opts = { stdio: 'inherit', env, cwd: path.join(__dirname, '..') };
-// Windows runs npx through the shell, which splits on spaces: quote every argument there
+// Windows runs npx through the shell, which splits on spaces: quote the arguments there.
+// Don't quote "npx" itself: a quoted command name makes npx.cmd look for npm in the wrong folder.
 const win = process.platform === 'win32';
 const res = win
-  ? spawnSync(['npx', ...args].map((a) => `"${String(a).replace(/"/g, '""')}"`).join(' '), { ...opts, shell: true })
+  ? spawnSync(`npx ${args.map((a) => `"${String(a).replace(/"/g, '""')}"`).join(' ')}`, { ...opts, shell: true })
   : spawnSync('npx', args, opts);
 process.exit(res.status ?? 1);
