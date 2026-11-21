@@ -5,7 +5,8 @@ Ask Claude: **"launch checklist"** to walk through it.
 
 ## Accounts & stores
 - [x] Apple Developer account → iPhone build on TestFlight (17 Nov 2026: installed on an iPhone, push notifications and in-app payment tested)
-- [ ] TestFlight external beta (Perkly pilot group): build 1 rejected (no sign-in info). Build 2 waiting for Beta App Review since 18 Nov 2026
+- [x] TestFlight external beta approved: build 6 (new logo) is **Testing** in the Perkly pilot group (21 Nov 2026). Build 2 also approved; build 1 rejected (no sign-in info)
+  - Add more iPhone testers: TestFlight → Perkly pilot → Testers (+) by email, or turn on a Public Link
   - 20 Nov: Test Information filled in: sign-in required (student.demo@perkly.app), review notes, privacy URL, marketing URL
   - If still waiting after ~5 days in total, contact Apple (App Store Connect → Contact Us)
   - [x] Feedback Email switched to support@perklyapp.co (20 Nov 2026)
