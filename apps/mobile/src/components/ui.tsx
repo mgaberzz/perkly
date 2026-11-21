@@ -17,7 +17,9 @@ export function Screen({ children, scroll = true, edges = ['top'], style, ...res
   return (
     <SafeAreaView edges={edges} style={{ flex: 1, backgroundColor: c.bg }}>
       {scroll ? (
-        <ScrollView contentContainerStyle={[{ padding: 20, paddingBottom: 120, gap: 20 }, style]} showsVerticalScrollIndicator={false} {...rest}>
+        // Under a native header (edges without 'top') iOS must push the content below the bar, or it hides behind it
+        <ScrollView contentContainerStyle={[{ padding: 20, paddingBottom: 120, gap: 20 }, style]} showsVerticalScrollIndicator={false}
+          contentInsetAdjustmentBehavior={edges.includes('top') ? 'never' : 'automatic'} {...rest}>
           {children}
         </ScrollView>
       ) : (

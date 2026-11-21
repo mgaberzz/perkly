@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Platform, Pressable, Switch, View } from 'react-native';
 import { Card, Screen, T } from '@/components/ui';
 import { Avatar } from '@/components/avatar';
+import { LineIcon } from '@/components/line-icon';
 import { deleteMyAccount } from '@/lib/account';
 import { biometricAvailable, biometricEnabled, faceIdLimitedHere, setBiometricEnabled } from '@/lib/biometric';
 import { fwdChevron, lang, setLanguage, t } from '@/lib/i18n';
@@ -115,11 +116,20 @@ export default function Settings() {
     error: { text: t('Error · Tap to Retry'), color: brand.danger },
   };
 
-  const Row = ({ label, onPress, right }: { label: string; onPress?: () => void; right?: React.ReactNode }) => (
-    <Pressable onPress={onPress} disabled={!onPress} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: c.border }}>
-      <T style={{ flex: 1 }}>{label}</T>{right ?? (onPress ? <T v="muted">{fwdChevron()}</T> : null)}
+  const Row = ({ icon, label, onPress, right, danger, sub, last }: { icon: string; label: string; onPress?: () => void; right?: React.ReactNode; danger?: boolean; sub?: string; last?: boolean }) => (
+    <Pressable onPress={onPress} disabled={!onPress} style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13,
+      borderBottomWidth: last ? 0 : 1, borderBottomColor: c.border, opacity: pressed ? 0.6 : 1 })}>
+      <View style={{ width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: danger ? '#F044381A' : '#7B2FF71A' }}>
+        <LineIcon name={icon} size={18} color={danger ? brand.danger : brand.purple} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <T color={danger ? brand.danger : undefined} style={danger ? { fontWeight: '800' } : undefined}>{label}</T>
+        {sub ? <T v="small" style={{ marginTop: 2 }}>{sub}</T> : null}
+      </View>
+      {right ?? (onPress && !danger ? <T v="muted">{fwdChevron()}</T> : null)}
     </Pressable>
   );
+  const box = { gap: 0, paddingVertical: 0 } as const;
 
   return (
     <Screen edges={[]}>
@@ -132,45 +142,46 @@ export default function Settings() {
         </View>
       </Card>
       <T v="label">{t('Account')}</T>
-      <Card style={{ gap: 0, paddingVertical: 0 }}>
-        <Row label={`👤 ${t('Edit Profile & Campus')}`} onPress={() => router.push('/edit-profile')} />
-        <Row label={`🧾 ${t('Savings History')}`} onPress={() => router.push('/history')} />
-        {profile?.student_code ? <Row label={`🎓 ${t('Student ID')}`} right={<T v="small" style={{ writingDirection: 'ltr', fontWeight: '800' }}>{profile.student_code}</T>} /> : null}
-        {feature('verification') && <Row label={`🎓 ${t('Student Verification')}`} onPress={() => router.push('/student-verification')}
+      <Card style={box}>
+        <Row icon="user" label={t('Edit Profile & Campus')} onPress={() => router.push('/edit-profile')} />
+        <Row icon="receipt" label={t('Savings History')} onPress={() => router.push('/history')} />
+        {profile?.student_code ? <Row icon="id" label={t('Student ID')} right={<T v="small" style={{ writingDirection: 'ltr', fontWeight: '800' }}>{profile.student_code}</T>} /> : null}
+        {feature('verification') && <Row icon="school" label={t('Student Verification')} onPress={() => router.push('/student-verification')}
           right={<T v="small" color={profile?.verification_status === 'verified' ? brand.success : profile?.verification_status === 'rejected' ? brand.danger : brand.purple}>{t(VERIFY_LABEL[profile?.verification_status ?? 'unverified'])} {fwdChevron()}</T>} />}
-        <Row label={`🆔 ${t('User ID')}`} right={<T v="small" style={{ writingDirection: 'ltr', fontWeight: '800' }}>{profile?.user_code}</T>} />
-        <Row label={`📞 ${t('Mobile Number')}`} onPress={() => router.push('/edit-profile')}
+        <Row icon="tag" label={t('User ID')} right={<T v="small" style={{ writingDirection: 'ltr', fontWeight: '800' }}>{profile?.user_code}</T>} />
+        <Row icon="phone" label={t('Mobile Number')} onPress={() => router.push('/edit-profile')}
           right={<T v="small" style={{ writingDirection: 'ltr' }}>{profile?.phone ? profile.phone.replace(/^\+20/, '0') : t('Add')}</T>} />
-        <Row label={`📱 ${t('Signed in As')}`} right={<T v="small" numberOfLines={1} style={{ maxWidth: 180 }}>{session?.user.email || (session?.user.phone ? `+${session.user.phone.replace(/^\+/, '')}` : profile?.email)}</T>} />
+        <Row icon="mail" label={t('Signed in As')} last right={<T v="small" numberOfLines={1} style={{ maxWidth: 180 }}>{session?.user.email || (session?.user.phone ? `+${session.user.phone.replace(/^\+/, '')}` : profile?.email)}</T>} />
       </Card>
       <T v="label">{t('Security & Language')}</T>
-      <Card style={{ gap: 0, paddingVertical: 0 }}>
+      <Card style={box}>
         {bio.ok
-          ? <Row label={`🔐 ${t('Log In with {method}', { method: bio.label })}`} right={<Switch value={bio.on} onValueChange={toggleBio} trackColor={{ true: brand.purple }} />} />
-          : <Row label={`🔐 ${t('Biometric Login')}`} right={<T v="small">{Platform.OS === 'web' ? t('Phone Only') : t('Set up Face ID / fingerprint on your phone first')}</T>} />}
+          ? <Row icon="fingerprint" label={t('Log In with {method}', { method: bio.label })} last={!feature('language')} right={<Switch value={bio.on} onValueChange={toggleBio} trackColor={{ true: brand.purple }} />} />
+          : <Row icon="fingerprint" label={t('Biometric Login')} last={!feature('language')} right={<T v="small" style={{ maxWidth: 150, textAlign: 'right' }}>{Platform.OS === 'web' ? t('Phone Only') : t('Set up Face ID / fingerprint on your phone first')}</T>} />}
         {bio.ok && faceIdLimitedHere && <T v="small" style={{ paddingVertical: 10 }}>{t('Testing in Expo Go: iPhone asks for your passcode instead of Face ID. Face ID works in the real Perkly app.')}</T>}
-        {feature('language') && <Row label={`🌐 ${t('Language')}`} onPress={switchLanguage} right={<T v="small" color={brand.purple}>{lang() === 'ar' ? 'العربية ⇄ English' : 'English ⇄ العربية'}</T>} />}
+        {feature('language') && <Row icon="globe" label={t('Language')} last onPress={switchLanguage} right={<T v="small" color={brand.purple}>{lang() === 'ar' ? 'العربية ⇄ English' : 'English ⇄ العربية'}</T>} />}
       </Card>
       <T v="label">{t('Notifications')}</T>
-      <Card style={{ gap: 0, paddingVertical: 0 }}>
-        <Row label={`🔥 ${t('Perk Drops & Flash Deals')}`} right={<Switch value={drops} onValueChange={toggleDrops} trackColor={{ true: brand.purple }} />} />
-        <Row label={`⏰ ${t('Reminders (saved perks ending, levels)')}`} right={<Switch value={reminders} onValueChange={toggleReminders} trackColor={{ true: brand.purple }} />} />
-        <Row label={`🔔 ${t('Notifications on This Phone')}`} onPress={push === 'ok' || push === 'checking' ? undefined : fixPush}
+      <Card style={box}>
+        <Row icon="flame" label={t('Perk Drops & Flash Deals')} right={<Switch value={drops} onValueChange={toggleDrops} trackColor={{ true: brand.purple }} />} />
+        <Row icon="clock" label={t('Reminders (saved perks ending, levels)')} right={<Switch value={reminders} onValueChange={toggleReminders} trackColor={{ true: brand.purple }} />} />
+        <Row icon="bell" label={t('Notifications on This Phone')} onPress={push === 'ok' || push === 'checking' ? undefined : fixPush}
           right={<T v="small" color={PUSH_LABEL[push].color}>{PUSH_LABEL[push].text}</T>} />
-        <Row label={`📬 ${t('Notifications')}`} onPress={() => router.push('/notifications')} />
-        <Row label={`⚙️ ${t('Phone Permissions')}`} onPress={() => Linking.openSettings()} />
+        <Row icon="inbox" label={t('Notifications')} onPress={() => router.push('/notifications')} />
+        <Row icon="sliders" label={t('Phone Permissions')} last onPress={() => Linking.openSettings()} />
       </Card>
       <T v="label">{t('Help')}</T>
-      <Card style={{ gap: 0, paddingVertical: 0 }}>
-        <Row label={`💬 ${t('Support Chat')}`} onPress={() => Linking.openURL('https://wa.me/')} />
-        <Row label={`📄 ${t('Terms of Use')}`} onPress={() => Linking.openURL(legalUrl('terms'))} />
-        <Row label={`🔒 ${t('Privacy Policy')}`} onPress={() => Linking.openURL(legalUrl('privacy'))} />
+      <Card style={box}>
+        <Row icon="chat" label={t('Support Chat')} onPress={() => Linking.openURL('https://wa.me/')} />
+        <Row icon="doc" label={t('Terms of Use')} onPress={() => Linking.openURL(legalUrl('terms'))} />
+        <Row icon="shield" label={t('Privacy Policy')} last onPress={() => Linking.openURL(legalUrl('privacy'))} />
       </Card>
-      <Pressable onPress={logout} style={{ padding: 16 }}><T color={brand.danger} style={{ textAlign: 'center', fontWeight: '900' }}>{t('Log Out')}</T></Pressable>
-      <Pressable onPress={confirmDelete} disabled={deleting} style={{ padding: 8, flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
-        {deleting ? <ActivityIndicator color={brand.danger} size="small" /> : null}
-        <T v="small" color={brand.danger} style={{ textAlign: 'center' }}>{deleting ? t('Deleting…') : t('Delete Account')}</T>
-      </Pressable>
+      <Card style={[box, { marginTop: 4 }]}>
+        <Row icon="logout" label={t('Log Out')} danger onPress={logout} />
+        <Row icon="trash" label={deleting ? t('Deleting…') : t('Delete Account')} danger last onPress={deleting ? undefined : confirmDelete}
+          sub={t('Permanently deletes your account, savings history and rewards.')}
+          right={deleting ? <ActivityIndicator color={brand.danger} size="small" /> : undefined} />
+      </Card>
       <View style={{ alignItems: 'center', gap: 2 }}>
         <T v="small">Perkly · {t('Unlock Perks. Live Smart.')}</T>
         <T v="small" style={{ opacity: 0.6, fontSize: 11 }}>{versionLabel()}</T>

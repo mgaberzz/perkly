@@ -116,6 +116,7 @@ export default function History() {
   return (
     <FlatList
       style={{ backgroundColor: c.bg }}
+      contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={{ padding: 16, gap: 10 }}
       data={list}
       keyExtractor={(r) => r.id}

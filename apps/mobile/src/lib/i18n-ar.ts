@@ -1,5 +1,18 @@
 // Arabic translations for the student app. Keys are the English text used in the code (see lib/i18n.ts).
 export const AR: Record<string, string> = {
+  "Male": "ولد",
+  "Female": "بنت",
+  "Permanently deletes your account, savings history and rewards.": "بيمسح حسابك وسجل توفيرك ومكافآتك نهائياً.",
+  "Optional. We send a code by SMS to confirm a new number before saving it.": "اختياري. هنبعتلك كود في رسالة علشان نتأكد من الرقم الجديد قبل ما نحفظه.",
+  "We sent a 6-digit code to {phone}. Enter it to save your number.": "بعتنا كود من ٦ أرقام على {phone}. اكتبه علشان نحفظ رقمك.",
+  "SMS Code": "كود الرسالة",
+  "Confirm Number": "تأكيد الرقم",
+  "Change Number": "غيّر الرقم",
+  "Enter the 6-digit code from the SMS.": "اكتب الكود اللي من ٦ أرقام اللي في الرسالة.",
+  "SMS codes aren’t switched on yet, so a new number can’t be confirmed. Leave the number empty for now.": "رسايل الأكواد لسه مش شغالة، فمش هينفع نأكد رقم جديد دلوقتي. سيب الرقم فاضي دلوقتي.",
+  "That code is wrong or has expired. Check the SMS or resend the code.": "الكود غلط أو انتهى. راجع الرسالة أو ابعت الكود تاني.",
+  "This number is already used by another Perkly account.": "الرقم ده مستخدم في حساب Perkly تاني.",
+  "Please wait a minute before asking for another code.": "استنى دقيقة قبل ما تطلب كود تاني.",
   "Version": "الإصدار",
   "Update": "تحديث",
   "Built-in": "الأصلية",

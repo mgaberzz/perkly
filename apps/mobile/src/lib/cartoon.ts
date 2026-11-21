@@ -23,13 +23,14 @@ export const OPTIONS = {
   blush: ['on', 'off'],
 } as const;
 
+export type Gender = 'male' | 'female';
 export type CartoonConfig = {
-  skin: number; face: string; hair: string; hairColor: number; eyes: string; brows: string; mouth: string;
+  gender: Gender; skin: number; face: string; hair: string; hairColor: number; eyes: string; brows: string; mouth: string;
   facial: string; glasses: string; headwear: string; hijabColor: number; outfit: string; outfitColor: number; bg: number; blush: string;
 };
 
 export const DEFAULT_CARTOON: CartoonConfig = {
-  skin: 2, face: 'oval', hair: 'short', hairColor: 1, eyes: 'normal', brows: 'natural', mouth: 'smile', facial: 'none',
+  gender: 'male', skin: 2, face: 'oval', hair: 'short', hairColor: 1, eyes: 'normal', brows: 'natural', mouth: 'smile', facial: 'none',
   glasses: 'none', headwear: 'none', hijabColor: 0, outfit: 'hoodie', outfitColor: 0, bg: 0, blush: 'on',
 };
 
@@ -40,7 +41,10 @@ const idx = (len: number, v: unknown, d: number) => (Number.isInteger(v) && (v a
 export function cleanCartoon(raw: unknown): CartoonConfig {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   const D = DEFAULT_CARTOON;
+  // older avatars have no gender: guess it from the hair / hijab
+  const guess: Gender = r.headwear === 'hijab' || ['bob', 'bun', 'ponytail'].includes(String(r.hair)) || r.eyes === 'lashes' ? 'female' : 'male';
   return {
+    gender: r.gender === 'male' || r.gender === 'female' ? r.gender : guess,
     skin: idx(SKIN.length, r.skin, D.skin), face: pick(OPTIONS.face, r.face, D.face), hair: pick(OPTIONS.hair, r.hair, D.hair),
     hairColor: idx(HAIR_COLORS.length, r.hairColor, D.hairColor), eyes: pick(OPTIONS.eyes, r.eyes, D.eyes), brows: pick(OPTIONS.brows, r.brows, D.brows),
     mouth: pick(OPTIONS.mouth, r.mouth, D.mouth), facial: pick(OPTIONS.facial, r.facial, D.facial), glasses: pick(OPTIONS.glasses, r.glasses, D.glasses),
@@ -50,15 +54,36 @@ export function cleanCartoon(raw: unknown): CartoonConfig {
   };
 }
 
-export function randomCartoon(): CartoonConfig {
+/** Options that make sense for each gender (the avatar builder shows only these). */
+export const GENDER_OPTIONS: Record<Gender, { hair: readonly string[]; facial: readonly string[]; headwear: readonly string[]; eyes: readonly string[] }> = {
+  male: { hair: ['short', 'side', 'buzz', 'curly', 'quiff', 'afro', 'long', 'bald'], facial: OPTIONS.facial, headwear: ['none', 'cap', 'beanie'], eyes: ['normal', 'happy', 'wink', 'big', 'sleepy'] },
+  female: { hair: ['long', 'bob', 'bun', 'ponytail', 'curly', 'afro', 'short', 'side'], facial: ['none'], headwear: ['none', 'hijab', 'cap', 'beanie'], eyes: ['lashes', 'normal', 'happy', 'wink', 'big', 'sleepy'] },
+};
+
+/** Switch gender, keeping everything that still fits and swapping what doesn't. */
+export function withGender(c: CartoonConfig, g: Gender): CartoonConfig {
+  const o = GENDER_OPTIONS[g];
+  return {
+    ...c, gender: g,
+    hair: o.hair.includes(c.hair) && c.gender === g ? c.hair : g === 'female' ? 'long' : 'short',
+    facial: o.facial.includes(c.facial) ? c.facial : 'none',
+    headwear: o.headwear.includes(c.headwear) ? c.headwear : 'none',
+    eyes: g === 'female' ? (c.gender === g ? c.eyes : 'lashes') : c.eyes === 'lashes' ? 'normal' : c.eyes,
+    blush: g === 'female' ? 'on' : c.gender === g ? c.blush : 'off',
+  };
+}
+
+export function randomCartoon(gender?: Gender): CartoonConfig {
   const any = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)];
-  const head = Math.random() < 0.18 ? 'hijab' : Math.random() < 0.15 ? any(['cap', 'beanie']) : 'none';
+  const g: Gender = gender ?? (Math.random() < 0.5 ? 'male' : 'female');
+  const o = GENDER_OPTIONS[g];
+  const head = g === 'female' && Math.random() < 0.35 ? 'hijab' : Math.random() < 0.15 ? any(['cap', 'beanie']) : 'none';
   return cleanCartoon({
-    skin: Math.floor(Math.random() * SKIN.length), face: any(OPTIONS.face), hair: any(OPTIONS.hair.filter((h) => h !== 'bald' || Math.random() < 0.3)),
-    hairColor: Math.floor(Math.random() * 7), eyes: any(OPTIONS.eyes), brows: any(['natural', 'raised', 'thick']), mouth: any(OPTIONS.mouth),
-    facial: Math.random() < 0.35 ? any(OPTIONS.facial) : 'none', glasses: Math.random() < 0.3 ? any(OPTIONS.glasses) : 'none', headwear: head,
+    gender: g, skin: Math.floor(Math.random() * SKIN.length), face: any(OPTIONS.face), hair: any(o.hair.filter((h) => h !== 'bald' || Math.random() < 0.3)),
+    hairColor: Math.floor(Math.random() * 7), eyes: any(o.eyes), brows: any(['natural', 'raised', 'thick']), mouth: any(OPTIONS.mouth),
+    facial: g === 'male' && Math.random() < 0.4 ? any(OPTIONS.facial) : 'none', glasses: Math.random() < 0.3 ? any(OPTIONS.glasses) : 'none', headwear: head,
     hijabColor: Math.floor(Math.random() * HIJAB_COLORS.length), outfit: any(OPTIONS.outfit), outfitColor: Math.floor(Math.random() * OUTFIT_COLORS.length),
-    bg: Math.floor(Math.random() * BG_COLORS.length), blush: 'on',
+    bg: Math.floor(Math.random() * BG_COLORS.length), blush: g === 'female' ? 'on' : 'off',
   });
 }
 

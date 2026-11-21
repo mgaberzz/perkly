@@ -64,3 +64,17 @@ reset role;
 do $$ begin
   assert (select count(*) from api_key_lookup(repeat('d', 64))) = 0, 'revoked keys no longer work';
 end $$;
+
+-- ── Mobile number on the profile must be confirmed by SMS first ──
+reset role;
+update auth.users set phone = '201011112222' where id = '00000000-0000-0000-0000-00000000a001';
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000a001', false);
+do $$ declare ok boolean; me uuid := '00000000-0000-0000-0000-00000000a001'; begin
+  begin update profiles set phone = '+201099998888' where id = me; ok := false; exception when others then ok := sqlerrm = 'phone_not_verified'; end;
+  assert ok, 'unverified number refused';
+  update profiles set phone = '+201011112222' where id = me;   -- the verified one
+  assert (select phone from profiles where id = me) = '+201011112222', 'verified number saved';
+  update profiles set phone = null where id = me;               -- clearing is fine
+end $$;
+reset role;

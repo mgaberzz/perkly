@@ -7,7 +7,7 @@ import { CartoonAvatar } from '@/components/avatar';
 import { Text } from '@/components/text';
 import { T } from '@/components/ui';
 import { saveCartoon } from '@/lib/avatar';
-import { BG_COLORS, cleanCartoon, DEFAULT_CARTOON, HAIR_COLORS, HIJAB_COLORS, OPTIONS, OUTFIT_COLORS, randomCartoon, SKIN, type CartoonConfig } from '@/lib/cartoon';
+import { BG_COLORS, cleanCartoon, DEFAULT_CARTOON, GENDER_OPTIONS, HAIR_COLORS, HIJAB_COLORS, OPTIONS, OUTFIT_COLORS, randomCartoon, SKIN, withGender, type CartoonConfig, type Gender } from '@/lib/cartoon';
 import { t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { brand, useTheme } from '@/lib/theme';
@@ -26,18 +26,20 @@ export default function AvatarBuilder() {
   const [saving, setSaving] = useState(false);
 
   const TABS: Tab[] = useMemo(() => {
+    const g = GENDER_OPTIONS[cfg.gender];
     const list: Tab[] = [
       { key: 'skin', label: t('Skin'), emoji: '✋', kind: 'color', field: 'skin', colors: SKIN },
       { key: 'face', label: t('Face'), emoji: '🙂', kind: 'shape', field: 'face', options: OPTIONS.face },
-      { key: 'hair', label: t('Hair'), emoji: '💇', kind: 'shape', field: 'hair', options: OPTIONS.hair },
+      { key: 'hair', label: t('Hair'), emoji: '💇', kind: 'shape', field: 'hair', options: g.hair },
       { key: 'hairColor', label: t('Hair Colour'), emoji: '🎨', kind: 'color', field: 'hairColor', colors: HAIR_COLORS },
-      { key: 'eyes', label: t('Eyes'), emoji: '👀', kind: 'shape', field: 'eyes', options: OPTIONS.eyes },
+      { key: 'eyes', label: t('Eyes'), emoji: '👀', kind: 'shape', field: 'eyes', options: g.eyes },
       { key: 'brows', label: t('Brows'), emoji: '🤨', kind: 'shape', field: 'brows', options: OPTIONS.brows },
       { key: 'mouth', label: t('Mouth'), emoji: '😁', kind: 'shape', field: 'mouth', options: OPTIONS.mouth },
-      { key: 'facial', label: t('Beard'), emoji: '🧔', kind: 'shape', field: 'facial', options: OPTIONS.facial },
       { key: 'glasses', label: t('Glasses'), emoji: '👓', kind: 'shape', field: 'glasses', options: OPTIONS.glasses },
-      { key: 'headwear', label: t('Head'), emoji: '🧕', kind: 'shape', field: 'headwear', options: OPTIONS.headwear },
+      { key: 'headwear', label: t('Head'), emoji: cfg.gender === 'female' ? '🧕' : '🧢', kind: 'shape', field: 'headwear', options: g.headwear },
     ];
+    // beards only for the male avatar, right after the mouth
+    if (cfg.gender === 'male') list.splice(list.findIndex((x) => x.key === 'mouth') + 1, 0, { key: 'facial', label: t('Beard'), emoji: '🧔', kind: 'shape', field: 'facial', options: g.facial });
     if (cfg.headwear === 'hijab') list.push({ key: 'hijabColor', label: t('Hijab Colour'), emoji: '🧣', kind: 'color', field: 'hijabColor', colors: HIJAB_COLORS });
     list.push(
       { key: 'outfit', label: t('Outfit'), emoji: '👕', kind: 'shape', field: 'outfit', options: OPTIONS.outfit },
@@ -46,9 +48,15 @@ export default function AvatarBuilder() {
       { key: 'blush', label: t('Blush'), emoji: '😊', kind: 'shape', field: 'blush', options: OPTIONS.blush },
     );
     return list;
-  }, [cfg.headwear]);
+  }, [cfg.headwear, cfg.gender]);
   const current = TABS.find((x) => x.key === tab) ?? TABS[0];
 
+  const setGender = (g: Gender) => {
+    if (g === cfg.gender) return;
+    Haptics.selectionAsync().catch(() => {});
+    setCfg((x) => withGender(x, g));
+    if (g === 'female' && tab === 'facial') setTab('skin');
+  };
   const set = (field: keyof CartoonConfig, v: string | number) => {
     Haptics.selectionAsync().catch(() => {});
     setCfg((x) => ({ ...x, [field]: v }));
@@ -83,10 +91,24 @@ export default function AvatarBuilder() {
         <View style={{ width: preview, height: preview, borderRadius: preview / 2, overflow: 'hidden', borderWidth: 4, borderColor: '#fff', shadowColor: brand.purple, shadowOpacity: 0.25, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 6 }}>
           <CartoonAvatar config={cfg} size={preview - 8} />
         </View>
-        <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {}); setCfg(randomCartoon()); }}
+        <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {}); setCfg(randomCartoon(cfg.gender)); }}
           style={({ pressed }) => ({ marginTop: -22, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: c.card, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 9, borderWidth: 1, borderColor: c.border, transform: [{ scale: pressed ? 0.95 : 1 }], shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 })}>
           <Text style={{ fontSize: 16 }}>🎲</Text><Text style={{ fontWeight: '800', color: c.text }}>{t('Shuffle')}</Text>
         </Pressable>
+      </View>
+
+      {/* male / female */}
+      <View style={{ flexDirection: 'row', alignSelf: 'center', marginTop: 12, backgroundColor: c.card, borderRadius: 999, padding: 4, borderWidth: 1, borderColor: c.border }}>
+        {(['male', 'female'] as const).map((g) => {
+          const on = cfg.gender === g;
+          return (
+            <Pressable key={g} onPress={() => setGender(g)} accessibilityRole="button" accessibilityState={{ selected: on }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 18, paddingVertical: 8, borderRadius: 999, backgroundColor: on ? brand.purple : 'transparent' }}>
+              <Text style={{ fontSize: 15 }}>{g === 'male' ? '👦' : '👧'}</Text>
+              <Text style={{ fontWeight: '800', color: on ? '#fff' : c.text }}>{g === 'male' ? t('Male') : t('Female')}</Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       {/* category tabs */}
