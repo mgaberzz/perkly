@@ -76,6 +76,11 @@ Ask Claude: **"launch checklist"** to walk through it.
 - [ ] **HubSpot free** (CRM for the merchant pipeline): create the account, save the private app token in Supabase (not in chat). Claude then sends merchant applications in as leads and keeps status (live, monthly transactions) up to date
 - [ ] Lawyer review covers the analytics consent (Egypt data protection law 151/2020)
 
+## Merchant webhooks (built 21 Nov 2026, not switched on yet)
+- [ ] Apply the webhooks migration on the live database: Supabase → SQL Editor → paste all of `supabase/migrations/20261210000049_merchant_webhooks.sql` → Run (the approval card in chat timed out twice). Only adds tables, functions, triggers and two scheduled jobs; no existing data changes
+  - Until then the merchant portal's Webhooks tab shows nothing and adding a webhook gives an error. Everything else works
+- [ ] After applying: Claude checks the tables/jobs exist, sends a real signed test event to confirm the signature, and updates Notion
+
 ## Later (after launch)
 - [ ] Apple Watch app (optional): show XP, quests, the spin wheel and the latest receipt. Today the watch only mirrors iPhone notifications. Decide after launch whether it's worth a separate build.
   - Passed 17 Nov 2026: with the iPhone locked and Perkly closed, notifications show on the Apple Watch (mirroring on). Nothing else appears there.
