@@ -174,6 +174,12 @@ export async function adminSetApiAccess(merchantId: string, enabled: boolean) {
   revalidatePath(`/admin/merchants/${merchantId}`);
 }
 
+export async function adminDeleteWebhook(merchantId: string, webhookId: string) {
+  const { supabase } = await requireStaff("merchants_view");
+  await supabase.rpc("delete_webhook", { p_id: webhookId });
+  revalidatePath(`/admin/merchants/${merchantId}`);
+}
+
 export async function adminRevokeApiKeys(merchantId: string) {
   const { supabase } = await requireStaff("merchants_view");
   await supabase.rpc("revoke_api_credentials", { p_merchant_id: merchantId });

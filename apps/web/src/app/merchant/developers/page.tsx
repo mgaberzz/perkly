@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { requireMerchantArea } from "@/lib/auth";
 import { Card, PageHeader } from "@/components/ui";
-import { Icon } from "@/components/icons";
+import { PageTabs } from "@/components/page-tabs";
+import { devTabs } from "@/lib/dev-tabs";
 import { ApiKeyCard, CreateKeysButton } from "@/components/api-key-card";
 import { dateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
@@ -22,7 +22,8 @@ export default async function DevelopersPage() {
   return (
     <>
       <PageHeader title={t("API keys")} subtitle={t("Create and manage API keys to connect your cashier system or website to Perkly.")}
-        actions={<Link href="/merchant/developers/docs" className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-zinc-50"><Icon name="doc" size={16} className="me-1.5 inline-block align-[-3px]" />{t("Documentation")}</Link>} />
+        />
+      <PageTabs tabs={devTabs(t)} />
       {!enabled && <div className="mb-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">{t("API access is turned off for your business. Your keys don't work right now. Contact Perkly to turn it on.")}</div>}
       {!cred ? (
         <Card className="max-w-xl">

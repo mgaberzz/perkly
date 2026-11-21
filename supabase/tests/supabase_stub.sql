@@ -26,6 +26,8 @@ create table auth.one_time_tokens (id uuid primary key default gen_random_uuid()
 
 -- Stand-in for pg_net: records the push requests instead of sending them
 create schema net;
-create table net.calls (id bigserial primary key, url text, body jsonb);
+create table net.calls (id bigserial primary key, url text, body jsonb, headers jsonb);
 create function net.http_post(url text, body jsonb default '{}', params jsonb default '{}', headers jsonb default '{}', timeout_milliseconds integer default 5000)
-returns bigint language sql as $$ insert into net.calls (url, body) values (url, body) returning id $$;
+returns bigint language sql as $$ insert into net.calls (url, body, headers) values (url, body, headers) returning id $$;
+create table net._http_response (id bigint primary key, status_code integer, content_type text, headers jsonb, content text,
+  timed_out boolean, error_msg text, created timestamptz default now());

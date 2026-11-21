@@ -25,6 +25,7 @@ export default async function MerchantSettingsHub() {
     ] },
     { title: t("Developers"), items: [
       { href: "/merchant/developers", icon: "key", title: t("API keys"), text: t("Create and manage keys to connect your cashier system or website."), area: "developers" },
+      { href: "/merchant/developers/webhooks", icon: "send", title: t("Webhooks"), text: t("Let Perkly tell your system about redemptions, refunds and payouts as they happen."), area: "developers" },
       { href: "/merchant/developers/docs", icon: "code", title: t("Documentation"), text: t("How to use the Perkly API, with examples."), area: "developers" },
     ] },
   ];

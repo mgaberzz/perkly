@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { requireMerchantArea } from "@/lib/auth";
 import { Card, PageHeader } from "@/components/ui";
+import { PageTabs } from "@/components/page-tabs";
+import { devTabs } from "@/lib/dev-tabs";
 import { getT } from "@/lib/i18n/server";
 import { SITE_URL } from "@/lib/env";
 
@@ -25,7 +26,8 @@ export default async function ApiDocs() {
   return (
     <>
       <PageHeader title={t("API documentation")} subtitle={t("Connect your cashier system, website or reports to Perkly.")}
-        actions={<Link href="/merchant/developers" className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-zinc-50">← {t("API keys")}</Link>} />
+        />
+      <PageTabs tabs={devTabs(t)} />
       <div className="max-w-4xl space-y-6">
         <Card title={t("1. Sign in every request")}>
           <p className="text-sm text-zinc-600">{t("Send your secret key in the Authorization header. Requests without it, with an old key, or while API access is off get a 401 error.")}</p>
@@ -61,7 +63,44 @@ export default async function ApiDocs() {
           <Code>{`curl "${base}/transactions?from=2026-11-01&to=2026-11-30&limit=200" \\\n  -H "Authorization: Bearer sk_live_…"`}</Code>
           <p className="mt-3 text-sm text-zinc-600">{t("If next_before isn't null, ask again with before=<next_before> to get the next page.")}</p>
         </Card>
-        <Card title={t("5. Errors")}>
+        <Card title={t("5. Webhooks: Perkly calls you")}>
+          <p className="text-sm text-zinc-600">{t("Add your https address under Webhooks. Perkly sends a POST with JSON the moment an event happens. Answer with any 2xx status within 10 seconds; otherwise Perkly tries again after 1, 5, 30, 120 and 600 minutes.")}</p>
+          <ul className="mt-3 list-disc space-y-1 ps-5 text-sm text-zinc-600">
+            <li><code className="text-xs">redemption.created</code> · <code className="text-xs">redemption.reversed</code>: {t("data is the same transaction object as the API.")}</li>
+            <li><code className="text-xs">refund.requested</code> · <code className="text-xs">refund.decided</code>: {t("refund ID, transaction ID, amount, reason, status.")}</li>
+            <li><code className="text-xs">settlement.paid</code>: {t("settlement ID, amount, direction, amount paid, bank reference.")}</li>
+            <li><code className="text-xs">ping</code>: {t("sent by the \"Send test event\" button.")}</li>
+          </ul>
+          <Code>{`POST https://your-system.com/perkly/webhook
+Content-Type: application/json
+Perkly-Event: redemption.created
+Perkly-Delivery: 5d0c…  (same as "id" below; use it to ignore repeats)
+Perkly-Signature: t=1795190400,v1=9f86d08188…
+
+{"id": "5d0c…", "type": "redemption.created", "created_at": "…", "data": { "id": "9000000021", "code": "7F3K", "bill": 200, "discount": 40, … }}`}</Code>
+          <p className="mt-4 text-sm font-semibold">{t("Check the signature (always do this)")}</p>
+          <p className="mt-1 text-sm text-zinc-600">{t("Compute HMAC-SHA256 of \"<t>.<raw body>\" with your signing secret and compare it with v1. Use the raw body exactly as received. Reject events older than 5 minutes.")}</p>
+          <Code>{`// Node.js (Express)
+import crypto from "crypto";
+app.post("/perkly/webhook", express.raw({ type: "application/json" }), (req, res) => {
+  const [, t, v1] = /t=(\\d+),v1=([0-9a-f]+)/.exec(req.get("Perkly-Signature") || "") || [];
+  const expected = crypto.createHmac("sha256", process.env.PERKLY_WEBHOOK_SECRET)
+    .update(\`\${t}.\${req.body}\`).digest("hex");
+  const fresh = Math.abs(Date.now() / 1000 - Number(t)) < 300;
+  if (!v1 || !fresh || !crypto.timingSafeEqual(Buffer.from(v1), Buffer.from(expected))) return res.sendStatus(400);
+  const event = JSON.parse(req.body);
+  // … handle event.type / event.data
+  res.sendStatus(200);
+});`}</Code>
+          <Code>{`<?php // PHP
+$body = file_get_contents("php://input");
+preg_match('/t=(\\d+),v1=([0-9a-f]+)/', $_SERVER["HTTP_PERKLY_SIGNATURE"] ?? "", $m);
+$expected = hash_hmac("sha256", $m[1] . "." . $body, getenv("PERKLY_WEBHOOK_SECRET"));
+if (!$m || abs(time() - (int)$m[1]) > 300 || !hash_equals($expected, $m[2])) { http_response_code(400); exit; }
+$event = json_decode($body, true);
+http_response_code(200);`}</Code>
+        </Card>
+        <Card title={t("6. Errors")}>
           <Code>{`{ "error": { "code": "unauthorized", "message": "…" } }`}</Code>
           <ul className="mt-3 list-disc space-y-1 ps-5 text-sm text-zinc-600">
             <li><b>400 bad_request</b>: {t("a filter is wrong (the message says which).")}</li>

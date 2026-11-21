@@ -15,7 +15,7 @@ import { dealLabel } from "@/components/partner-form";
 import { BRAND_TYPE_LABEL, CHANNEL_LABEL } from "@/lib/labels";
 import type { Balance, Merchant, Perk, QrCode } from "@/lib/types";
 import { BANKS } from "@/lib/banks";
-import { adminRevokeApiKeys, adminSetApiAccess, adminCreateBranch, adminCreateQr, adminRejectBank, adminRenameQr, adminSaveBank, adminSetPerkStatus, adminToggleQr, adminUpdateBranch, resolveRequest } from "../../actions";
+import { adminDeleteWebhook, adminRevokeApiKeys, adminSetApiAccess, adminCreateBranch, adminCreateQr, adminRejectBank, adminRenameQr, adminSaveBank, adminSetPerkStatus, adminToggleQr, adminUpdateBranch, resolveRequest } from "../../actions";
 
 export const metadata = { title: "Merchant" };
 
@@ -55,6 +55,10 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
         .maybeSingle<{ public_key: string; created_at: string; secret_rotated_at: string; last_used_at: string | null }>()
     : { data: null };
   const apiOn = (merchant as Merchant & { api_enabled?: boolean }).api_enabled ?? true;
+  const { data: hooks } = apiAdmin || role === "account_manager"
+    ? await supabase.from("merchant_webhooks").select("id, url, events, is_active, last_success_at, failures_in_row").eq("merchant_id", id).order("created_at")
+        .returns<{ id: string; url: string; events: string[]; is_active: boolean; last_success_at: string | null; failures_in_row: number }[]>()
+    : { data: null };
   const requestFor = new Map((requests ?? []).map((r) => [r.ref_id, r.id]));
   const from30 = resolvePeriod("30d").from;
   const s = (stats ?? {}) as { redemptions?: number; unique_students?: number; new_customer_pct?: number; recurring_customer_pct?: number; revenue_after_discount?: number };
@@ -243,7 +247,7 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
                   <button className="rounded-lg border border-zinc-300 px-3 py-1 text-xs font-semibold hover:bg-zinc-50">{apiOn ? t("Turn off") : t("Turn on")}</button>
                 </form>
               )}
-              <span className="text-xs text-zinc-500">{t("When off, the business can't create keys and its keys stop working.")}</span>
+              <span className="text-xs text-zinc-500">{t("When off, the business can't create keys or webhooks, its keys stop working and no webhooks are sent.")}</span>
             </div>
             <div className="mt-4 border-t border-zinc-100 pt-4 text-sm">
               {cred ? (
@@ -259,6 +263,25 @@ export default async function AdminMerchantPage({ params, searchParams }: PagePr
                   )}
                 </div>
               ) : <p className="text-zinc-500">{t("The business hasn't created API keys.")}</p>}
+            </div>
+            <div className="mt-4 border-t border-zinc-100 pt-4 text-sm">
+              <div className="mb-2 font-semibold">{t("Webhooks")}</div>
+              {(hooks ?? []).length === 0 ? <p className="text-zinc-500">{t("No webhooks.")}</p> : (
+                <ul className="space-y-2">
+                  {(hooks ?? []).map((h) => (
+                    <li key={h.id} className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="min-w-0">
+                        <code dir="ltr" className="block truncate font-mono text-xs">{h.url}</code>
+                        <span className="text-xs text-zinc-500">{h.events.length} {t("events")} · {h.last_success_at ? t("Last delivered {date}", { date: dateTime(h.last_success_at) }) : t("Nothing delivered yet")}</span>
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <Badge tone={!h.is_active ? "paused" : h.failures_in_row > 0 ? "pending" : "active"}>{!h.is_active ? t("Off") : h.failures_in_row > 0 ? t("Failing ({n} in a row)", { n: h.failures_in_row }) : t("Active")}</Badge>
+                        {apiAdmin && <form action={adminDeleteWebhook.bind(null, id, h.id)}><button className="text-xs font-semibold text-red-600 hover:underline">{t("Remove")}</button></form>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </Card>
         )}

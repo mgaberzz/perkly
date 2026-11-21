@@ -21,4 +21,5 @@ for f in "$DIR"/migrations/*.sql; do echo "migrate: $(basename "$f")"; "${PSQL[@
 "${PSQL[@]}" -f "$DIR/tests/test_redemption.sql"
 "${PSQL[@]}" -f "$DIR/tests/test_roles_payments.sql"
 "${PSQL[@]}" -f "$DIR/tests/test_api_keys.sql"
+"${PSQL[@]}" -f "$DIR/tests/test_webhooks.sql"
 echo "ALL TESTS PASSED"
