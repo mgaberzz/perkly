@@ -61,6 +61,7 @@ Ask Claude: **"launch checklist"** to walk through it.
 ## Providers
 - [ ] SMS provider for students' login codes (Supabase Auth → Phone)
   - Also needed for the merchant portal's mobile number verification (Settings → Mobile number); until then it shows "SMS codes aren't switched on yet"
+  - Also needed in the student app: a new mobile number is saved only after its SMS code is confirmed (since 21 Nov 2026); until the provider is set up, students can leave the number empty
 - [x] Applicant confirmation email: create a Resend API key (Sending access) and save it in Vercel as `RESEND_API_KEY` (Production), then redeploy. Until then applicants get no confirmation email.
 - [x] Email provider: Resend is connected but in **test mode** (only emails m.gaberz@hotmail.com). Verify the domain at resend.com/domains, then change the sender in Supabase → Auth → SMTP to e.g. `no-reply@<domain>`. Until then students can't get email login codes and portal invites don't arrive. This also enables university-email verification.
   - After email works: email each merchant their weekly summary every Sunday (today it's the "Your week with Perkly" card on their dashboard)
